@@ -298,7 +298,7 @@ toIgraph <- function(net){
 
     #network direction
     if(exists("showArrows",net$options)){
-      directed <- net$show$Arrows
+      directed <- net$options$showArrows
     }else{
       directed <- FALSE
     }

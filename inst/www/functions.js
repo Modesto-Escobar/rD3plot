@@ -1180,3 +1180,56 @@ function intersection(a, b){
 
     return result;
 }
+
+function makeZoomButton(svg, y, n){
+    var w = +svg.attr("width"),
+        h = +svg.attr("height");
+
+    var zoombutton = svg.append("g")
+      .attr("class","zoombutton "+n)
+      .attr("transform","translate("+(w-35)+","+(h-y)+")")
+
+    zoombutton.append("rect")
+      .attr("x",0)
+      .attr("y",0)
+      .attr("rx",3)
+      .attr("ry",3)
+      .attr("width",30)
+      .attr("height",30)
+
+    return zoombutton;
+}
+
+function makeZoomIn(svg,y){
+  var zoomin = makeZoomButton(svg,y,"zoomin");
+  zoomin.append("rect")
+      .attr("x",7)
+      .attr("y",12)
+      .attr("width",16)
+      .attr("height",6)
+  zoomin.append("rect")
+      .attr("x",12)
+      .attr("y",7)
+      .attr("width",6)
+      .attr("height",16)
+  return zoomin;
+}
+
+function makeZoomReset(svg,y){
+  var zoomreset = makeZoomButton(svg,y,"zoomreset");
+  zoomreset.append("path")
+      .attr("transform","translate(7,6)")
+      .style("fill","#fff")
+      .attr("d",d4paths.resetzoom)
+  return zoomreset;
+}
+
+function makeZoomOut(svg,y){
+  var zoomout = makeZoomButton(svg,y,"zoomout");
+  zoomout.append("rect")
+      .attr("x",7)
+      .attr("y",12)
+      .attr("width",16)
+      .attr("height",6)
+  return zoomout;
+}

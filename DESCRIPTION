@@ -1,7 +1,7 @@
 Package: rD3plot
 Type: Package
-Version: 1.0.0
-Date: 2020-11-5
+Version: 1.0.1
+Date: 2020-12-4
 Title: Interactive Analytic Networks
 Description: Creates interactive analytic networks with R. It joins the data analysis power of R and the visualization libraries of JavaScript in one package.
 License: GPL-3 + file LICENSE

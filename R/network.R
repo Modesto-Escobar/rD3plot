@@ -148,12 +148,12 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
         community = NULL, layout = NULL,
         name = NULL, label = NULL, group = NULL, labelSize = NULL,
         size = NULL, color = NULL, shape = NULL, legend = NULL,
-        orderA = NULL, orderD = NULL, ntext = NULL, info = NULL,
+        sort = NULL, decreasing = FALSE, ntext = NULL, info = NULL,
         image = NULL, imageNames = NULL,
         nodeBipolar = FALSE, nodeFilter = NULL, degreeFilter = NULL,
         source = NULL, target = NULL,
         lwidth = NULL, lweight = NULL, lcolor = NULL, ltext = NULL,
-        linkBipolar = FALSE, linkFilter = NULL,
+        intensity = NULL, linkBipolar = FALSE, linkFilter = NULL,
         repulsion = 25, distance = 10, zoom = 1,
         fixed = showCoordinates, limits = NULL,
         main = NULL, note = NULL, showCoordinates = FALSE, showArrows = FALSE,
@@ -334,8 +334,8 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
   options <- checkNodeColumn(options,"nodeLegend",legend,nodes)
   options <- checkNodeColumn(options,"nodeText",ntext,nodes)
   options <- checkNodeColumn(options,"nodeInfo",info,nodes)
-  options <- checkNodeColumn(options,"nodeOrderA",orderA,nodes)
-  options <- checkNodeColumn(options,"nodeOrderD",orderD,nodes)
+  options <- checkNodeColumn(options,"nodeOrder",sort,nodes)
+  options <- showSomething(options,"decreasing",decreasing)
 
   if (!is.null(image)){
     if(length(setdiff(image,colnames(nodes)))){
@@ -356,6 +356,7 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
   options <- checkLinkColumn(options,"linkWeight",lweight,links)
   options <- checkLinkColumn(options,"linkColor",lcolor,links)
   options <- checkLinkColumn(options,"linkText",ltext,links)
+  options <- checkLinkColumn(options,"linkIntensity",intensity,links)
 
   # filters
   if(!is.null(nodeFilter) || !is.null(linkFilter) || !is.null(degreeFilter)){

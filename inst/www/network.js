@@ -457,6 +457,7 @@ function network(Graph){
     options.colorScalenodeColor = "RdWhGn"; // default linear scale for nodes
     options.colorScalelinkColor = "RdBkGn"; // default linear scale for links
     options.colorScalenodeGroup = "RdBkGn"; // default linear scale for groups
+    options.colorScalelinkIntensity = "WhBu"; // default linear scale for intensity
 
     if(options.nodeBipolar){
       switch(defaultColor) {
@@ -926,7 +927,7 @@ function displaySidebar(){
       .attr("class","tab nodes")
 
     if(options.heatmap){
-      visData = ["Label","Color","Shape","Legend","OrderA","OrderD"];
+      visData = ["Label","Color","Shape","Legend","Order"];
     }else{
       visData = ["Label","Size","LabelSize","Color","Shape","Image","Legend","Group"];
     }
@@ -950,7 +951,7 @@ function displaySidebar(){
       .attr("class", "tab links")
 
     if(options.heatmap){
-      visData = ["Color","Text"];
+      visData = ["Intensity","Text"];
     }else{
       visData = ["Width","Weight","Color","Text"];
     }
@@ -1362,6 +1363,23 @@ function addVisualController(){
             drawNet();
           });
         }
+        if(visual=="Order" && Graph.nodenames.indexOf(attr)!=-1){
+          var win = displayWindow(200);
+          win.append("h2")
+          .style("cursor", "pointer")
+          .text("increasing").on("click",function(){
+            delete options.decreasing;
+            drawNet();
+            d3.select("div.window-background").remove();
+          });
+          win.append("h2")
+          .style("cursor", "pointer")
+          .text("decreasing").on("click",function(){
+            options.decreasing = true;
+            drawNet();
+            d3.select("div.window-background").remove();
+          });
+        }
       })
       .selectAll("option")
         .data(attributes)
@@ -1401,12 +1419,6 @@ function applyAuto(key, attr){
       delete options[key];
     }else{
       options[key] = attr;
-    }
-    if(key == "nodeOrderA"){
-        delete options.nodeOrderD;
-    }
-    if(key == "nodeOrderD"){
-        delete options.nodeOrderA;
     }
     if(VisualHandlers.hasOwnProperty(key)){
       delete VisualHandlers[key];
@@ -1889,25 +1901,10 @@ function drawSVG(){
         update_forces();
       })
 
-  var makeZoomButton = function(y,n){
-    var zoombutton = svg.append("g")
-      .attr("class","zoombutton "+n)
-      .attr("transform","translate("+(width-35)+","+(height-y)+")")
-
-    zoombutton.append("rect")
-      .attr("x",0)
-      .attr("y",0)
-      .attr("rx",3)
-      .attr("ry",3)
-      .attr("width",30)
-      .attr("height",30)
-
-    return zoombutton;
-  }
 
   // zoom in
-  var zoomin = makeZoomButton(130,"zoomin");
-  zoomin.on("click",function(){
+  makeZoomIn(svg,130)
+      .on("click",function(){
         transform.k = transform.k + 0.1;
         if(transform.k>zoomRange[1]){
           transform.k = zoomRange[1];
@@ -1916,32 +1913,18 @@ function drawSVG(){
         options.zoomScale = transform.k
         Sliders.zoom.update(options.zoomScale).brushedValue(true);
       })
-  zoomin.append("rect")
-      .attr("x",7)
-      .attr("y",12)
-      .attr("width",16)
-      .attr("height",6)
-  zoomin.append("rect")
-      .attr("x",12)
-      .attr("y",7)
-      .attr("width",6)
-      .attr("height",16)
-  zoomin.append("title").text(texts.zoomin + " (ctrl + '+')")
+      .append("title").text(texts.zoomin + " (ctrl + '+')")
 
   // reset zoom
-  var zoomreset = makeZoomButton(95,"zoomreset");
-  zoomreset.on("click",function(){
+  makeZoomReset(svg,95)
+      .on("click",function(){
         resetZoom();
       })
-  zoomreset.append("title").text(texts.resetzoom + " (ctrl + 0)")
-  zoomreset.append("path")
-      .attr("transform","translate(7,6)")
-      .style("fill","#fff")
-      .attr("d",d4paths.resetzoom)
+      .append("title").text(texts.resetzoom + " (ctrl + 0)")
 
   // zoom out
-  var zoomout = makeZoomButton(60,"zoomout");
-  zoomout.on("click",function(){
+  makeZoomOut(svg,60)
+      .on("click",function(){
         transform.k = transform.k - 0.1;
         if(transform.k<zoomRange[0]){
           transform.k = zoomRange[0];
@@ -1950,12 +1933,8 @@ function drawSVG(){
         options.zoomScale = transform.k
         Sliders.zoom.update(options.zoomScale).brushedValue(true);
       })
-  zoomout.append("rect")
-      .attr("x",7)
-      .attr("y",12)
-      .attr("width",16)
-      .attr("height",6)
-  zoomout.append("title").text(texts.zoomout + " (ctrl + '-')")
+      .append("title").text(texts.zoomout + " (ctrl + '-')")
+
 
   if(frameControls){
     handleFrames(frameControls.frame);
@@ -2320,20 +2299,30 @@ function drawNet(){
         .computeScale()
   }
 
-  if(!VisualHandlers.hasOwnProperty("nodeGroup")){
-    VisualHandlers.nodeGroup = setColorScale()
+  if(options.heatmap){
+    if(!VisualHandlers.hasOwnProperty("linkIntensity")){
+      VisualHandlers.linkIntensity = setColorScale()
+        .data(Graph.links)
+        .item('link')
+        .itemAttr("linkIntensity")
+        .computeScale()
+    }
+  }else{
+    if(!VisualHandlers.hasOwnProperty("nodeGroup")){
+      VisualHandlers.nodeGroup = setColorScale()
         .data(GraphLinksLength && options.nodeGroup=="degree" ? nodes : Graph.nodes)
         .item('node')
         .itemAttr("nodeGroup")
         .computeScale()
-  }
+    }
 
-  if(!VisualHandlers.hasOwnProperty("linkColor")){
-    VisualHandlers.linkColor = setColorScale()
+    if(!VisualHandlers.hasOwnProperty("linkColor")){
+      VisualHandlers.linkColor = setColorScale()
         .data(Graph.links)
         .item('link')
         .itemAttr("linkColor")
         .computeScale()
+    }
   }
 
   // compute link attributes
@@ -2389,9 +2378,9 @@ function drawNet(){
     });
 
     links.forEach(function(link) {
-      var valColor = options.linkColor?link[options.linkColor]:1,
+      var valColor = options.linkIntensity?link[options.linkIntensity]:1,
           loadMatrix = function(i,j){
-            matrix[i][j][options.linkColor] = valColor;
+            matrix[i][j][options.linkIntensity] = valColor;
             if(options.linkText)
               matrix[i][j].txt = link[options.linkText];
           }
@@ -2400,20 +2389,20 @@ function drawNet(){
         loadMatrix(link.target.index,link.source.index);
     });
 
-  if(options.nodeOrderA || options.nodeOrderD){
-    if(options.nodeOrderA)
-      options.nodeOrder = options.nodeOrderA;
-    else
-      options.nodeOrder = options.nodeOrderD;
+  if(options.nodeOrder){
     x.domain(d3.range(n).sort(function(a, b) {
           a = nodes[a][options.nodeOrder];
-          b = nodes[b][options.nodeOrder]
-          if(options.nodeOrderD)
-            b = [a, a = b][0];
+          b = nodes[b][options.nodeOrder];
+          if(options.decreasing){
+            var aux = a;
+            a = b;
+            b = aux;          
+          }
           return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;
         }));
-  }else
+  }else{
     x.domain(d3.range(n));
+  }
 
   svg.append("rect")
       .style("fill","#eee")
@@ -2447,8 +2436,11 @@ function drawNet(){
 
   if(options.nodeOrder){
     var clusters = nodes.map(function(d){ return d[options.nodeOrder]; }).sort(function(a, b) { 
-          if(options.nodeOrderD)
-            b = [a, a = b][0];
+          if(options.decreasing){
+            var aux = a;
+            a = b;
+            b = aux;
+          }
           return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;
         }),
         step = NaN,
@@ -2471,8 +2463,6 @@ function drawNet(){
                 x2 = d[1]*x.bandwidth() + x.bandwidth()/2;
             return "M"+x1+",-6L"+x1+",-12L"+x2+",-12L"+x2+",-6";
         })
-
-    delete options.nodeOrder;
   }
 
   function appendText(sel,row){
@@ -2503,14 +2493,14 @@ function drawNet(){
         });
         showTables();
       })
-      .on("dblclick", row || !options.linkColor ? function(){
+      .on("dblclick", row || !options.linkIntensity ? function(){
         d3.event.stopPropagation();
         switchEgoNet();
       } : function(d,i){
         d3.event.stopPropagation();
         var order = d3.transpose(matrix)[i].sort(function(a,b){
-              var aIntensity = a[options.linkColor]?a[options.linkColor]:0,
-                  bIntensity = b[options.linkColor]?b[options.linkColor]:0;
+              var aIntensity = a[options.linkIntensity]?a[options.linkIntensity]:0,
+                  bIntensity = b[options.linkIntensity]?b[options.linkIntensity]:0;
               if(bIntensity==aIntensity){
                 if(a.y==i) return -1;
                 if(b.y==i) return 1;
@@ -2554,20 +2544,20 @@ function drawNet(){
 
   function rowFunc(row) {
     d3.select(this).selectAll(".cell")
-        .data(row.filter(function(d) { return d[options.linkColor]; }))
+        .data(row.filter(function(d) { return d[options.linkIntensity]; }))
       .enter().append("rect")
         .attr("class", "cell")
         .attr("x", function(d) { return x(d.x); })
         .attr("width", x.bandwidth())
         .attr("height", x.bandwidth())
-        .style("fill", function(link) { return VisualHandlers.linkColor(link); })
+        .style("fill", function(link) { return VisualHandlers.linkIntensity(link); })
         .on("mouseover", mouseover)
         .on("mouseout", mouseout)
         .on("click",click)
         .on("dblclick",dblclick)
     if(options.linkText){
       d3.select(this).selectAll(".cellText")
-        .data(row.filter(function(d) { return d[options.linkColor]; }))
+        .data(row.filter(function(d) { return d[options.linkIntensity]; }))
       .enter().append("text")
         .attr("class", "cellText")
         .attr("x", function(d) { return x(d.x) + x.bandwidth()/2; })
@@ -2676,7 +2666,7 @@ function drawNet(){
 
     // display scale
     if(options.heatmap){
-      VisualHandlers.linkColor.displayScale();
+      VisualHandlers.linkIntensity.displayScale();
     }else{
       VisualHandlers.nodeColor.displayScale();
     }

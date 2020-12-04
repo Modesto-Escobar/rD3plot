@@ -1346,12 +1346,12 @@ div.topbar.gallery-topbar{
   position: relative;
 }
 div.gallery-content {
-  margin: 1em;
+  margin: 10px;
 }
 div.grid-gallery {
   position: relative;
   display: inline-block;
-  width: 66%;
+  width: 100%;
   height: 100%;
   overflow: auto;
 }
@@ -1382,11 +1382,18 @@ div.grid-gallery > .gallery-items > div > span:after {
   background:linear-gradient(to right, transparent 75%, white);
   pointer-events: none;
 }
+div.split-bar {
+  position: relative;
+  vertical-align: top;
+  display: inline-block;
+  width: 12px;
+  height: 100%;
+  cursor: ew-resize;
+}
 div.gallery-panel {
   position: relative;
   vertical-align: top;
   display: inline-block;
-  width: 33%;
   height: 100%;
   margin: 0;
 }
@@ -1413,11 +1420,14 @@ div.grid-gallery > .show-panel-button {
   top: 0;
   right: 0;
 }
-div.gallery-content.hide-panel > .gallery-panel {
-  display: none;
+div.grid-gallery > svg.zoom-svg {
+  position: absolute;
+  bottom: 0;
+  right: 0;
 }
-div.gallery-content.hide-panel > .grid-gallery {
-  width: 100%;
+div.gallery-content.hide-panel > .gallery-panel,
+div.gallery-content.hide-panel > .split-bar {
+  display: none;
 }
 div.gallery-content:not(.hide-panel) > .grid-gallery > .show-panel-button {
   display: none;

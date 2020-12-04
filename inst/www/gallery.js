@@ -87,6 +87,7 @@ function gallery(Graph){
   showPanelButton.append("span");
   showPanelButton.on("click",function(){
     content.classed("hide-panel",false);
+    panelSize();
   })
 
   gallery.on("click",function(){
@@ -94,49 +95,102 @@ function gallery(Graph){
     displayNodes();
   });
 
-  gallery.call(d3.zoom()
+  var zoom = d3.zoom()
       .filter(function(){ return d3.event.ctrlKey; })
       .scaleExtent(zoomRange)
-      .on("zoom", zoomed))
+      .on("zoom", function(){
+        currentGridHeight = gridHeight*d3.event.transform.k;
+        displayNodes();
+      })
 
-  gallery = gallery.append("div").attr("class","gallery-items");
+  gallery.call(zoom)
+
+  var galleryItems = gallery.append("div").attr("class","gallery-items");
 
   displayNodes();
 
+  content.append("div")
+      .attr("class","split-bar")
+      .call(d3.drag()
+        .on("drag",function(){
+          panelSize(d3.mouse(content.node())[0]);
+        }))
+
   var panel = content.append("div")
-        .attr("class","gallery-panel");
+        .attr("class","gallery-panel")
 
   panel.append("div")
     .attr("class","close-button")
     .on("click",function(){
       content.classed("hide-panel",true);
+      panelSize();
     });
 
   var panelContent = panel.append("div")
         .attr("class","panel-content")
         .append("div");
 
+  var zoomsvg = gallery.append("svg")
+    .attr("class","zoom-svg")
+    .attr("width",40)
+    .attr("height",100)
+
+  makeZoomIn(zoomsvg,100)
+    .on("click",function(){
+      gallery.call(zoom.scaleBy,2);
+    })
+  makeZoomReset(zoomsvg,65)
+    .on("click",function(){
+      gallery.call(zoom.transform,d3.zoomIdentity);
+    })
+  makeZoomOut(zoomsvg,30)
+    .on("click",function(){
+      gallery.call(zoom.scaleBy,0.5);
+    })
+
   if(options.note){
     var note = body.append("div")
       .attr("class","gallery-note")
       .html(options.note)
   }
-  
+
   if(options.help){
     panelContent.html(options.help);
   }else{
     content.classed("hide-panel",true);
   }
+  panelSize();
 
   content.style("height",(height - topBar.node().offsetHeight - 20 - (options.note ? note.node().offsetHeight : 0))+"px")
 
-  function zoomed() {
-      currentGridHeight = gridHeight*d3.event.transform.k;
-      displayNodes();
+  function panelSize(size){
+    var w = parseInt(content.style("width")) - 20,
+        pw = 0,
+        gw = 0;
+    if(typeof size == "number"){
+      gw = size - 6;
+      if(gw < 100){
+        return;
+      }
+      pw = w - gw - 12;
+      if(pw < 100){
+        return;
+      }
+    }else{
+      if(!content.classed("hide-panel")){
+        pw = parseInt(panel.style("width"));
+        if(pw<100){
+          pw = (w/3) - 6;
+        }
+        gw = w - pw - 6;
+      }
+    }
+    panel.style("width", pw ? pw + "px" : null);
+    gallery.style("width", gw ? gw + "px" : null);
   }
 
   function displayNodes(){
-    gallery.selectAll("div").remove();
+    galleryItems.selectAll("div").remove();
 
     var data = nodes.filter(filterNodes);
 
@@ -154,7 +208,7 @@ function gallery(Graph){
     }
 
     data.forEach(function(n){
-      var wrapper = gallery.append("div")
+      var wrapper = galleryItems.append("div")
         .classed("selected",n.selected)
       if(options.imageItems){
         wrapper.append("img")
@@ -196,21 +250,22 @@ function gallery(Graph){
           displayNodes();
           if(options.nodeInfo && n[options.nodeInfo]){
             content.classed("hide-panel",false);
+            panelSize();
             panelContent.html(n[options.nodeInfo]);
           }
       })
     })
   }
 
-function filterNodes(n){
+  function filterNodes(n){
       return !filter || filter.indexOf(n[options.nodeName])!=-1 ? true : false;
-}
+  }
 
-function topOrder(topBar,data,displayGraph){
+  function topOrder(topBar,data,displayGraph){
 
-  topBar.append("h3").text(texts.Order + ":")
+    topBar.append("h3").text(texts.Order + ":")
 
-  var selOrder = topBar.append("div")
+    var selOrder = topBar.append("div")
       .attr("class","select-wrapper")
     .append("select")
     .on("change",function(){
@@ -220,9 +275,9 @@ function topOrder(topBar,data,displayGraph){
       displayGraph();
     })
 
-  var opt = getOptions(data);
-  opt.unshift("-default-");
-  selOrder.selectAll("option")
+    var opt = getOptions(data);
+    opt.unshift("-default-");
+    selOrder.selectAll("option")
         .data(opt)
       .enter().append("option")
         .property("selected",function(d){
@@ -231,9 +286,9 @@ function topOrder(topBar,data,displayGraph){
         .property("value",function(d){ return d; })
         .text(function(d){ return d; })
 
-  topBar.append("h3")
+    topBar.append("h3")
     .text(texts.Reverse)
-  topBar.append("button")
+    topBar.append("button")
     .attr("class","switch-button")
     .classed("active",options.rev)
     .on("click",function(){
@@ -242,8 +297,8 @@ function topOrder(topBar,data,displayGraph){
       displayGraph();
     })
 
-  topBar.append("span").style("padding","0 10px")
-}
+    topBar.append("span").style("padding","0 10px")
+  }
 } // gallery function end
 
 if(typeof multiGraph == 'undefined'){
