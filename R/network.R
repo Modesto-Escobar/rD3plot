@@ -219,7 +219,7 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
     val <- NULL
     if(!is.null(column)){
       if(!(column=="" || identical(column,FALSE))){
-        if(column %in% union(colnames(nodes),"degree")){
+        if(column %in% union(colnames(nodes),c("degree","community"))){
           val <- column
         }else{
           warning(paste0(item,": '",column,"' is not in nodes data frame"))
