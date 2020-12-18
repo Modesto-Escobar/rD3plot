@@ -1,7 +1,7 @@
 Package: rD3plot
 Type: Package
-Version: 1.0.1
-Date: 2020-12-4
+Version: 1.0.2
+Date: 2020-12-18
 Title: Interactive Analytic Networks
 Description: Creates interactive analytic networks with R. It joins the data analysis power of R and the visualization libraries of JavaScript in one package.
 License: GPL-3 + file LICENSE
@@ -10,8 +10,8 @@ Imports: igraph (>= 1.0.1)
 Suggests: shiny
 NeedsCompilation: no
 Authors@R: c( 
-    person("Modesto", "Escobar", email = "modesto@usal.es", role = c("aut", "cph"), comment = c(ORCID = "0000-0003-2072-6071")), 
-    person("Carlos", "Prieto", email = "cprietos@usal.es", role = c("cre", "aut")),
+    person("Modesto", "Escobar", email = "modesto@usal.es", role = c("aut", "cph","cre"), comment = c(ORCID = "0000-0003-2072-6071")), 
+    person("Carlos", "Prieto", email = "cprietos@usal.es", role = c("aut")),
     person("David", "Barrios", email = "metal@usal.es", role = "aut")
     )
 Encoding: UTF-8

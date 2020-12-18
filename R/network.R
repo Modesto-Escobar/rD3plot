@@ -215,30 +215,11 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
   
   # graph options
 
-  checkNodeColumn <- function(opt,item,column,nodes){
+  checkColumn <- function(opt,item,column){
     val <- NULL
     if(!is.null(column)){
       if(!(column=="" || identical(column,FALSE))){
-        if(column %in% union(colnames(nodes),c("degree","community"))){
           val <- column
-        }else{
-          warning(paste0(item,": '",column,"' is not in nodes data frame"))
-        }
-      }
-    }
-    opt[[item]] <- val
-    return(opt)
-  }
-
-  checkLinkColumn <- function(opt,item,column,links){
-    val <- NULL
-    if(!is.null(column)){
-      if(!(column=="" || identical(column,FALSE))){
-        if(column %in% colnames(links)){
-          val <- column
-        }else{
-          warning(paste0(item,": '",column,"' is not in links data frame"))
-        }
       }
     }
     opt[[item]] <- val
@@ -324,17 +305,17 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
   if(is.null(label)){
     options[["nodeLabel"]] <- name
   }else{
-    options <- checkNodeColumn(options,"nodeLabel",label,nodes)
+    options <- checkColumn(options,"nodeLabel",label)
   }
-  options <- checkNodeColumn(options,"nodeLabelSize",labelSize,nodes)
-  options <- checkNodeColumn(options,"nodeGroup",group,nodes)
-  options <- checkNodeColumn(options,"nodeSize",size,nodes)
-  options <- checkNodeColumn(options,"nodeColor",color,nodes)
-  options <- checkNodeColumn(options,"nodeShape",shape,nodes)
-  options <- checkNodeColumn(options,"nodeLegend",legend,nodes)
-  options <- checkNodeColumn(options,"nodeText",ntext,nodes)
-  options <- checkNodeColumn(options,"nodeInfo",info,nodes)
-  options <- checkNodeColumn(options,"nodeOrder",sort,nodes)
+  options <- checkColumn(options,"nodeLabelSize",labelSize)
+  options <- checkColumn(options,"nodeGroup",group)
+  options <- checkColumn(options,"nodeSize",size)
+  options <- checkColumn(options,"nodeColor",color)
+  options <- checkColumn(options,"nodeShape",shape)
+  options <- checkColumn(options,"nodeLegend",legend)
+  options <- checkColumn(options,"nodeText",ntext)
+  options <- checkColumn(options,"nodeInfo",info)
+  options <- checkColumn(options,"nodeOrder",sort)
   options <- showSomething(options,"decreasing",decreasing)
 
   if (!is.null(image)){
@@ -352,11 +333,11 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
   }
 
   # link options
-  options <- checkLinkColumn(options,"linkWidth",lwidth,links)
-  options <- checkLinkColumn(options,"linkWeight",lweight,links)
-  options <- checkLinkColumn(options,"linkColor",lcolor,links)
-  options <- checkLinkColumn(options,"linkText",ltext,links)
-  options <- checkLinkColumn(options,"linkIntensity",intensity,links)
+  options <- checkColumn(options,"linkWidth",lwidth)
+  options <- checkColumn(options,"linkWeight",lweight)
+  options <- checkColumn(options,"linkColor",lcolor)
+  options <- checkColumn(options,"linkText",ltext)
+  options <- checkColumn(options,"linkIntensity",intensity)
 
   # filters
   if(!is.null(nodeFilter) || !is.null(linkFilter) || !is.null(degreeFilter)){
