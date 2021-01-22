@@ -38,6 +38,7 @@ var texts = {
     directional: "Flechas",
     degree: "grado",
     none: "Nada",
+    default: "Por defecto",
     downloadtable: "Descargar tabla",
     total: "Total",
     concoincidences: "Coincidencias condicionales",

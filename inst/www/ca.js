@@ -39,6 +39,7 @@ var texts = {
     directional: "Fletxes",
     degree: "Grau",
     none: "Cap",
+    default: "Per defecte",
     downloadtable: "Descarrega la taula",
     total: "Total",
     concoincidences: "Coincidències condicionals",

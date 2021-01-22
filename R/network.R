@@ -215,14 +215,72 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
   
   # graph options
 
-  checkColumn <- function(opt,item,column){
+  checkColumn <- function(opt,item,variable){
     val <- NULL
-    if(!is.null(column)){
-      if(!(column=="" || identical(column,FALSE))){
-          val <- column
+    if(!is.null(variable)){
+      if(!(variable=="" || identical(variable,FALSE))){
+          val <- variable
       }
     }
     opt[[item]] <- val
+    return(opt)
+  }
+
+  checkNodeVariable <- function(opt,item,varName,isItem,autoItems,sanitize){
+    prepareVar <- function(var){
+          if(is.numeric(var) || is.factor(var)){
+            var <- autoItems(var)
+          }else if(is.character(var) && isItem(var)){
+            var <- sanitize(var)
+          }else{
+            var <- NULL
+            warning(paste0(varName,": this variable cannot be a ",varName))
+          }
+          return(var)
+    }
+    variable <- get0(varName)
+    if(is.null(variable)){
+      opt[[item]] <- NULL
+    }else if(is.matrix(variable) || is.data.frame(variable)){
+      if(nrow(variable)==nrow(nodes)){
+        for(k in colnames(variable)){
+          var <- prepareVar(variable[[k]])
+          if(!is.null(var)){
+            if(k %in% colnames(nodes)){
+              itemlegend <- as.character(nodes[[k]])
+            }else{
+              itemlegend <- as.character(variable[[k]])
+            }
+            nodes[[k]] <<- itemlegend
+            nodes[[paste0("_",varName,"_",k)]] <<- var
+          }
+        }
+        opt[[item]] <- colnames(variable)[1]
+      }else{
+        warning(paste0(varName,": variable number of rows doesn't match with nodes"))
+      }
+    }else if(length(variable)>1 || (isItem(variable) && !(variable %in% colnames(nodes)))){
+        if(length(variable)==1){
+          variable <- rep(variable,nrow(nodes))
+        }
+        if(length(variable)==nrow(nodes)){
+          if(!is.null(names(variable))){
+            itemlegend <- names(variable)
+          }else{
+            itemlegend <- as.character(variable)
+          }
+          variable <- prepareVar(variable)
+          if(!is.null(variable)){
+            nodes[[paste0("-",varName,"-")]] <<- itemlegend
+            nodes[[paste0("_",varName,"_-",varName,"-")]] <<- variable
+            opt[[item]] <- paste0("-",varName,"-")
+          }
+        }else{
+          warning(paste0(varName,": variable length doesn't match with nodes' number of rows"))
+        }
+    }else{
+      opt <- checkColumn(opt,item,variable)
+    }
     return(opt)
   }
 
@@ -277,7 +335,16 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
   if (!is.null(main)) options[["main"]] <- main
   if (!is.null(note)) options[["note"]] <- note
   if (!is.null(help)) options[["help"]] <- help
-  if (!is.null(background)) options[["background"]] <- background
+  if (!is.null(background)){
+    if(isColor(background) || file.exists(background)){
+      if(isColor(background)){
+        background <- col2hex(background)
+      }
+      options[["background"]] <- background
+    }else{
+      warning("background: must be a valid color or image file")
+    }
+  }
   
   options[["language"]] <- checkLanguage(language)
 
@@ -289,9 +356,15 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
   options <- showSomething(options,"linkBipolar",linkBipolar)
   options <- showSomething(options,"helpOn",helpOn)
   options <- showSomething(options,"frequencies",frequencies)
-  options[["defaultColor"]] <- defaultColor
-  options[["controls"]] <- as.numeric(controls)
-  options[["mode"]] <- tolower(substr(as.character(mode),1,1))
+  if(!is.null(defaultColor)){
+    if(isColor(defaultColor)){
+      options[["defaultColor"]] <- col2hex(defaultColor)
+    }else{
+      warning("defaultColor: you must pass a valid color")
+    }
+  }
+  if (!is.null(controls)) options[["controls"]] <- as.numeric(controls)
+  if (!is.null(mode)) options[["mode"]] <- tolower(substr(as.character(mode),1,1))
   if (!is.null(axesLabels)) options[["axesLabels"]] <- as.character(axesLabels)
 
   options <- showSomething(options,"fixed",fixed)
@@ -310,8 +383,8 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
   options <- checkColumn(options,"nodeLabelSize",labelSize)
   options <- checkColumn(options,"nodeGroup",group)
   options <- checkColumn(options,"nodeSize",size)
-  options <- checkColumn(options,"nodeColor",color)
-  options <- checkColumn(options,"nodeShape",shape)
+  options <- checkNodeVariable(options,"nodeColor","color",isColor,categoryColors,col2hex)
+  options <- checkNodeVariable(options,"nodeShape","shape",isShape,getShapes,capitalize)
   options <- checkColumn(options,"nodeLegend",legend)
   options <- checkColumn(options,"nodeText",ntext)
   options <- checkColumn(options,"nodeInfo",info)

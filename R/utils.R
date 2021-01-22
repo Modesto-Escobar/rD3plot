@@ -77,13 +77,17 @@ getLanguageScript <- function(obj){
 toJSON <- function(x){
 
   prepare_number <- function(x){
+    if(!length(x)){
+      return("null")
+    }
     mod <- suppressWarnings(x%%1)
     if(is.nan(mod)){
       warning("Non-finite values not supported")
       return("null")
     }
-    if(mod!=0)
+    if(mod!=0){
       x <- signif(x,4)
+    }
     return(toString(x))
   }
 
@@ -196,41 +200,100 @@ tempDir <- function(){
   return(paste("temp",round(as.numeric(Sys.time())),sep="/"))
 }
 
+capitalize <- function(word){
+  return(paste0(toupper(substr(word,1,1)),tolower(substr(word,2,nchar(word)))))
+}
+
+symbolTypes <- function(){
+  return(c(
+    "Circle",
+    "Square",
+    "Diamond",
+    "Triangle",
+    "Cross",
+    "Star",
+    "Wye"
+  ))
+}
+
+isShape <- function(shape){
+  shape <- capitalize(shape)
+  shapes1 <- symbolTypes()
+  comp <- sapply(shape,function(x){ return(x %in% shapes1) })
+  if(all(comp)){
+    return(TRUE)
+  }
+  return(FALSE)
+}
+
+getShapes <- function(items){
+  shapes1 <- symbolTypes()
+  if(!is.numeric(items)){
+    items <- as.numeric(as.factor(items))
+  }
+  items <- ((items-1) %% length(shapes1))+1
+  return(shapes1[items])
+}
+
+isColor <- function(color){
+  if(!length(color)){
+    return(FALSE)
+  }
+  return(tryCatch({
+    col2rgb(color)
+    return(TRUE)
+  }, error=function(cond){
+    return(FALSE)
+  }))
+}
+
+col2hex <- function(color){
+  return(apply(col2rgb(color),2,function(x){
+    tolower(rgb(x[1],x[2],x[3],maxColorValue=255))
+  }))
+}
+
 rescale <- function(x) {
   to <- c(0, 1)
   from <- range(x, na.rm = TRUE, finite = TRUE)
   return((x - from[1]) / diff(from) * diff(to) + to[1])
 }
 
+categoryColors <- function(items){
+    colors1 <- c(
+  "#1f77b4", # blue
+  "#ff7f0e", # orange
+  "#2ca02c", # green
+  "#e377c2", # pink
+  "#d62728", # red
+  "#bcbd22", # lime
+  "#9467bd", # purple
+  "#8c564b", # brown
+  "#7f7f7f", # grey
+  "#17becf", # cyan
+  "#aec7e8", # light blue
+  "#ffbb78", # light orange
+  "#98df8a", # light green
+  "#f7b6d2", # light pink
+  "#ff9896", # light red
+  "#dbdb8d", # light lime
+  "#c5b0d5", # light purple
+  "#c49c94", # light brown
+  "#c7c7c7", # light grey
+  "#9edae5" # light cyan
+    )
+    if(!is.numeric(items)){
+      items <- as.numeric(as.factor(items))
+    }
+    items <- ((items-1) %% length(colors1))+1
+    return(colors1[items])
+}
+
 toColorScale <- function(items){
   if(is.numeric(items)){
     return(hsv(1,1,rescale(items)))
   }else{
-    colors <- c(
-  "#1f77b4", # blue
-  "#2ca02c", # green
-  "#d62728", # red
-  "#9467bd", # purple
-  "#ff7f0e", # orange
-  "#8c564b", # brown
-  "#e377c2", # pink
-  "#7f7f7f", # grey
-  "#bcbd22", # lime
-  "#17becf", # cyan
-  "#aec7e8", # light blue
-  "#98df8a", # light green
-  "#ff9896", # light red
-  "#c5b0d5", # light purple
-  "#ffbb78", # light orange
-  "#c49c94", # light brown
-  "#f7b6d2", # light pink
-  "#c7c7c7", # light grey
-  "#dbdb8d", # light lime
-  "#9edae5" # light cyan
-     )
-    items <- as.numeric(as.factor(items))
-        items <- ((items-1) %% length(colors))+1
-    return(colors[items])
+    return(categoryColors(items))
   }
 }
 

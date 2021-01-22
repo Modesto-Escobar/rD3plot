@@ -38,6 +38,7 @@ var texts = {
     directional: "Arrows",
     degree: "degree",
     none: "none",
+    default: "default",
     downloadtable: "Download table",
     total: "Total",
     concoincidences: "Conditional coincidences",

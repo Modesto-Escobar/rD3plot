@@ -21,10 +21,13 @@ function network(Graph){
 
   var defaultColor = categoryColors[0], // nodes and areas default color
       defaultLinkColor = "#999999", // links default color
+      black = "#000000", // black
+      darkGrey = "#777777", // dark grey
+      mediumGrey = "#c6c6c6", // medium grey
+      lightGrey = "#f5f5f5", // light grey
+      white = "#ffffff", // white
       defaultShape = "Circle", // node shape by default
       symbolTypes = ["Circle","Square","Diamond","Triangle","Cross","Star","Wye"], // list of available shapes
-      darkGrey = "#777777", // dark grey
-      lightGrey = "#f5f5f5", // light grey
       nodeSizeRange = [0.5,4], // node size range
       nodeLabelSizeRange = [8,20], // node label size range
       linkWeightRange = [200,40], // link weight range (link distance)
@@ -89,15 +92,24 @@ function network(Graph){
       .attr("class", "legend-panel")
       .style("width", (sidebarWidth) + "px")
 
-  if(typeof options.showTables != "undefined"){
+  if(typeof options.showNodes != "undefined" || typeof options.showLinks != "undefined"){
     panel.append("div")
       .attr("class","showHideTable")
-      .classed("showing",options.showTables)
+      .classed("showing",options.showNodes || options.showLinks)
       .on("click",function(){
         if(d3.select(this).classed("showing")){
-          options.showTables = false;
+          if(typeof options.showNodes != "undefined"){
+            options.showNodes = false;
+          }
+          if(typeof options.showLinks != "undefined"){
+            options.showLinks = false;
+          }
         }else{
-          options.showTables = true;
+          if(typeof options.showNodes != "undefined"){
+            options.showNodes = true;
+          }else{
+            options.showLinks = true;
+          }
         }
         displayBottomPanel();
       })
@@ -172,15 +184,27 @@ function network(Graph){
           }
           return;
         case "3":
-          if(typeof options.showTables != "undefined"){
-            options.showTables = !options.showTables;
-            displayBottomPanel();
-          }
-          return;
-        case "4":
           if(typeof options.showExport != "undefined"){
             options.showExport = !options.showExport;
             displayMain();
+          }
+          return;
+        case "4":
+          if(typeof options.showNodes != "undefined"){
+            options.showNodes = !options.showNodes;
+            if(options.showNodes && options.showLinks){
+              options.showLinks = false;
+            }
+            displayBottomPanel();
+          }
+          return;
+        case "5":
+          if(typeof options.showLinks != "undefined"){
+            options.showLinks = !options.showLinks;
+            if(options.showNodes && options.showLinks){
+              options.showNodes = false;
+            }
+            displayBottomPanel();
           }
           return;
         case "a":
@@ -250,7 +274,7 @@ function network(Graph){
           showHidden();
           return;
         case "s":
-          selectAllNodes();
+          selectAllItems();
           return;
         case "t": // warning: new tab
           return;
@@ -262,8 +286,11 @@ function network(Graph){
             if(options.showButtons2){
               options.showButtons2 = false;
             }
-            if(options.showTables){
-              options.showTables = false;
+            if(options.showNodes){
+              options.showNodes = false;
+            }
+            if(options.showLinks){
+              options.showLinks = false;
             }
             if(options.showSidebar){
               options.showSidebar = false;
@@ -388,6 +415,9 @@ function network(Graph){
       var node = {};
       Graph.nodenames.forEach(function(d,j){
         node[d] = Graph.nodes[j][i];
+        if(d.substr(0,1)=="_"){
+          hiddenFields.push(d);
+        }
       })
       node.degree = 0;
       splitMultiVariable(node);
@@ -461,38 +491,34 @@ function network(Graph){
 
     if(options.nodeBipolar){
       switch(defaultColor) {
-        case "black":
-        case "#000":
-        case "#000000":
+        case black:
           options.colorScalenodeColor = "RdWhBk";
           break;
-        case "#2ca02c":
+        case categoryColors[2]: // green
           options.colorScalenodeColor = "RdWhGn";
           break;
         default:
-          colorScales['custom1'] = ["#d62728","#ffffff",defaultColor];
-          colorScales['custom2'] = [defaultColor,"#ffffff","#d62728"];
+          colorScales['custom1'] = [categoryColors[4],white,defaultColor];
+          colorScales['custom2'] = [defaultColor,white,categoryColors[4]];
           options.colorScalenodeColor = "custom1";
       }
     }else{
       switch(defaultColor) {
-        case "black":
-        case "#000":
-        case "#000000":
+        case black:
           options.colorScalenodeColor = "WhBk";
           break;
-        case "#1f77b4":
+        case categoryColors[1]: // blue
           options.colorScalenodeColor = "WhBu";
           break;
-        case "#2ca02c":
+        case categoryColors[2]: // green
           options.colorScalenodeColor = "WhGn";
           break;
-        case "#d62728":
+        case categoryColors[4]: // red
           options.colorScalenodeColor = "WhRd";
           break;
         default:
-          colorScales['custom1'] = [defaultColor,,"#ffffff"];
-          colorScales['custom2'] = ["#ffffff",defaultColor];
+          colorScales['custom1'] = [defaultColor,white];
+          colorScales['custom2'] = [white,defaultColor];
           options.colorScalenodeColor = "custom2";
       }
     }
@@ -539,8 +565,16 @@ function network(Graph){
 
     options.showSidebar = showControls(1);
     options.showButtons2 = showControls(2);
-    options.showTables = showControls(3);
-    options.showExport = showControls(4);
+    options.showExport = showControls(3);
+    options.showNodes = showControls(4);
+    options.showLinks = showControls(5);
+
+    if(!GraphLinksLength){
+      options.showLinks = undefined;
+    }
+    if(options.showLinks && options.showNodes){
+      options.showLinks = false;
+    }
 
     if(Array.isArray(options.axesLabels)){
       if(options.axesLabels.length>4)
@@ -646,7 +680,7 @@ function displayMain(){
         .width(24)
         .height(24)
         .src(b64Icons.help)
-        .title(texts.showHelp+" (ctrl+h)")
+        .title(texts.showHelp+" (ctrl + h)")
         .job(function(){ displayInfoPanel(options.help); }));
     }
     if(options.showExport){
@@ -698,7 +732,7 @@ function displayPanelButtons(){
   if(options.showButtons2){
     var buttonsSelect = panel.append("div")
         .attr("class","panel-buttons");
-    displayButton(buttonsSelect,"selectall",selectAllNodes,"ctrl + s",true,"primary");
+    displayButton(buttonsSelect,"selectall",selectAllItems,"ctrl + s",true,"primary");
     displayButton(buttonsSelect,"selectneighbors",addNeighbors,"ctrl + b",false,"primary");
     displayButton(buttonsSelect,"filter",switchEgoNet,texts.filterInfo+" (ctrl + e)",false,"primary");
     displayButton(buttonsSelect,"isolate",filterSelection,texts.isolateInfo+" (ctrl + f)",false,"primary");
@@ -724,7 +758,7 @@ function displayBottomPanel(){
     drawSVG();
   }
 
-  if(options.showTables){
+  if(options.showNodes || options.showLinks){
 
     // panel dragbar
     var dragbar = body.append("div")
@@ -756,25 +790,38 @@ function displayBottomPanel(){
     var tables = body.append("div")
       .attr("class", "tables")
 
+    var items = [];
+    if(typeof options.showNodes != "undefined"){
+      items.push("nodes")
+    }
+    if(typeof options.showLinks != "undefined"){
+      items.push("links")
+    }
+
     tables.style("min-height","150px");
     panel.append("div")
       .attr("class","switchNodeLink")
       .selectAll("div")
-        .data(GraphLinksLength ? ["nodes","links"] : ["nodes"])
+        .data(items)
         .enter().append("div")
+          .classed("active",function(d){
+            return (d=="nodes" && options.showNodes) || (d=="links" && options.showLinks);
+          })
           .on("click",function(d){
-              panel.selectAll("div.switchNodeLink > div")
-                .classed("active",false)
-              d3.select(this)
-                .classed("active",true)
-              tables.selectAll("div.nodes, div.links").style("display","none");
-              tables.select(".tables > div."+d).style("display",null);
-              tables.select("div.table-title."+d).style("display",null);
+            if(items.length==2){
+              if(d=="nodes"){
+                options.showNodes = true;
+                options.showLinks = false;
+              }
+              if(d=="links"){
+                options.showLinks = true;
+                options.showNodes = false;
+              }
+              displayBottomPanel();
+            }
           })
           .append("h3")
             .text(function(d){ return texts[d]; })
-    panel.select("div.switchNodeLink > div")
-      .classed("active",true)
 
     if(options.scenarios){
       tables.append("h3").text(texts.scenarios + ": " + options.scenarios);
@@ -784,9 +831,7 @@ function displayBottomPanel(){
       .attr("class","table-header")
 
     tableHeader.append("div")
-      .attr("class","table-title nodes")
-    tableHeader.append("div")
-      .attr("class","table-title links").style("display","none");
+      .attr("class","table-title " + (options.showNodes ? "nodes" : "links"));
     tableHeader.call(iconButton()
         .alt("xlsx")
         .width(14)
@@ -822,8 +867,7 @@ function displayBottomPanel(){
 
     displayButton(tableHeader,"tableselection",selectNodesFromTable,"ctrl + o",false,"primary");
 
-    tables.append("div").attr("class","nodes");
-    tables.append("div").attr("class","links").style("display","none");
+    tables.append("div").attr("class",options.showNodes ? "nodes" : "links");
     showTables();
   }
 
@@ -832,7 +876,7 @@ function displayBottomPanel(){
   }
 
   if(!panel.select(".showHideTable").empty()){
-    panel.select(".showHideTable").classed("showing",options.showTables);
+    panel.select(".showHideTable").classed("showing",options.showNodes || options.showLinks);
   }
 
   height = computeHeight();
@@ -1289,11 +1333,7 @@ showTables();
       frameButons.append("button") // pause
       .attr("class","pause")
       .call(getSVG().d(d4paths.pause))
-      .on("click",function(){
-        frameControls.play = false;
-        clearInterval(frameControls.frameInterval);
-        clickFrameCtrlBtn();
-      })
+      .on("click",pauseFrames)
       frameButons.append("button") // play
       .attr("class","play")
       .call(getSVG().d(d4paths.play))
@@ -1348,8 +1388,8 @@ function addVisualController(){
             }
           }
           return false;
-        });
-      attributes.unshift("-"+texts.none+"-");
+        }).map(function(d){ return [d,d]; });
+      attributes.unshift(["_none_","-"+texts.none+"-"]);
 
       d3.select(this).append("div")
         .attr("class","select-wrapper")
@@ -1385,13 +1425,13 @@ function addVisualController(){
         .data(attributes)
       .enter().append("option")
         .property("selected",function(d){
-          if(options[item+visual]==d)
+          if(options[item+visual]==d[0])
             return true;
           else
             return null;
         })
-        .property("value",String)
-        .text(String)
+        .property("value",function(d){ return d[0]; })
+        .text(function(d){ return d[1]; })
     })
 
     sel.append("div").attr("class","clear")
@@ -1415,7 +1455,7 @@ function addVisualController(){
 } // end of Visual Controller
 
 function applyAuto(key, attr){
-    if(attr=="-"+texts.none+"-"){
+    if(attr=="_none_"){
       delete options[key];
     }else{
       options[key] = attr;
@@ -1490,7 +1530,7 @@ function addFilterController(){
         .text(texts.filter)
         .on("click",function(){
           applyValueSelection();
-          filterSelection();
+          filterLinkSelection();
         })
     }
 
@@ -1527,16 +1567,19 @@ function addFilterController(){
           .domain(extent)
           .current([mid,mid])
           .callback(function(s){
-            Graph.nodes.forEach(function(d){
-              delete d.selected;
-              if(items=="nodes" && checkSelectable(d) && (d[val]>=s[0] && d[val]<=s[1])){
-                d.selected = true;
-              }
-            });
+            if(items=="nodes"){
+              Graph.nodes.forEach(function(d){
+                delete d.selected;
+                if(checkSelectable(d) && (d[val]>=s[0] && d[val]<=s[1])){
+                  d.selected = true;
+                }
+              });
+            }
             if(items=="links"){
-              tmpData.forEach(function(d){
-                if(d[val]>=s[0] && d[val]<=s[1]){
-                  d.source.selected = d.target.selected = true;
+              Graph.links.forEach(function(d){
+                delete d.selected;
+                if(checkSelectableLink(d) && d[val]>=s[0] && d[val]<=s[1]){
+                  d.selected = true;
                 }
               });
             }
@@ -1559,24 +1602,27 @@ function addFilterController(){
               .each(function(){
                 values.push(this.value);
               })
-            Graph.nodes.forEach(function(d){
-              delete d.selected;
-              if(items=="nodes" && checkSelectable(d)){
-                if(typeof d[val] == "object"){
-                  if(intersection(values,d[val]).length){
-                    d.selected = true;
-                  }
-                }else{
-                  if(values.indexOf(String(d[val]))!=-1){
-                    d.selected = true;
+            if(items=="nodes"){
+              Graph.nodes.forEach(function(d){
+                delete d.selected;
+                if(checkSelectable(d)){
+                  if(typeof d[val] == "object"){
+                    if(intersection(values,d[val]).length){
+                      d.selected = true;
+                    }
+                  }else{
+                    if(values.indexOf(String(d[val]))!=-1){
+                      d.selected = true;
+                    }
                   }
                 }
-              }
-            });
+              });
+            }
             if(items=="links"){
-              tmpData.forEach(function(d){
-                if(values.indexOf(String(d[val]))!=-1){
-                  d.source.selected = d.target.selected = true;
+              Graph.links.forEach(function(d){
+                delete d.selected;
+                if(checkSelectableLink(d) && values.indexOf(String(d[val]))!=-1){
+                  d.selected = true;
                 }
               });
             }
@@ -1603,7 +1649,7 @@ function addFilterController(){
                   }
                 }
               }else{
-                if(!(tmpData[i].source.selected && tmpData[i].target.selected) && String(tmpData[i][val])==d){
+                if(!tmpData[i].selected && String(tmpData[i][val])==d){
                   this.selected = false;
                 }
               }
@@ -1817,6 +1863,7 @@ function drawSVG(){
             Graph.nodes.forEach(function(node) {
               node.selected = checkSelectable(node) && (node.selected ^ (extent[0][0] <= node.x && node.x < extent[1][0] && extent[0][1] <= node.y && node.y < extent[1][1]));
             });
+            autoSelectLinks();
           }
           showTables();
           brushg.selectAll('.selection').style("display","none");
@@ -2032,10 +2079,10 @@ function drawSVG(){
         .attr("height",16)
         .attr("rx",2)
         .style("stroke",darkGrey)
-        .style("fill","#fff")
+        .style("fill",white)
       bubble.append("text")
         .attr("text-anchor","start")
-        .attr("fill","#000000")
+        .attr("fill",black)
 
       brush.on("brush", brushed)
            .on("start",function(){
@@ -2185,6 +2232,12 @@ function clickFrameCtrlBtn(){
         }
 }
 
+function pauseFrames(){
+        frameControls.play = false;
+        clearInterval(frameControls.frameInterval);
+        clickFrameCtrlBtn();
+}
+
 function frameStep(value){
         frameControls.frame = value;
 
@@ -2237,8 +2290,9 @@ function frameStep(value){
           }
         }
 
-        if(frameControls.frame==frameControls.frames.length-1 && !frameControls.loop)
-          d3.select(".divFrameCtrl .pause").dispatch("click");
+        if(frameControls.frame==frameControls.frames.length-1 && !frameControls.loop){
+          pauseFrames();
+        }
 }
 
 function drawNet(){  
@@ -2377,7 +2431,8 @@ function drawNet(){
       matrix[i] = d3.range(n).map(function(j) { return {x: j, y: i}; });
     });
 
-    links.forEach(function(link) {
+    links.forEach(function(link, i) {
+      link.index = i;
       var valColor = options.linkIntensity?link[options.linkIntensity]:1,
           loadMatrix = function(i,j){
             matrix[i][j][options.linkIntensity] = valColor;
@@ -2405,7 +2460,7 @@ function drawNet(){
   }
 
   svg.append("rect")
-      .style("fill","#eee")
+      .style("fill","#eeeeee")
       .attr("width", side)
       .attr("height", side);
 
@@ -2418,7 +2473,7 @@ function drawNet(){
 
   row.append("line")
       .attr("x2", side)
-    .style("stroke","#fff");
+    .style("stroke",white);
 
   appendText(row,true);
       
@@ -2430,7 +2485,7 @@ function drawNet(){
 
   column.append("line")
       .attr("x1", -side)
-    .style("stroke","#fff");
+    .style("stroke",white);
 
   appendText(column,false);
 
@@ -2565,7 +2620,7 @@ function drawNet(){
         .attr("dy", ".32em")
         .attr("text-anchor", "middle")
         .style("font-weight", "bold")
-        .style("fill", "#ffffff")
+        .style("fill", function(link){ return d3.hsl(VisualHandlers.linkIntensity(link)).l > 0.75 ? black : white; })
         .style("font-size", x.bandwidth()*2/5 + "px")
         .on("mouseover", mouseover)
         .text(function(d){
@@ -2673,8 +2728,8 @@ function drawNet(){
 
     // display legends
     var legendLegend = options.nodeLegend ? true : false,
-        legendColor = !options.imageItem && (options.nodeColor && dataType(nodes,options.nodeColor)!='number'),
-        legendShape = !options.imageItem && options.nodeShape,
+        legendColor = options.nodeColor && dataType(nodes,options.nodeColor)!='number',
+        legendShape = options.nodeShape,
         legendImage = (!options.heatmap && options.imageItem) && (options.imageItems && options.imageNames);
 
     Legends = {};
@@ -2689,7 +2744,8 @@ function drawNet(){
       Legends.legend = displayLegend()
       .type("Legend")
       .key(options.nodeLegend)
-      .data(data.sort(sortAsc));
+      .data(data.sort(sortAsc))
+      .text(stripTags);
     }
 
     if(legendColor){
@@ -2698,6 +2754,8 @@ function drawNet(){
         .type("Color")
         .key(options.nodeColor)
         .data(data.sort(sortAsc))
+        .title(options.nodeColor)
+        .text(stripTags)
         .color(VisualHandlers.nodeColor.getScale());
     }
 
@@ -2707,6 +2765,8 @@ function drawNet(){
         .type("Shape")
         .key(options.nodeShape)
         .data(data.sort(sortAsc))
+        .title(options.nodeShape)
+        .text(stripTags)
         .shape(VisualHandlers.nodeShape.getScale())
     }
 
@@ -2811,14 +2871,14 @@ function drawNet(){
     ctx.clearRect(0, 0, width, height);
 
     if(frameControls.recorder){
-      ctx.fillStyle = options.background ? options.background : "#ffffff";
+      ctx.fillStyle = options.background ? options.background : white;
       ctx.fillRect(0, 0, width, height);
       var text = frameControls.frames[frameControls.frame];
       if(options.main && Array.isArray(options.main))
         text = options.main[frameControls.frame];
       ctx.font = 10*options.cex+"px "+fontFamily;
       ctx.textAlign = "right";
-      ctx.fillStyle = "#000000";
+      ctx.fillStyle = black;
       ctx.fillText(text,width-10,height-10);
     }
 
@@ -2850,7 +2910,7 @@ function drawNet(){
         return;
       ctx.beginPath();
       ctx.lineWidth = getLinkWidth(link);
-      ctx.strokeStyle = link._selected? "#F00" : VisualHandlers.linkColor(link);
+      ctx.strokeStyle = link._selected? "#F00" : (link.selected ? "#FF0" : VisualHandlers.linkColor(link));
       ctx.moveTo(points[0][0], points[0][1]);
       if(link.linkNum)
         ctx.quadraticCurveTo(points[2][0], points[2][1], points[1][0], points[1][1]);
@@ -2917,7 +2977,7 @@ function drawNet(){
           if(options.nodeColor){
             strokeStyle = VisualHandlers.nodeColor(node);
           }else{
-            strokeStyle = "#777777";
+            strokeStyle = darkGrey;
           }
           ctx.strokeStyle = strokeStyle;
           ctx.lineWidth = 2;
@@ -2949,7 +3009,7 @@ function drawNet(){
     // write labels
     if(options.nodeLabel){
       ctx.textAlign = "left";
-      ctx.fillStyle = "#000000";
+      ctx.fillStyle = black;
       ctx.beginPath();
       ctx.font = 10*options.cex+"px "+fontFamily;
       nodes.forEach(function(node) {
@@ -3144,7 +3204,7 @@ function drawNet(){
 
       if(options.nodeLabel){
         doc.setFontSize(10*options.cex*scale);
-        doc.setTextColor("#000000");
+        doc.setTextColor(black);
         nodes.forEach(function(node){
           var x = ((node.x + node.nodeSize + 8)*scale)+translate[0],
               y = ((node.y + 4)*scale)+translate[1],
@@ -3155,7 +3215,7 @@ function drawNet(){
       }
     }
 
-    doc.setTextColor("#000000");
+    doc.setTextColor(black);
 
     d3.selectAll("div.main span.title").each(function(){
       doc.setFontSize(parseInt(d3.select(this).style("font-size")));
@@ -3296,9 +3356,13 @@ function clickNet(){
   if(node){
     if(d3.event.ctrlKey || d3.event.metaKey){
       node.selected = !node.selected;
+      autoSelectLinks();
     }else{
       Graph.nodes.forEach(function(n){
         n.selected = false;
+      });
+      Graph.links.forEach(function(l){
+        l.selected = false;
       });
       node.selected = true;
     }
@@ -3314,6 +3378,9 @@ function clickNet(){
     }else{
       Graph.nodes.forEach(function(n){
         n.selected = false;
+      });
+      Graph.links.forEach(function(l){
+        l.selected = false;
       });
     }
   }
@@ -3595,6 +3662,13 @@ function setSomeSale(callback){
     exports: callback
   }
 
+  config.rangeFromColumn = function(domain,range){
+    var aux = d3.map(config.data,function(d){ return d[domain]+"|"+d[range]; })
+      .keys()
+      .map(function(d){ return d.split("|"); });
+    return {domain: aux.map(function(d){ return d[0]; }), range: aux.map(function(d){ return d[1]; })};
+  }
+
   config.exports.getScale = function(){
     return config.scale;
   }
@@ -3651,11 +3725,18 @@ function setShapeScale(){
 
   config.exports.computeScale = function(){
     if(options[config.itemAttr]){
-      var domain = d3.map(config.data, function(d) { return d[options[config.itemAttr]]; }).keys(),
-          range = [];
-      domain.forEach(function(d,i){
-        range[i] = symbolTypes[i%symbolTypes.length];
-      })
+      var domain, range;
+      if(Graph.nodenames.indexOf("_shape_"+options[config.itemAttr])!=-1){
+        var aux = config.rangeFromColumn(options[config.itemAttr],"_shape_"+options[config.itemAttr]);
+        domain = aux.domain;
+        range = aux.range;
+      }else{
+        domain = d3.map(config.data, function(d) { return d[options[config.itemAttr]]; }).keys();
+        range = [];
+        domain.forEach(function(d,i){
+          range[i] = symbolTypes[i%symbolTypes.length];
+        })
+      }
       config.scale = d3.scaleOrdinal()
          .range(range)
          .domain(domain);
@@ -3669,7 +3750,7 @@ function setShapeScale(){
 function setColorScale(){
   var config = setSomeSale(function(obj){
     if(config.scale){
-      return (obj[options[config.itemAttr]] === null)? (config.item == "node"? "#ffffff" : "#000000") : config.scale(obj[options[config.itemAttr]]);
+      return (obj[options[config.itemAttr]] === null)? (config.item == "node"? white : black) : config.scale(obj[options[config.itemAttr]]);
     }else{
       return config.item == "link" && !options.heatmap ? defaultLinkColor : defaultColor;
     }
@@ -3679,30 +3760,37 @@ function setColorScale(){
 
   config.exports.computeScale = function(){
     if(options[config.itemAttr]){
-      config.datatype = dataType(config.data,options[config.itemAttr]);
-      var domain, range;
-      if(config.datatype == "number"){
-        domain = d3.extent(config.data.filter(function(d){ return d !== null; }), function(d) { return d[options[config.itemAttr]]; });
-        if(options[config.item+"Bipolar"]){
-          var absmax = Math.max(Math.abs(domain[0]),Math.abs(domain[1]));
-          domain = [-absmax,+absmax];
-        }
-        range = colorScales[options["colorScale"+config.itemAttr]];
-        if(range.length==3){
-          domain = [domain[0],d3.mean(domain),domain[1]];
-        }
-        config.scale = d3.scaleLinear()
-          .range(range)
-          .domain(domain);
-      }else{
-        domain = d3.map(config.data.filter(function(d){ return d[options[config.itemAttr]] !== null; }), function(d){ return d[options[config.itemAttr]]; }).keys();
-        range = [];
-        domain.forEach(function(d,i){
-          range[i] = categoryColors[i%categoryColors.length];
-        })
+      if(Graph.nodenames.indexOf("_color_"+options[config.itemAttr])!=-1){
+        var aux = config.rangeFromColumn(options[config.itemAttr],"_color_"+options[config.itemAttr]);
         config.scale = d3.scaleOrdinal()
+          .range(aux.range)
+          .domain(aux.domain);
+      }else{
+        var domain, range;
+        config.datatype = dataType(config.data,options[config.itemAttr]);
+        if(config.datatype == "number"){
+          domain = d3.extent(config.data.filter(function(d){ return d !== null; }), function(d) { return d[options[config.itemAttr]]; });
+          if(options[config.item+"Bipolar"]){
+            var absmax = Math.max(Math.abs(domain[0]),Math.abs(domain[1]));
+            domain = [-absmax,+absmax];
+          }
+          range = colorScales[options["colorScale"+config.itemAttr]];
+          if(range.length==3){
+            domain = [domain[0],d3.mean(domain),domain[1]];
+          }
+          config.scale = d3.scaleLinear()
           .range(range)
           .domain(domain);
+        }else{
+          domain = d3.map(config.data.filter(function(d){ return d[options[config.itemAttr]] !== null; }), function(d){ return d[options[config.itemAttr]]; }).keys();
+          range = [];
+          domain.forEach(function(d,i){
+            range[i] = categoryColors[i%categoryColors.length];
+          })
+          config.scale = d3.scaleOrdinal()
+          .range(range)
+          .domain(domain);
+        }
       }
     }
     return config.exports;
@@ -3811,26 +3899,26 @@ function addGradient(defs,id, stops){
   });
 }
 
-function displayVisualPicker(type){
+function displayVisualPicker(visual){
   var win = displayWindow(400),
-      attrData = Graph.nodenames.filter(function(d){ return hiddenFields.indexOf(d)==-1; });
-  attrData.unshift("-"+texts.none+"-");
+      attributes = Graph.nodenames.filter(function(d){ return hiddenFields.indexOf(d)==-1; }).map(function(d){ return [d,d]; });
+  attributes.unshift(["_none_","-"+texts.none+"-"]);
   win.append("h2")
-    .text(texts.selectattribute+texts[type])
+    .text(texts.selectattribute+texts[visual])
   var ul = win.append("ul")
     .attr("class","visual-selector")
   ul.selectAll("li")
-      .data(attrData)
+      .data(attributes)
     .enter().append("li")
-      .text(String)
-      .property("val",String)
+      .text(function(d){ return d[1]; })
+      .property("val",function(d){ return d[0]; })
       .classed("active",function(d){
-        return d==options["node"+type];
+        return d[0]==options["node"+visual];
       })
       .on("click",function(attr){
         ul.selectAll("li").classed("active",false);
         d3.select(this).classed("active",true);
-        applyAuto("node"+type,attr);
+        applyAuto("node"+visual,attr[0]);
         displaySidebar();
         d3.select("div.window-background").remove();
       })
@@ -3848,7 +3936,7 @@ function displayInfoPanel(info){
     }
     div = body.append("div")
           .attr("class","infopanel");
-    var infoHeight = (options.showTables ? 10 + height : docSize.height - 10)
+    var infoHeight = ((options.showNodes || options.showLinks) ? 10 + height : docSize.height - 10)
       - parseInt(div.style("top"))
       - parseInt(div.style("padding-top"))
       - parseInt(div.style("padding-bottom"));
@@ -3887,17 +3975,36 @@ function displayInfoPanel(info){
   }
 }
 
-function selectAllNodes(){
-  Graph.nodes.forEach(function(d){
-    if(checkSelectable(d)){
-      d.selected = true;
+function selectAllItems(){
+  Graph.nodes.forEach(function(n){
+    if(checkSelectable(n)){
+      n.selected = true;
+    }
+  });
+  Graph.links.forEach(function(l){
+    if(checkSelectableLink(l)){
+      l.selected = true;
     }
   });
   showTables();
 }
 
+function autoSelectLinks(){
+  Graph.links.forEach(function(link){
+    link.selected = checkSelectableLink(link) && link.source.selected && link.target.selected;
+  })
+}
+
 function filterSelection(){
     Graph.nodes.forEach(function(d){
+      if(!d.selected)
+        d._hidden = true;
+    });
+    drawNet();
+}
+
+function filterLinkSelection(){
+    Graph.links.forEach(function(d){
       if(!d.selected)
         d._hidden = true;
     });
@@ -3926,6 +4033,7 @@ function addNeighbors(){
       d.selected = checkSelectable(d) && d.__neighbor;
       delete d.__neighbor;
     });
+    autoSelectLinks();
     showTables();
 }
 
@@ -3955,8 +4063,9 @@ function checkSelectable(node){
 
 function checkSelectableLink(link){
   var selectable = !link._hidden && !link.target._hidden && !link.source._hidden && !link._hideFrame;
-  if(egoNet)
-    selectable = selectable && ((link.source.select || link.source._neighbor) && (link.target.select || link.target._neighbor));
+  if(egoNet){
+    selectable = selectable && ((link.source.selected || link.source._neighbor) && (link.target.selected || link.target._neighbor));
+  }
   return selectable;
 }
 
@@ -3969,7 +4078,7 @@ function treeAction(){
   }
 
   Graph.nodes.filter(function(d){
-      return d.selected;
+    return d.selected;
   }).forEach(function(d){
     if(d.childNodes.length){
         d.childNodes.forEach(function(c){
@@ -4081,8 +4190,8 @@ function displayLegend(){
       type,
       key,
       title,
-      text = stripTags,
-      color = "#000000",
+      text = String,
+      color = black,
       shape = defaultShape,
       data = [];
 
@@ -4125,6 +4234,7 @@ function displayLegend(){
             }
           }
         });
+        autoSelectLinks();
       }
       if(d3.event.shiftKey && row.filter(function(d){ return this.selected; }).size()>1){
         var first = false,
@@ -4309,6 +4419,11 @@ function showTables() {
   });
 
   var tableWrapper = function(dat, name, columns){
+
+    if(body.select("div.tables > ."+name).empty()){
+      return;
+    }
+
     var currentData,
         columnAlign = columns.map(function(col){
           if(dataType(dat,col) == 'number'){
@@ -4481,13 +4596,13 @@ function showTables() {
     return hidden.indexOf(d)==-1;
   };
 
-  var nodesData = Graph.nodes.filter(function(d){
-        delete d._selected;
-        return checkSelectable(d) && d.selected;
+  var nodesData = Graph.nodes.filter(function(n){
+        delete n._selected;
+        return checkSelectable(n) && n.selected;
       }).map(cleanData),
-      linksData = Graph.links.filter(function(d){
-        delete d._selected;
-        return checkSelectableLink(d) && (d.source.selected && d.target.selected);
+      linksData = Graph.links.filter(function(l){
+        delete l._selected;
+        return checkSelectableLink(l) && l.selected;
       }).map(cleanData),
       nodeColumns = Graph.nodenames.filter(filterHidden),
       linkColumns = Graph.linknames.filter(filterHidden);
@@ -5076,7 +5191,7 @@ function displayFreqBars(){
           .attr("y", function(d) { return y(d.y2); })
           .attr("width", function(d) { return x(d.x1) - x(d.x0) -1 -8 ; })
           .attr("height", function(d) { return h - y(d.y2); })
-          .style("fill", "#c6c6c6")
+          .style("fill", mediumGrey)
       }
     }
   })
@@ -5165,7 +5280,7 @@ function svg2png(callback){
   canvas.width = svg.attr("width");
   canvas.height = svg.attr("height");
   var ctx = canvas.getContext("2d");
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = white;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   svg.selectAll(".zoombutton").style("display","none");
@@ -5275,7 +5390,7 @@ function computeHeight(){
     if(main){
       h = h-main.node().offsetHeight;
     }
-    if(options.showTables){
+    if(options.showNodes || options.showLinks){
       h = h - 165;
     }
     return h;
