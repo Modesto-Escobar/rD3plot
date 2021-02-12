@@ -26,6 +26,8 @@ function network(Graph){
       mediumGrey = "#c6c6c6", // medium grey
       lightGrey = "#f5f5f5", // light grey
       white = "#ffffff", // white
+      linkSelectedColor = "#BB0", // Color of selected links
+      nodeSelectedColor = "#FF0", // Color of selected nodes
       defaultShape = "Circle", // node shape by default
       symbolTypes = ["Circle","Square","Diamond","Triangle","Cross","Star","Wye"], // list of available shapes
       nodeSizeRange = [0.5,4], // node size range
@@ -1541,6 +1543,9 @@ function addFilterController(){
         Graph.nodes.forEach(function(d){
           delete d.selected;
         });
+        Graph.links.forEach(function(d){
+          delete d.selected;
+        });
         updateSidebarFilters(true);
         applyInitialFilter();
       })
@@ -2910,7 +2915,7 @@ function drawNet(){
         return;
       ctx.beginPath();
       ctx.lineWidth = getLinkWidth(link);
-      ctx.strokeStyle = link._selected? "#F00" : (link.selected ? "#FF0" : VisualHandlers.linkColor(link));
+      ctx.strokeStyle = link._selected? "#F00" : (link.selected ? linkSelectedColor : VisualHandlers.linkColor(link));
       ctx.moveTo(points[0][0], points[0][1]);
       if(link.linkNum)
         ctx.quadraticCurveTo(points[2][0], points[2][1], points[1][0], points[1][1]);
@@ -2953,7 +2958,7 @@ function drawNet(){
       var nodeSize = checkNodeBigger(node);
       ctx.globalAlpha = node._back? 0.2 : 1;
       ctx.lineWidth = node.selected || node._selected ? 2 : 1;
-      var strokeStyle = node._selected ? "#F00" : (node.selected ? "#FF0" : false);
+      var strokeStyle = node._selected ? "#F00" : (node.selected ? nodeSelectedColor : false);
       ctx.strokeStyle = strokeStyle;
       ctx.translate(node.x, node.y);
       if(options.imageItem){
@@ -3180,7 +3185,7 @@ function drawNet(){
 
       nodes.forEach(function(node){
         var color = d3.rgb(VisualHandlers.nodeColor(node)),
-            sColor = d3.rgb(node.selected ? "#FF0" : d3.rgb(color).darker(1)),
+            sColor = d3.rgb(node.selected ? nodeSelectedColor : d3.rgb(color).darker(1)),
             size = node.nodeSize*scale,
             x = (node.x*scale)+translate[0],
             y = (node.y*scale)+translate[1];
@@ -4506,7 +4511,8 @@ function showTables() {
     drawHeader = function() {
         var thead = table.append("thead"),
             tbody = table.append("tbody"),
-            desc = columns.map(function(){ return false; });
+            desc0 = columns.map(function(){ return false; }),
+            desc = desc0.slice();
         columns.forEach(function(d,i){
           var sort1 = function(a,b){
                 var rv = [1,-1];
@@ -4533,7 +4539,7 @@ function showTables() {
               tbody.html("");
               dat.sort(sort1);
               var desci = desc[i];
-              desc = columns.map(function(){ return false; });
+              desc = desc0.slice();
               thead.selectAll("th").attr("class","sorting");
               desc[i] = !desci;
               d3.select(this).attr("class",desci ? "sorting_desc" : "sorting_asc");

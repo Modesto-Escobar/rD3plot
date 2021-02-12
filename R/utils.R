@@ -96,7 +96,7 @@ toJSON <- function(x){
     n <- suppressWarnings(as.numeric(x))
     if(is.na(n)){
       x <- gsub("[[:cntrl:]]","",x)
-      #x <- gsub("[^\u0001-\uffff]","",x)
+      x <- tryCatch(gsub("[\U010000-\U10FFFF]","",x),error=function(cond){ return(x) })
       x <- deparse(x)
       if(l10n_info()[["Latin-1"]]){
         x <- gsub("([^\\])\\\\[0-7]{3}","\\1_",x)
@@ -351,7 +351,7 @@ fromIgraph <- function(G, ...){
 
 # network_rd3 -> igraph
 toIgraph <- function(net){
-  if (inherits(net,c("network_rd3","netCoin"))){
+  if (inherits(net,"network_rd3")){
     nodes <- net$nodes
     links <- net$links
     if(is.null(links)){

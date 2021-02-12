@@ -7,13 +7,13 @@ for(item in names(multi)){
   graph <- multi[[item]]
   gClass <- ""
   jsongraph <- "{}"
-  if(inherits(graph,c("network_rd3","netCoin"))){
+  if(inherits(graph,"network_rd3")){
     gClass <- "network"
     jsongraph <- imgWrapper(graph,networkJSON,dir)
-  }else if(inherits(graph,c("timeline_rd3","timeCoin"))){
+  }else if(inherits(graph,"timeline_rd3")){
     gClass <- "timeline"
     jsongraph <- timelineJSON(graph)
-  }else if(inherits(graph,c("barplot_rd3","barCoin"))){
+  }else if(inherits(graph,"barplot_rd3")){
     gClass <- "barplot"
     jsongraph <- barplotJSON(graph)
   }else if(is.character(graph) && file.exists(paste0(graph,'/index.html'))){
@@ -50,7 +50,7 @@ polyGraph <- function(multi,dir){
 
 frameGraph <- function(multi,frame,speed,dir){
 
-  if(!all(vapply(multi, inherits, TRUE, what = c("network_rd3","netCoin"))))
+  if(!all(vapply(multi, inherits, TRUE, what = "network_rd3")))
     stop("All graphs must be 'network_rd3' objects")
   name <- unique(vapply(multi,function(x){ return(x$options$nodeName) },character(1)))
   if(length(name)!=1)
