@@ -58,22 +58,22 @@ plotObj <- function(x,dir,callback){
 shiny_rd3 <- function(x) UseMethod("shiny_rd3", x)
 
 shiny_rd3.network_rd3 <- function(x){
-    netCreate(x,"www")
-    insertIncludeFile("www")
+    addIframe(x,netCreate)
 }
 
 shiny_rd3.barplot_rd3 <- function(x){
-    barCreate(x,"www")
-    insertIncludeFile("www")
+    addIframe(x,barCreate)
 }
 
 shiny_rd3.timeline_rd3 <- function(x){
-    timeCreate(x,"www")
-    insertIncludeFile("www")
+    addIframe(x,timeCreate)
 }
 
-insertIncludeFile <- function(dir){
-    www <- wwwDirectory()
-    file.copy(paste0(www,"/include.html"),dir)
-    shiny::includeHTML(paste0(dir,"/include.html"))
+addIframe <- function(x,callback){
+    directory <- "rD3plot_files"
+    dir.create(directory, showWarnings = FALSE)
+    time <- round(as.numeric(Sys.time()))
+    callback(x,paste0(directory,"/",time))
+    shiny::addResourcePath("rD3plot", directory)
+    shiny::tags$iframe(src=paste0("/rD3plot/",time,"/index.html"), style="border:none; overflow:hidden; width:100%; height:100%; min-height:600px;")
 }

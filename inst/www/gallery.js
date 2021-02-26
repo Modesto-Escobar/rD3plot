@@ -4,59 +4,111 @@ function gallery(Graph){
       width = docSize.width,
       height = docSize.height,
       options = Graph.options,
-      nodes = Graph.nodes,
       filter = false,
       zoomRange = [0.1, 10],
       gridHeight = 60,
-      currentGridHeight = 60;
+      currentGridHeight = gridHeight;
+
+  if(!options.defaultColor){
+    options.defaultColor = categoryColors[0];
+  }
+  options.colorScalenodeColor = "RdWhGn"; // default linear scale
+
+  var nodes = [],
+      len = Graph.nodes[0].length;
+  for(var i = 0; i<len; i++){
+      var node = {};
+      Graph.nodenames.forEach(function(d,j){
+        node[d] = Graph.nodes[j][i];
+      })
+      node[options.nodeName] = String(node[options.nodeName]);
+      nodes.push(node);
+  }
 
   var body = d3.select("body");
+
+  body.on("keydown.shortcut",function(){
+    if(!body.select("body > div.window-background").empty()){
+      return;
+    }
+    if(d3.event.ctrlKey){
+      var key = getKey(d3.event);
+      switch(key){
+        case "+":
+          d3.event.preventDefault();
+          zoomsvg.select(".zoombutton.zoomin").dispatch("click");
+          return;
+        case "-":
+          d3.event.preventDefault();
+          zoomsvg.select(".zoombutton.zoomout").dispatch("click");
+          return;
+        case "0":
+          d3.event.preventDefault();
+          zoomsvg.select(".zoombutton.zoomreset").dispatch("click");
+          return;
+      }
+    }
+  });
 
   // top bar
   var topBar = body.append("div")
         .attr("class","topbar gallery-topbar")
 
   if(options.main){
-    topBar.append("h3").text(options.main)
-    if(typeof multiGraph != 'undefined'){
-      topBar.append("span").text("/");
-    }
+    topBar.append("h2").text(options.main)
+    topBar.append("span").style("padding","0 10px");
   }
 
   // multigraph
   if(typeof multiGraph != 'undefined'){
       topBar.append("h3").text(texts.graph + ":")
       multiGraph.graphSelect(topBar);
+      topBar.append("span").style("padding","0 10px");
   }
-
-  topBar.append("span").style("padding","0 10px");
 
   // node multi search
   topBar.call(displayMultiSearch()
         .data(nodes)
         .column(options.nodeLabel)
-        .update(displayNodes)
+        .update(displayGraph)
+        .update2(filterSelection)
         .filterData(filterNodes));
 
   topBar.append("span").style("padding","0 10px");
 
   // node order
-  topOrder(topBar,nodes,displayNodes);
+  topOrder(topBar,nodes,displayGraph);
 
+  // colors
+  topBar.append("h3").text(texts.Color + ":")
+
+  var colorSelect = topBar.append("div")
+      .attr("class","select-wrapper")
+    .append("select")
+    .on("change",function(){
+      options.nodeColor = this.value;
+      if(options.nodeColor=="-"+texts.none+"-"){
+        options.nodeColor = false;
+      }else if(dataType(nodes,options.nodeColor)=="number"){
+        displayPicker(options,"nodeColor",displayGraph);
+      }
+      displayGraph();
+    })
+  var opt = getOptions(nodes);
+  opt.unshift("-"+texts.none+"-");
+  colorSelect.selectAll("option")
+        .data(opt)
+      .enter().append("option")
+        .property("value",String)
+        .text(String)
+        .property("selected",function(d){ return d==options.nodeColor?true:null; })
   topBar.append("span").style("padding","0 10px");
-  
+
+  // filter selection
   topBar.append("button")
     .attr("class","primary")
     .text(texts.filterselection)
-    .on("click",function(){
-      filter = nodes.filter(function(n){
-          return n.selected;
-        })
-        .map(function(n){
-          return n[options.nodeName];
-        });
-      displayNodes();
-    })
+    .on("click",filterSelection)
 
   topBar.append("span").style("padding","0 10px");
 
@@ -71,7 +123,7 @@ function gallery(Graph){
         })
       }
       filter = f;
-      displayNodes();
+      displayGraph();
     });
   topBar.call(topFilterInst); 
 
@@ -92,22 +144,25 @@ function gallery(Graph){
 
   gallery.on("click",function(){
     nodes.forEach(function(n){ delete n.selected; });
-    displayNodes();
+    displayGraph();
   });
+
+  if(!options.hasOwnProperty("zoom"))
+    options.zoom = 1;
 
   var zoom = d3.zoom()
       .filter(function(){ return d3.event.ctrlKey; })
       .scaleExtent(zoomRange)
       .on("zoom", function(){
         currentGridHeight = gridHeight*d3.event.transform.k;
-        displayNodes();
+        displayGraph();
       })
 
-  gallery.call(zoom)
+  gallery.call(zoom);
 
   var galleryItems = gallery.append("div").attr("class","gallery-items");
 
-  displayNodes();
+  resetZoom();
 
   content.append("div")
       .attr("class","split-bar")
@@ -140,9 +195,7 @@ function gallery(Graph){
       gallery.call(zoom.scaleBy,2);
     })
   makeZoomReset(zoomsvg,65)
-    .on("click",function(){
-      gallery.call(zoom.transform,d3.zoomIdentity);
-    })
+    .on("click",resetZoom)
   makeZoomOut(zoomsvg,30)
     .on("click",function(){
       gallery.call(zoom.scaleBy,0.5);
@@ -161,7 +214,11 @@ function gallery(Graph){
   }
   panelSize();
 
-  content.style("height",(height - topBar.node().offsetHeight - 20 - (options.note ? note.node().offsetHeight : 0))+"px")
+  content.style("height",(height - topBar.node().offsetHeight - 20 - (options.note ? note.node().offsetHeight : 0))+"px");
+
+  function resetZoom(){
+    gallery.call(zoom.transform,d3.zoomIdentity.scale(options.zoom));
+  }
 
   function panelSize(size){
     var w = parseInt(content.style("width")) - 20,
@@ -189,8 +246,7 @@ function gallery(Graph){
     gallery.style("width", gw ? gw + "px" : null);
   }
 
-  function displayNodes(){
-    galleryItems.selectAll("div").remove();
+  function displayGraph(){
 
     var data = nodes.filter(filterNodes);
 
@@ -207,29 +263,31 @@ function gallery(Graph){
       })
     }
 
-    data.forEach(function(n){
-      var wrapper = galleryItems.append("div")
-        .classed("selected",n.selected)
-      if(options.imageItems){
-        wrapper.append("img")
-          .style("height",currentGridHeight+"px")
-          .on("load", function(){
-            var imgheight = this.height;
-            var imgwidth = this.width;
+    var items = galleryItems.selectAll(".item").data(data);
 
-            wrapper.style("width",(currentGridHeight*(imgwidth/imgheight))+"px")
+    var itemsEnter = items.enter()
+          .append("div").attr("class","item")
+    if(options.imageItems){
+      itemsEnter.append("img")
+          .on("load", function(){
+            imgWidth(this);
           })
-          .attr("src", n[options.imageItems]);
-      }else{
-        wrapper.style("width",currentGridHeight+"px")
+          .on("error", function(){
+            d3.select(this.parentNode).style("width",currentGridHeight+"px")
+          })
+          .attr("src",function(n){ return n[options.imageItems]; });
+    }else{
+      itemsEnter
           .append("div")
-            .style("height",currentGridHeight+"px")
             .style("width","100%")
-      }
-      wrapper.append("span")
-        .text(n[options.nodeLabel])
-      wrapper.style("cursor","pointer")
-      .on("click",function(){
+    }
+
+    itemsEnter.append("span")
+        .attr("title",function(d){ return d[options.nodeLabel]; })
+        .text(function(d){ return d[options.nodeLabel]; })
+
+    itemsEnter.style("cursor","pointer")
+      .on("click",function(n){
           d3.event.stopPropagation();
           if(d3.event.ctrlKey){
             if(n.selected){
@@ -247,14 +305,110 @@ function gallery(Graph){
             data.forEach(function(n){ delete n.selected; });
             n.selected = true;
           }
-          displayNodes();
+          displayGraph();
           if(options.nodeInfo && n[options.nodeInfo]){
             content.classed("hide-panel",false);
             panelSize();
             panelContent.html(n[options.nodeInfo]);
           }
       })
-    })
+
+    if(options.nodeText){
+      itemsEnter.each(function(d){
+        if(d[options.nodeText]){
+          var tooltip = d3.select(this).append("div")
+            .attr("class","tooltip")
+            .style("display","none")
+            .style("top",0)
+            .style("left",0)
+            .text(d[options.nodeText])
+            
+          d3.select(this)
+              .on("mouseenter",function(){
+                tooltip.style("display","block");
+              })
+              .on("mouseleave",function(){
+                tooltip.style("display","none");
+              })
+        }
+      });
+    }
+
+    items.exit().remove();
+
+    var itemsUpdate = itemsEnter.merge(items);
+    itemsUpdate.classed("selected",function(n){ return n.selected; });
+    if(options.imageItems){
+      itemsUpdate
+        .select("img")
+          .style("height",currentGridHeight+"px")
+          .each(function(){
+            imgWidth(this);
+          })
+    }else{
+       itemsUpdate.style("width",currentGridHeight+"px")
+          .select("div")
+            .style("height",currentGridHeight+"px")
+    }
+    itemsUpdate.selectAll("span, .tooltip").style("font-size",(currentGridHeight/gridHeight)+"em")
+
+    var colorScale;
+    if(options.nodeColor){
+      var type = dataType(nodes,options.nodeColor);
+      if(type=="number"){
+          var domain = d3.extent(nodes,function(node){
+            return node[options.nodeColor];
+          })
+          var range = colorScales[options.colorScalenodeColor];
+          if(range.length==3){
+            domain = [domain[0],d3.mean(domain),domain[1]];
+          }
+          colorScale = d3.scaleLinear()
+            .range(range)
+            .domain(domain)
+      }
+      if(type=="string"){
+          colorScale = d3.scaleOrdinal()
+            .range(categoryColors)
+            .domain(d3.map(nodes,function(node){
+              return node[options.nodeColor];
+            }).keys())
+      }
+    }
+
+    if(options.imageItems){
+      itemsUpdate.style("border-color",function(d){
+        if(!d.selected && options.nodeColor){
+            return colorScale(d[options.nodeColor]);
+        }
+        return null;
+      })
+    }else{
+      itemsUpdate.select("div:first-child").style("background-color",function(d){
+        if(options.nodeColor){
+            return colorScale(d[options.nodeColor]);
+        }
+        return options.defaultColor;
+      })
+    }
+
+    function imgWidth(img){
+      var ratio = 1;
+      if(img.complete && img.naturalHeight!==0){
+        ratio = img.naturalWidth / img.naturalHeight;
+      }
+      d3.select(img.parentNode).style("width",(currentGridHeight*ratio)+"px")
+    }
+  }
+
+  function filterSelection(){
+      filter = nodes.filter(function(n){
+          return n.selected;
+        })
+        .map(function(n){
+          return n[options.nodeName];
+        });
+      displayGraph();
   }
 
   function filterNodes(n){

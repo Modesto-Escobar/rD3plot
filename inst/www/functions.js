@@ -1050,7 +1050,7 @@ function getSVG(d,w,h){
   return exports;
 }
 
-function displayMultiSearch(sel, data, column, update, filterData){
+function displayMultiSearch(){
   var data = [],
       column = "name",
       update = function(){},

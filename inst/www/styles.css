@@ -788,6 +788,13 @@ div.topbar {
   padding: 10px 20px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.07);
 }
+.topbar h2 {
+  display: inline-block;
+  padding-right: 4px;
+  color: #000000;
+  font-size: 1.6em;
+  font-weight: bold;
+}
 .topbar h3 {
   display: inline-block;
   padding-right: 4px;
@@ -1353,26 +1360,30 @@ div.grid-gallery {
   display: inline-block;
   width: 100%;
   height: 100%;
+}
+div.grid-gallery > .gallery-items {
+  height: 100%;
   overflow: auto;
 }
-div.grid-gallery > .gallery-items > div {
+div.grid-gallery > .gallery-items > .item {
   display: inline-block;
+  position: relative;
   margin: 0.5em;
-  overflow: hidden;
   border: solid #ffffff 3px;
 }
-div.grid-gallery > .gallery-items > div.selected {
+div.grid-gallery > .gallery-items > .item.selected {
   border-color: yellow;
 }
-div.grid-gallery > .gallery-items > div > img {
+div.grid-gallery > .gallery-items > .item > img {
   display: block;
 }
-div.grid-gallery > .gallery-items > div > span {
+div.grid-gallery > .gallery-items > .item > span {
   display: block;
+  overflow: hidden;
   white-space: nowrap;
   position: relative;
 }
-div.grid-gallery > .gallery-items > div > span:after {
+div.grid-gallery > .gallery-items > .item > span:after {
   content: '';
   position: absolute;
   top: 0;
@@ -1419,6 +1430,7 @@ div.grid-gallery > .show-panel-button {
   position: absolute;
   top: 0;
   right: 0;
+  z-index: 1;
 }
 div.grid-gallery > svg.zoom-svg {
   position: absolute;

@@ -105,9 +105,9 @@ getRawName <- function(filepath){
 #copy images to net graph
 imgWrapper <- function(net,callback,dir){
   imgDir <- paste(dir,"images",sep="/")
-  if("imageItems" %in% names(net$options)){
+  if(!is.null(net$options[["imageItems"]])){
     dir.create(imgDir, showWarnings = FALSE)
-    if(is.null(net$options[["imageNames"]])){
+    if(inherits(net,"network_rd3") && is.null(net$options[["imageNames"]])){
       net$options[["imageNames"]] <- net$options[["imageItems"]]
       net$options[["imageItems"]] <- paste0(net$options[["imageItems"]],"_url")
       for(i in seq_along(net$options[["imageItems"]])){
@@ -118,7 +118,11 @@ imgWrapper <- function(net,callback,dir){
     for(img in net$options[["imageItems"]]){
       net$nodes[[img]] <- vapply(as.character(net$nodes[[img]]),function(filepath){
         rawname <- getRawName(filepath)
-        file.copy(filepath, paste(imgDir,rawname,sep="/"), overwrite = FALSE)
+        if(file.exists(filepath)){
+          file.copy(filepath, paste(imgDir,rawname,sep="/"), overwrite = FALSE)
+        }else{
+          warning("missing image file (",filepath,")")
+        }
         paste("images",rawname,sep="/")
       },character(1))
     }
@@ -130,6 +134,8 @@ imgWrapper <- function(net,callback,dir){
       dir.create(imgDir, showWarnings = FALSE)
       file.copy(filepath, paste(imgDir,rawname,sep="/"))
       net$options[["background"]] <- paste0('url("',paste("images",rawname,sep="/"),'")')
+    }else{
+      warning("missing background image file")
     }
   }
   return(callback(net))

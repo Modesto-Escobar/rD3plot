@@ -80,6 +80,9 @@ window.onload = function(){
     case 'timeline':
       timeline(json);
       break;
+    case 'gallery':
+      gallery(json);
+      break;
     case 'iFrame':
       displayIframe(json);
       break;
