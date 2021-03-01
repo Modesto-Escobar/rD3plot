@@ -1393,6 +1393,11 @@ div.grid-gallery > .gallery-items > .item > span:after {
   background:linear-gradient(to right, transparent 75%, white);
   pointer-events: none;
 }
+div.grid-gallery > .gallery-items > .item > .tooltip {
+  top: 0;
+  left: 0;  
+  z-index: 1;
+}
 div.split-bar {
   position: relative;
   vertical-align: top;

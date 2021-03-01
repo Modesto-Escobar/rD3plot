@@ -263,7 +263,7 @@ function gallery(Graph){
       })
     }
 
-    var items = galleryItems.selectAll(".item").data(data);
+    var items = galleryItems.selectAll(".item").data(data, function(d){ return d[options.nodeName]; });
 
     var itemsEnter = items.enter()
           .append("div").attr("class","item")
@@ -319,8 +319,6 @@ function gallery(Graph){
           var tooltip = d3.select(this).append("div")
             .attr("class","tooltip")
             .style("display","none")
-            .style("top",0)
-            .style("left",0)
             .text(d[options.nodeText])
             
           d3.select(this)
@@ -335,6 +333,8 @@ function gallery(Graph){
     }
 
     items.exit().remove();
+
+    items.order();
 
     var itemsUpdate = itemsEnter.merge(items);
     itemsUpdate.classed("selected",function(n){ return n.selected; });
