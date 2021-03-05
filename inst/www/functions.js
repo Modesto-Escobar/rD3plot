@@ -482,13 +482,11 @@ function selectedValues2str(selectedValues,data){
 }
 
 function getOptions(data,order){
-  if(!order)
-    order = d3.ascending;
-  return d3.keys(data[0]).filter(function(d){ return d.substring(0,1)!="_"; }).sort(order);
+  return d3.keys(data[0]).filter(function(d){ return d.substring(0,1)!="_"; }).sort(order ? order : sortAsc);
 }
 
-function displayPicker(options,itemVisual,callback){
-    var attr = options[itemVisual],
+function displayPicker(options,option,callback){
+    var attr = options[option],
         scaleKeys = d3.keys(colorScales),
         r = 14,
         itemsPerRow = 8,
@@ -509,7 +507,7 @@ function displayPicker(options,itemVisual,callback){
         .style("width",(r*2+1)+"px")
         .style("height",(r*2+1)+"px")
         .property("val",d)
-        .classed("active",options["colorScale"+itemVisual]==d)
+        .classed("active",options["colorScale"+option]==d)
         .on("click",function(){
           picker.selectAll("span").classed("active",false);
           d3.select(this).classed("active",true);
@@ -537,12 +535,12 @@ function displayPicker(options,itemVisual,callback){
     });
 
     pickerSelectButton(win, function(){
-      options["colorScale"+itemVisual] = picker.select("span.active").property("val");
+      options["colorScale"+option] = picker.select("span.active").property("val");
       callback();
     });
 }
 
-function displayPicker2(value,active,callback){
+function displayPickerColor(value,active,callback){
     var r = 14,
         itemsPerRow = 10,
         row,
@@ -669,7 +667,8 @@ function topFilter(){
       attr,
       displayGraph,
       selectedValues = {},
-      selFilter;
+      selFilter,
+      filterTags;
 
   function exports(topBar){
 
@@ -678,65 +677,70 @@ function topFilter(){
     var changeAttrSel = function(val){
       if(d3.select("body>div>div.window").empty()){
 
-        var panel = displayWindow(),
-            vp = viewport();
+        var w = 300,
+            panel = displayWindow(w);
 
-        panel.append("h3").text(val)
+        panel.append("h2").text(val)
+
+        var content = panel.append("div").attr("class", "filter-options");
 
         var type = dataType(data.filter(function(d){ return d[val] !== null; }),val);
         if(type == 'number'){
           var extent = d3.extent(data, function(d){ return d[val]; }),
               tempValues;
-          panel.append("div").call(brushSlider()
+          content.call(brushSlider()
             .domain(extent)
             .current(selectedValues[val])
             .callback(function(s){ tempValues = s; })
-            .baseWidth(vp.width/3));
+            .baseWidth(w));
         }else{
           var dat = data.map(function(d){ return d[val]; });
           if(type != 'string')
             dat = dat.reduce(function(a,b) { return b ? a.concat(b) : a; }, []);
           dat = d3.set(dat).values().sort();
 
-          var valSelector = panel.append("select")
-            .attr("multiple","multiple")
-            .attr("size",dat.length)
-            .style("width",vp.width/3+"px");
-
-          valSelector.selectAll("option").data(dat)
-            .enter().append("option")
+          var options = content.selectAll("div")
+              .data(dat)
+            .enter().append("div")
+              .attr("class","legend-item")
               .property("value",String)
-              .property("selected",function(d){ return (selectedValues[val] && selectedValues[val].indexOf(d)!=-1); })
+              .style("cursor","pointer")
+              .on("click",function(){
+                var box = d3.select(this).select(".legend-check-box");
+                box.classed("checked",!box.classed("checked"))
+              })
+          options.append("div")
+              .attr("class","legend-check-box")
+              .classed("checked",function(d){ return (selectedValues[val] && selectedValues[val].indexOf(d)!=-1); })
+          options.append("span")
+              .attr("title",String)
               .text(String);
         }
 
-        panel.append("button")
+        panel.append("center")
+          .append("button")
           .attr("class","primary")
           .text(texts.apply)
-          .style("position","absolute")
-          .style("bottom","30px")
-          .style("right","30px")
           .on("click",function(){
-            selectedValues = {};
             add2filter();
             applyfilter();
           })
-
-//        panel.append("button").text(texts.add).style("position","absolute").style("bottom","30px").style("right","80px").on("click",add2filter)
       }
+
+      selFilter.node().selectedIndex = 0;
 
       function add2filter(){
             selectedValues[val] = [];
             if(typeof tempValues != 'undefined'){
               selectedValues[val] = tempValues;
             }else{
-              valSelector.selectAll("option").each(function(){
-                if(this.selected)
-                  selectedValues[val].push(this.value);
+              options.selectAll(".legend-check-box.checked").each(function(){
+                  selectedValues[val].push(d3.select(this.parentNode).property("value"));
               })
             }
-            if(selectedValues[val].length == 0)
+            if(selectedValues[val].length == 0){
               delete selectedValues[val];
+            }
             d3.select("div.window-background").remove();
       }
     }
@@ -755,8 +759,8 @@ function topFilter(){
         .property("value",String)
         .text(String)
 
-//    topBar.append("button").text(texts.apply).on("click",applyfilter)
-
+    filterTags = topBar.append("div")
+      .attr("class","filter-tags")
 
     topBar.append("button")
       .attr("class","primary-outline clear")
@@ -768,12 +772,27 @@ function topFilter(){
       var query = selectedValues2str(selectedValues,data);
       var names = data.filter(function(d){ return eval(query); }).map(function(d){ return d[attr]; });
       displayGraph(names);
+      displayTags();
+  }
+
+  function displayTags(){
+      var tags = filterTags.selectAll(".tag").data(d3.keys(selectedValues),String)
+      tags.enter().append("div")
+        .attr("class","tag")
+        .text(String)
+        .append("span")
+          .html("&times;")
+          .on("click",function(d){
+            delete selectedValues[d];
+            applyfilter();
+          })
+      tags.exit().remove()
   }
 
   function removeFilter(){
-      selFilter.node().selectedIndex = 0;
       selectedValues = {};
       displayGraph(false);
+      displayTags();
   }
 
   exports.removeFilter = function(){
@@ -797,6 +816,12 @@ function topFilter(){
     displayGraph = x;
     return exports;
   };
+
+  exports.newFilter = function(key,values){
+    selectedValues = {};
+    selectedValues[key] = values;
+    applyfilter();
+  }
 
   return exports;
 }
@@ -1232,4 +1257,98 @@ function makeZoomOut(svg,y){
       .attr("width",16)
       .attr("height",6)
   return zoomout;
+}
+
+function uniqueRangeDomain(data,domainCol,rangeCol){
+    var aux = d3.map(data,function(d){ return d[domainCol]+"|"+d[rangeCol]; })
+      .keys()
+      .map(function(d){ return d.split("|"); });
+    return {domain: aux.map(function(d){ return d[0]; }), range: aux.map(function(d){ return d[1]; })};
+}
+
+function stripTags(text){
+  text = String(text);
+  if(text=="null"){
+    return "NA";
+  }
+  return text.replace(/(<([^>]+)>)/ig,"");
+}
+
+function displayLinearScale(sel,value,range,domain,selectScale,selectAttribute){
+    var panel = sel.select(".scale");
+    if(panel.empty()){
+      panel = sel.append("div")
+          .attr("class","scale")
+
+      var paddingRight = 0;
+
+      if(selectScale){
+        panel.append("img")
+          .attr("width","24")
+          .attr("height","24")
+          .attr("src",b64Icons.edit)
+          .style("padding-top",".5em")
+          .on("click",selectScale)
+        paddingRight = 30;
+      }
+
+      var div = panel.append("div").style("padding-right",paddingRight+"px");
+
+      if(selectAttribute){
+        panel.select("img").style("padding-top","2.5em")
+        div.append("div")
+          .attr("class","title")
+          .text("Color / "+value)
+          .on("click",selectAttribute);
+      }
+
+      var scaleWidth = div.node().offsetWidth - paddingRight;
+
+      var svg = div.append("svg")
+      .attr("width", scaleWidth)
+      .attr("height",10)
+      svg.append("defs")
+      svg.append("rect")
+        .attr("x",0)
+        .attr("y",0)
+        .attr("height",10)
+        .attr("width",scaleWidth)
+        .attr("rx",2)
+        .attr("fill","url(#legend-scale-gradient)")
+
+      div.append("span")
+      .attr("class","domain1")
+
+      div.append("span")
+      .attr("class","domain2")
+    }
+    addGradient(panel.select("svg > defs"),"legend-scale-gradient",range);
+    panel.select(".domain1").text(formatter(domain[0]));
+    panel.select(".domain2").text(formatter(domain[domain.length-1]));
+}
+
+function addGradient(defs,id,range){
+    var offset = 100/(range.length-1);
+
+    var gradient = defs.select("linearGradient#"+id);
+    if(gradient.empty()){
+      var gradient = defs.append("linearGradient")
+      .attr("id",id)
+      .attr("x1","0%")
+      .attr("y1","0%")
+      .attr("x2","100%")
+      .attr("y2","0%");
+    }
+
+    var stops = gradient.selectAll("stop")
+                  .data(range,String)
+
+    stops.exit().remove()
+
+    stops.enter().append("stop")
+      .merge(stops)
+        .attr("offset",function(d,i){
+          return (offset*i)+"%";
+        })
+        .style("stop-color",String);
 }

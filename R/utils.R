@@ -297,6 +297,84 @@ toColorScale <- function(items){
   }
 }
 
+# checking options
+checkColumn <- function(opt,item,variable){
+    val <- NULL
+    if(!is.null(variable)){
+      if(!(variable=="" || identical(variable,FALSE))){
+          val <- variable
+      }
+    }
+    opt[[item]] <- val
+    return(opt)
+}
+
+checkNodeVariable <- function(net,item,variable,varName,isItem,autoItems,sanitize){
+    prepareVar <- function(var){
+          if(is.numeric(var) || is.factor(var)){
+            var <- autoItems(var)
+          }else if(is.character(var) && isItem(var)){
+            var <- sanitize(var)
+          }else{
+            var <- NULL
+            warning(paste0(varName,": this variable cannot be a ",varName))
+          }
+          return(var)
+    }
+    if(is.null(variable)){
+      net$options[[item]] <- NULL
+    }else if(is.matrix(variable) || is.data.frame(variable)){
+      if(nrow(variable)==nrow(net$nodes)){
+        for(k in colnames(variable)){
+          var <- prepareVar(variable[[k]])
+          if(!is.null(var)){
+            if(k %in% colnames(net$nodes)){
+              itemlegend <- as.character(net$nodes[[k]])
+            }else{
+              itemlegend <- as.character(variable[[k]])
+            }
+            net$nodes[[k]] <- itemlegend
+            net$nodes[[paste0("_",varName,"_",k)]] <- var
+          }
+        }
+        net$options[[item]] <- colnames(variable)[1]
+      }else{
+        warning(paste0(varName,": variable number of rows doesn't match with nodes"))
+      }
+    }else if(length(variable)>1 || (isItem(variable) && !(variable %in% colnames(net$nodes)))){
+        if(length(variable)==1){
+          variable <- rep(variable,nrow(net$nodes))
+        }
+        if(length(variable)==nrow(net$nodes)){
+          if(!is.null(names(variable))){
+            itemlegend <- names(variable)
+          }else{
+            itemlegend <- as.character(variable)
+          }
+          variable <- prepareVar(variable)
+          if(!is.null(variable)){
+            net$nodes[[paste0("-",varName,"-")]] <- itemlegend
+            net$nodes[[paste0("_",varName,"_-",varName,"-")]] <- variable
+            net$options[[item]] <- paste0("-",varName,"-")
+          }
+        }else{
+          warning(paste0(varName,": variable length doesn't match with nodes' number of rows"))
+        }
+    }else{
+      net$options <- checkColumn(net$options,item,variable)
+    }
+    return(net)
+}
+
+showSomething <- function(opt,item,show){
+    if(identical(show,TRUE)){
+      opt[[item]] <- TRUE
+    }else{
+      opt[[item]] <- NULL
+    }
+    return(opt)
+}
+
 # igraph -> network_rd3
 fromIgraph <- function(G, ...){
   if (inherits(G,"igraph")){

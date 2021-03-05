@@ -21,15 +21,15 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
   }
   rownames(nodes) <- nodes[[name]]
 
+  # options
   options <- list(nodeName = name)
   if(is.null(label)){
-      options[["nodeLabel"]] <- name
-  }else if(label!=""){
-      options[["nodeLabel"]] <- label
+    options[["nodeLabel"]] <- name
+  }else{
+    options <- checkColumn(options,"nodeLabel",label)
   }
-  if (!is.null(color)) options[["nodeColor"]] <- color
-  if (!is.null(ntext)) options[["nodeText"]] <- ntext
-  if (!is.null(info)) options[["nodeInfo"]] <- info
+  options <- checkColumn(options,"nodeText",ntext)
+  options <- checkColumn(options,"nodeInfo",info)
 
   if(!(is.numeric(zoom) && zoom>=0.1 && zoom<=10)){
     zoom <- formals(gallery_rd3)[["zoom"]]
@@ -51,7 +51,12 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
     }
   }
 
+  # create gallery
   gallery <- structure(list(nodes=nodes,options=options),class="gallery_rd3")
+
+  # more options
+  gallery <- checkNodeVariable(gallery,"nodeColor",color,"color",isColor,categoryColors,col2hex)
+
   if (!is.null(dir)) galleryCreate(gallery,dir)
   return(gallery)
 }

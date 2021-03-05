@@ -2734,7 +2734,7 @@ function drawNet(){
     // display legends
     var legendLegend = options.nodeLegend ? true : false,
         legendColor = options.nodeColor && dataType(nodes,options.nodeColor)!='number',
-        legendShape = options.nodeShape,
+        legendShape = options.nodeShape ? true : false,
         legendImage = (!options.heatmap && options.imageItem) && (options.imageItems && options.imageNames);
 
     Legends = {};
@@ -3667,13 +3667,6 @@ function setSomeSale(callback){
     exports: callback
   }
 
-  config.rangeFromColumn = function(domain,range){
-    var aux = d3.map(config.data,function(d){ return d[domain]+"|"+d[range]; })
-      .keys()
-      .map(function(d){ return d.split("|"); });
-    return {domain: aux.map(function(d){ return d[0]; }), range: aux.map(function(d){ return d[1]; })};
-  }
-
   config.exports.getScale = function(){
     return config.scale;
   }
@@ -3732,7 +3725,7 @@ function setShapeScale(){
     if(options[config.itemAttr]){
       var domain, range;
       if(Graph.nodenames.indexOf("_shape_"+options[config.itemAttr])!=-1){
-        var aux = config.rangeFromColumn(options[config.itemAttr],"_shape_"+options[config.itemAttr]);
+        var aux = uniqueRangeDomain(config.data, options[config.itemAttr], "_shape_"+options[config.itemAttr]);
         domain = aux.domain;
         range = aux.range;
       }else{
@@ -3766,7 +3759,7 @@ function setColorScale(){
   config.exports.computeScale = function(){
     if(options[config.itemAttr]){
       if(Graph.nodenames.indexOf("_color_"+options[config.itemAttr])!=-1){
-        var aux = config.rangeFromColumn(options[config.itemAttr],"_color_"+options[config.itemAttr]);
+        var aux = uniqueRangeDomain(config.data, options[config.itemAttr], "_color_"+options[config.itemAttr]);
         config.scale = d3.scaleOrdinal()
           .range(aux.range)
           .domain(aux.domain);
@@ -3803,51 +3796,20 @@ function setColorScale(){
 
   config.exports.displayScale = function(){
     if(config.scale && config.datatype == "number"){
-      var div = legendPanel.append("div")
-      .attr("class","scale")
-
-      div.append("img")
-        .attr("width","24")
-        .attr("height","24")
-        .attr("src",b64Icons.edit)
-        .on("click",function(){
+      displayLinearScale(legendPanel,
+        options[config.itemAttr],
+        config.scale.range(),
+        config.scale.domain(),
+        function(){
           displayPicker(options,config.itemAttr,function(){
             delete VisualHandlers[config.itemAttr];
             drawNet();
           });
-        })
-
-      div = div.append("div");
-
-      div.append("div")
-      .attr("class","title")
-      .text("Color / "+options[config.itemAttr])
-      .on("click",function(){
+        },
+        function(){
           displayVisualPicker("Color");
-      });
-
-      var scaleWidth = div.node().offsetWidth - parseInt(div.style("padding-right"));
-
-      div.append("svg")
-      .attr("width", scaleWidth)
-      .attr("height",10)
-      .append("rect")
-        .attr("x",0)
-        .attr("y",0)
-        .attr("height",10)
-        .attr("width",scaleWidth)
-        .attr("rx",2)
-        .attr("fill", "url(#"+options["colorScale"+config.itemAttr]+")");
-
-      var domain = config.scale.domain();
-
-      div.append("span")
-      .attr("class","domain1")
-      .text(formatter(domain[0]));
-
-      div.append("span")
-      .attr("class","domain2")
-      .text(formatter(domain[domain.length-1]));
+        }
+      );
     }
   }
 
@@ -3885,23 +3847,6 @@ function getNumAttr(data,itemAttr,range,def){
       }
     }
     return function(){ return def; }
-}
-
-function addGradient(defs,id, stops){
-  var offset = 100/(stops.length-1);
-  var gradient = defs.append("linearGradient")
-    .attr("id",id)
-    .attr("x1","0%")
-    .attr("y1","0%")
-    .attr("x2","100%")
-    .attr("y2","0%");
-
-  stops.forEach(function(d, i){
-    gradient
-    .append("stop")
-    .attr("offset",(offset*i)+"%")
-    .style("stop-color",d);
-  });
 }
 
 function displayVisualPicker(visual){
@@ -4277,7 +4222,7 @@ function displayLegend(){
       if(typeof color == "function"){
         row.each(function(d,i){
           d3.select(this).select("svg").on("click",function(){
-            displayPicker2(d,color(d),function(val){
+            displayPickerColor(d,color(d),function(val){
               var range = color.range(),
                   domain = color.domain();
               range[domain.indexOf(d)] = val;
@@ -4405,14 +4350,6 @@ function getImageName(path){
   name = name.pop().split(".");
   name.pop();
   return name.join(".");
-}
-
-function stripTags(text){
-  text = String(text);
-  if(text=="null"){
-    return "NA";
-  }
-  return text.replace(/(<([^>]+)>)/ig,"");
 }
 
 function showTables() {

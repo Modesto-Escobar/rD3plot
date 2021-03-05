@@ -116,16 +116,8 @@ function gallery(Graph){
   var topFilterInst = topFilter()
     .data(nodes)
     .attr(options.nodeName)
-    .displayGraph(function(f){
-      if(filter && f){
-        f = f.filter(function(d){
-          return filter.indexOf(d)!=-1;
-        })
-      }
-      filter = f;
-      displayGraph();
-    });
-  topBar.call(topFilterInst); 
+    .displayGraph(displayGraph);
+  topBar.call(topFilterInst);
 
   var content = body.append("div")
         .attr("class","gallery-content");
@@ -161,6 +153,18 @@ function gallery(Graph){
   gallery.call(zoom);
 
   var galleryItems = gallery.append("div").attr("class","gallery-items");
+
+  var legend = displayLegend()
+                 .data(nodes)
+                 .displayGraph(displayGraph)
+                 .displayScalePicker(function(){
+                   displayPicker(options,"nodeColor",displayGraph);
+                 });
+  var legendPanel = gallery.append("div")
+        .attr("class","legend-panel")
+        .on("click",function(){
+          d3.event.stopPropagation();
+        })
 
   resetZoom();
 
@@ -246,7 +250,10 @@ function gallery(Graph){
     gallery.style("width", gw ? gw + "px" : null);
   }
 
-  function displayGraph(){
+  function displayGraph(newfilter){
+
+    if(typeof newfilter != "undefined")
+      filter = newfilter;
 
     var data = nodes.filter(filterNodes);
 
@@ -354,8 +361,14 @@ function gallery(Graph){
 
     var colorScale;
     if(options.nodeColor){
-      var type = dataType(nodes,options.nodeColor);
-      if(type=="number"){
+      if(Graph.nodenames.indexOf("_color_"+options.nodeColor)!=-1){
+          var aux = uniqueRangeDomain(nodes, options.nodeColor, "_color_"+options.nodeColor);
+          colorScale = d3.scaleOrdinal()
+            .range(aux.range)
+            .domain(aux.domain)
+      }else{
+        var type = dataType(nodes,options.nodeColor);
+        if(type=="number"){
           var domain = d3.extent(nodes,function(node){
             return node[options.nodeColor];
           })
@@ -366,15 +379,20 @@ function gallery(Graph){
           colorScale = d3.scaleLinear()
             .range(range)
             .domain(domain)
-      }
-      if(type=="string"){
+        }
+        if(type=="string"){
           colorScale = d3.scaleOrdinal()
             .range(categoryColors)
             .domain(d3.map(nodes,function(node){
               return node[options.nodeColor];
             }).keys())
+        }
       }
     }
+    legend
+      .value(options.nodeColor)
+      .scale(colorScale)
+    legendPanel.call(legend);
 
     if(options.imageItems){
       itemsUpdate.style("border-color",function(d){
@@ -402,13 +420,13 @@ function gallery(Graph){
   }
 
   function filterSelection(){
-      filter = nodes.filter(function(n){
+      var values = nodes.filter(function(n){
           return n.selected;
         })
         .map(function(n){
           return n[options.nodeName];
         });
-      displayGraph();
+      topFilterInst.newFilter(options.nodeName,values);
   }
 
   function filterNodes(n){
@@ -452,6 +470,170 @@ function gallery(Graph){
     })
 
     topBar.append("span").style("padding","0 10px")
+  }
+
+  function displayLegend(){
+    var parent,
+        value,
+        data,
+        scale,
+        displayGraph,
+        scalePicker;
+
+    function exports(parent){
+      if(!value){
+        parent.selectAll("*").remove();
+        return;
+      }
+
+      // ordinal scale
+      if(scale.name=="i"){
+        parent.select("div.scale").remove();
+
+        var legends = parent.select(".legends");
+        var initialize = false;
+        if(legends.empty()){
+          initialize = true;
+          legends = parent.append("div").attr("class","legends");
+          legends.append("div").attr("class","legends-content")
+        }
+        var content = legends.select(".legends-content");
+
+        var items = content.selectAll(".legend-item")
+              .data(scale.domain(),String)
+
+        var itemsEnter = items.enter()
+        .append("div")
+            .attr("class","legend-item")
+            .style("cursor","pointer")
+            .on("click",function(v){
+              var checked = d3.select(this).select(".legend-check-box").classed("checked");
+              data.forEach(function(d){
+                if(String(d[value])==v){
+                  d.selected = !checked ? true : false;
+                }
+              })
+              displayGraph();
+            })
+
+        itemsEnter.append("div")
+        .attr("class","legend-check-box")
+
+        itemsEnter.append("div")
+        .attr("class","legend-bullet")
+        .style("background-color",function(d){
+          return scale(d);
+        })
+
+        itemsEnter.append("span")
+        .text(stripTags)
+
+        items.exit().remove();
+
+        items.order();
+
+
+        var itemsUpdate = itemsEnter.merge(items);
+        itemsUpdate.select(".legend-check-box")
+        .classed("checked",function(v){
+          var aux = data.filter(function(d){
+            return String(d[value])==v;
+          });
+          if(aux.length){
+            return aux.filter(function(d){
+              return !d.selected;
+            }).length==0;
+          }
+          return false;
+        })
+
+        var legendsHeight = parent.node().parentNode.offsetHeight-100;
+        if(content.node().offsetHeight>legendsHeight){
+          content.style("height",legendsHeight+"px")
+        }
+
+        if(initialize){
+          var legendBottomControls = legends.append("div")
+          .attr("class","legend-bottom-controls")
+
+          var legendSelectAll = legendBottomControls.append("div")
+          .attr("class","legend-selectall")
+          .style("cursor","pointer")
+          .on("click",function(){
+              var checked = d3.select(this).select(".legend-check-box").classed("checked");
+              data.forEach(function(d){
+                d.selected = !checked ? true : false;
+              })
+              displayGraph();
+          })
+          legendSelectAll.append("div")
+          .attr("class","legend-check-box")
+          legendSelectAll.append("span")
+          .text(texts.selectall)
+
+          legendBottomControls.append("button")
+          .attr("class","legend-bottom-button primary")
+          .text(texts["filter"])
+          .on("click",filterSelection)
+          .attr("title",texts.filterInfo)
+        }
+
+        legends.select(".legend-selectall > .legend-check-box").classed("checked",function(){
+          return content.selectAll(".legend-item > .checked").size();
+        })
+        legends.select(".legend-bottom-button").classed("disabled",function(){
+          var nselected = data.filter(function(d){
+            return d.selected;
+          }).length;
+          return !nselected || (nselected==data.length);
+        })
+      }
+
+      // linear scale
+      if(scale.name=="h"){
+        parent.select("div.legends").remove();
+        
+        displayLinearScale(parent,
+          value,
+          scale.range(),
+          scale.domain(),
+          scalePicker
+        );
+      }
+    }
+
+    exports.value = function(x) {
+      if (!arguments.length) return value;
+      value = x;
+      return exports;
+    };
+
+    exports.data = function(x) {
+      if (!arguments.length) return data;
+      data = x;
+      return exports;
+    };
+
+    exports.scale = function(x) {
+      if (!arguments.length) return scale;
+      scale = x;
+      return exports;
+    };
+
+    exports.displayGraph = function(x) {
+      if (!arguments.length) return displayGraph;
+      displayGraph = x;
+      return exports;
+    };
+
+    exports.displayScalePicker = function(x) {
+      if (!arguments.length) return scalePicker;
+      scalePicker = x;
+
+      return exports;
+    };
+
+    return exports;
   }
 } // gallery function end
 

@@ -112,15 +112,7 @@ function timeline(json){
   var topFilterInst = topFilter()
     .data(nodes)
     .attr(options.name)
-    .displayGraph(function(f){
-      if(filter && f){
-        f = f.filter(function(d){
-          return filter.indexOf(d)!=-1;
-        })
-      }
-      filter = f;
-      displayGraph();
-    });
+    .displayGraph(displayGraph);
   topBar.call(topFilterInst);
 
   topBar.append("span").style("padding","0 10px");
@@ -177,7 +169,10 @@ function timeline(json){
         .attr("class","note")
         .html(options.note)
 
-  function displayGraph(){
+  function displayGraph(newfilter){
+
+    if(typeof newfilter != "undefined")
+      filter = newfilter;
 
     var plot = body.select("div.plot")
 
@@ -190,8 +185,7 @@ function timeline(json){
 
     plot.on("click",function(){
       if(d3.event.shiftKey){
-        filter = false;
-        displayGraph();
+        topFilterInst.removeFilter();
       }
     });
 
@@ -390,8 +384,7 @@ function timeline(json){
       headerButtons.append("div")
         .attr("class","goback")
         .on("click",function(){
-          filter = false;
-          displayGraph();
+          topFilterInst.removeFilter();
         })
     }
 
@@ -866,10 +859,7 @@ function timeline(json){
 
   function applyCheckBoxes(){
     if(selectedGroups && selectedGroups.size()){
-      filter = nodes
-        .filter(function(d){ return selectedGroups.has(d[options.group]); })
-        .map(function(d){ return d[options.name]; });
-      displayGraph();
+      topFilterInst.newFilter(options.group,selectedGroups.values());
     }
   }
 

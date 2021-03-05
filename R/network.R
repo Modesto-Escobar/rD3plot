@@ -221,84 +221,6 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
   
   # graph options
 
-  checkColumn <- function(opt,item,variable){
-    val <- NULL
-    if(!is.null(variable)){
-      if(!(variable=="" || identical(variable,FALSE))){
-          val <- variable
-      }
-    }
-    opt[[item]] <- val
-    return(opt)
-  }
-
-  checkNodeVariable <- function(opt,item,varName,isItem,autoItems,sanitize){
-    prepareVar <- function(var){
-          if(is.numeric(var) || is.factor(var)){
-            var <- autoItems(var)
-          }else if(is.character(var) && isItem(var)){
-            var <- sanitize(var)
-          }else{
-            var <- NULL
-            warning(paste0(varName,": this variable cannot be a ",varName))
-          }
-          return(var)
-    }
-    variable <- get0(varName)
-    if(is.null(variable)){
-      opt[[item]] <- NULL
-    }else if(is.matrix(variable) || is.data.frame(variable)){
-      if(nrow(variable)==nrow(nodes)){
-        for(k in colnames(variable)){
-          var <- prepareVar(variable[[k]])
-          if(!is.null(var)){
-            if(k %in% colnames(nodes)){
-              itemlegend <- as.character(nodes[[k]])
-            }else{
-              itemlegend <- as.character(variable[[k]])
-            }
-            nodes[[k]] <<- itemlegend
-            nodes[[paste0("_",varName,"_",k)]] <<- var
-          }
-        }
-        opt[[item]] <- colnames(variable)[1]
-      }else{
-        warning(paste0(varName,": variable number of rows doesn't match with nodes"))
-      }
-    }else if(length(variable)>1 || (isItem(variable) && !(variable %in% colnames(nodes)))){
-        if(length(variable)==1){
-          variable <- rep(variable,nrow(nodes))
-        }
-        if(length(variable)==nrow(nodes)){
-          if(!is.null(names(variable))){
-            itemlegend <- names(variable)
-          }else{
-            itemlegend <- as.character(variable)
-          }
-          variable <- prepareVar(variable)
-          if(!is.null(variable)){
-            nodes[[paste0("-",varName,"-")]] <<- itemlegend
-            nodes[[paste0("_",varName,"_-",varName,"-")]] <<- variable
-            opt[[item]] <- paste0("-",varName,"-")
-          }
-        }else{
-          warning(paste0(varName,": variable length doesn't match with nodes' number of rows"))
-        }
-    }else{
-      opt <- checkColumn(opt,item,variable)
-    }
-    return(opt)
-  }
-
-  showSomething <- function(opt,item,show){
-    if(identical(show,TRUE)){
-      opt[[item]] <- TRUE
-    }else{
-      opt[[item]] <- NULL
-    }
-    return(opt)
-  }
-
   if(!is.numeric(cex)){
     cex <- formals(network_rd3)[["cex"]]
     warning("cex: must be numeric")
@@ -389,8 +311,6 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
   options <- checkColumn(options,"nodeLabelSize",labelSize)
   options <- checkColumn(options,"nodeGroup",group)
   options <- checkColumn(options,"nodeSize",size)
-  options <- checkNodeVariable(options,"nodeColor","color",isColor,categoryColors,col2hex)
-  options <- checkNodeVariable(options,"nodeShape","shape",isShape,getShapes,capitalize)
   options <- checkColumn(options,"nodeLegend",legend)
   options <- checkColumn(options,"nodeText",ntext)
   options <- checkColumn(options,"nodeInfo",info)
@@ -468,6 +388,10 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
 
   #create net object
   net <- structure(list(links=links,nodes=nodes,options=options),class="network_rd3")
+
+  #more options
+  net <- checkNodeVariable(net,"nodeColor",color,"color",isColor,categoryColors,col2hex)
+  net <- checkNodeVariable(net,"nodeShape",shape,"shape",isShape,getShapes,capitalize)
 
   #check tree
   if(!is.null(tree)){
