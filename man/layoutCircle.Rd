@@ -2,10 +2,10 @@
 \alias{layoutCircle}
 \title{Produce a circle layout of any number of nodes.}
 \author{
-Modesto Escobar, Department of Sociology and Communication, University of Salamanca. See \url{https://sociocav.usal.es/blog/modesto-escobar/}
+Modesto Escobar, Department of Sociology and Communication, University of Salamanca.
 }
 \value{
-This function returns the input data frame of nodes with the resulting layout applied.
+‘layoutCircle’ produces a circle layout of any number of nodes.
 }
 
 \usage{
@@ -14,11 +14,11 @@ layoutCircle(N,nodes=seq_len(nrow(N)),deg=0,name=NULL)
 \arguments{
 \item{N}{a data frame of nodes.}
 
-\item{nodes}{a vector specifing nodes.}
+\item{nodes}{a vector specifing the node names inclued in the layout calculation.}
 
-\item{deg}{degrees to rotate.}
+\item{deg}{rotation degrees.}
 
-\item{name}{name of column with node names.}
+\item{name}{column name with node names in the N data frame.}
 }
 \description{
 \code{layoutCircle} produces a circle layout of any number of nodes.

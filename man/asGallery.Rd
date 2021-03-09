@@ -1,8 +1,8 @@
 \name{asGallery}
 \alias{asGallery}
-\title{Images in a grid gallery.}
+\title{Network to image gallery.}
 \description{
-\code{asGallery} produces a gallery_rd3 object. 
+\code{asGallery} transforms a network into an image gallery. 
 }
 \value{
 Object of class \code{gallery_rd3}.
@@ -12,10 +12,10 @@ Object of class \code{gallery_rd3}.
 asGallery(net)
 }
 \arguments{
-  \item{net}{is a \code{network_rd3} object. See \code{\link{network_rd3}}}
+  \item{net}{a \code{network_rd3} object. See \code{\link{network_rd3}}}
 }
 \author{
-Modesto Escobar, Department of Sociology and Communication, University of Salamanca. See \url{https://sociocav.usal.es/blog/modesto-escobar/}
+Modesto Escobar, Department of Sociology and Communication, University of Salamanca.
 }
 \examples{
 data(miserables)

@@ -2,7 +2,7 @@
 \alias{gallery_rd3}
 \title{Images in a grid gallery.}
 \description{
-\code{gallery_rd3} produces a gallery_rd3 object. 
+\code{gallery_rd3} produces an interactive image gallery. 
 }
 \value{
 Object of class \code{gallery_rd3}.
@@ -15,22 +15,22 @@ gallery_rd3(nodes, name = NULL, label = NULL, color = NULL,
     language = c("en", "es", "ca"), dir = NULL)
 }
 \arguments{
-\item{nodes}{a data frame with at least three vectors of names, start and end.}
-\item{name}{name of the vector with names in the nodes data frame.}
-\item{label}{name of the vector with labels in the nodes data frame.}
-\item{color}{name of the vector with color variable in the nodes data frame.}
-\item{zoom}{a number between 0.1 and 10 to start displaying zoom.}
+\item{nodes}{a data frame with at least three columns of names, start and end.}
+\item{name}{column name with image names in the nodes data frame.}
+\item{label}{column name with image labels in the nodes data frame.}
+\item{color}{column name with image background color variable in the nodes data frame.}
+\item{zoom}{a number between 0.1 and 10 as initial displaying zoom.}
 \item{main}{upper title of the graph.}
 \item{note}{lower title of the graph.}
-\item{ntext}{name of the vector with html text in the nodes data frame.}
-\item{info}{name of the vector with information to display in a panel in the nodes data frame.}
-\item{language}{a character vector (es=spanish; en=english; ca=catalan).}
-\item{help}{help text of the graph.}
-\item{image}{name of the vector with image files in the nodes data frame.}
-\item{dir}{a "character" string representing the directory where the web files will be saved.}
+\item{ntext}{column name with html text in the nodes data frame.}
+\item{info}{column name with information to display in a panel in the nodes data frame.}
+\item{language}{a character string indicating the language of the graph (en=english (default); es=spanish; ca=catalan).}
+\item{help}{a character string indicating a help text of the graph.}
+\item{image}{column name which indicates the image paths in the nodes data frame.}
+\item{dir}{a character string representing the directory where the web files will be saved.}
 }
 \author{
-Modesto Escobar, Department of Sociology and Communication, University of Salamanca. See \url{https://sociocav.usal.es/blog/modesto-escobar/}
+Modesto Escobar, Department of Sociology and Communication, University of Salamanca.
 }
 \examples{
 data("finches")

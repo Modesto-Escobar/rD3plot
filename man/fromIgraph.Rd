@@ -1,18 +1,11 @@
 \name{fromIgraph}
 \alias{fromIgraph}
 \title{Produce interactive networks from igraph objects.}
-\references{
-  Escobar, M. and Martinez-Uribe, L. (2020)
-  Network Coincidence Analysis: The \code{netCoin} \code{R} Package.
-  \emph{Journal of Statistical Software}, \bold{93}, 1-32.
-  \doi{10.18637/jss.v093.i11}.
-}
 \author{
-Modesto Escobar, Department of Sociology and Communication, University of Salamanca. See \url{https://sociocav.usal.es/blog/modesto-escobar/}
+Modesto Escobar, Department of Sociology and Communication, University of Salamanca.}
 }
 \value{
 This function returns a \code{network_rd3} object.
-If the 'dir' attribute is specified, the function creates a folder in the computer with an HTML document named index.html which contains the produced graph. This file can be directly opened with your browser and sent to a web server to work properly.
 }
 \usage{
 fromIgraph(G, ...)
