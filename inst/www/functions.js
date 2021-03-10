@@ -458,31 +458,8 @@ function dataType(data,key,deep){
   }
 }
 
-function selectedValues2str(selectedValues,data){
-  var query = "(true";
-  d3.keys(selectedValues).forEach(function(k){
-    query = query + ") && (false";
-    if(typeof selectedValues[k][0] == 'number' && selectedValues[k].length == 2){
-      query = query + " || ((d['" + k + "'] >= " + selectedValues[k][0] + ") && (d['" + k + "'] <= " + selectedValues[k][1] + "))";
-    }else{
-      var type = dataType(data,k);
-      if(type == 'object'){
-        selectedValues[k].forEach(function(p){
-          query = query + " || (d['" + k + "'] && d['" + k + "'].indexOf('" + p + "')!=-1)";
-        })
-      }else{
-        selectedValues[k].forEach(function(p){
-          query = query + " || (String(d['" + k + "']) == '" + p + "')";
-        })
-      }
-    }
-  })
-  query = query + ")";
-  return query;
-}
-
-function getOptions(data,order){
-  return d3.keys(data[0]).filter(function(d){ return d.substring(0,1)!="_"; }).sort(order ? order : sortAsc);
+function getOptions(data){
+  return d3.keys(data[0]).filter(function(d){ return d.substring(0,1)!="_"; }).sort(sortAsc);
 }
 
 function displayPicker(options,option,callback){
@@ -663,9 +640,10 @@ function pickerSelectButton(win, callback){
 
 function topFilter(){
 
-  var data,
-      attr,
-      displayGraph,
+  var data = [],
+      datanames = [],
+      attr = "",
+      displayGraph = function(){},
       selectedValues = {},
       selFilter,
       filterTags;
@@ -750,7 +728,7 @@ function topFilter(){
       .append("select")
         .on("change",function(){ changeAttrSel(this.value); })
 
-    var options = getOptions(data);
+    var options = datanames.slice();
     options.unshift("-"+texts.none+"-");
     selFilter.selectAll("option")
         .data(options)
@@ -761,16 +739,43 @@ function topFilter(){
 
     filterTags = topBar.append("div")
       .attr("class","filter-tags")
-
-    topBar.append("button")
-      .attr("class","primary-outline clear")
-      .text(texts.removefilter)
-      .on("click",removeFilter)
   }
 
   function applyfilter(){
-      var query = selectedValues2str(selectedValues,data);
-      var names = data.filter(function(d){ return eval(query); }).map(function(d){ return d[attr]; });
+      var keys = d3.keys(selectedValues);
+      var names = data.filter(function(d){
+        for(var i = 0; i<keys.length; i++){
+          var value = false;
+          var k = keys[i];
+          if(typeof selectedValues[k][0] == 'number' && selectedValues[k].length == 2){
+            if((d[k] >= selectedValues[k][0]) && (d[k] <= selectedValues[k][1] )){
+              value = true;
+            }
+          }else{
+            if(dataType(data,k) == 'object'){
+              for(var j = 0; j<selectedValues[k].length; j++){
+                var p = selectedValues[k][j];
+                if(d[k] && d[k].indexOf(String(p))!=-1){
+                  value = true;
+                  break;
+                }
+              }
+            }else{
+              for(var j = 0; j<selectedValues[k].length; j++){
+                var p = selectedValues[k][j];
+                if(String(d[k]) == String(p)){
+                  value = true;
+                  break;
+                }
+              }
+            }
+          }
+          if(!value){
+            return false;
+          }
+        }
+        return true;
+      }).map(function(d){ return d[attr]; });
       displayGraph(names);
       displayTags();
   }
@@ -789,19 +794,21 @@ function topFilter(){
       tags.exit().remove()
   }
 
-  function removeFilter(){
+  exports.removeFilter = function(){
       selectedValues = {};
       displayGraph(false);
       displayTags();
   }
 
-  exports.removeFilter = function(){
-    removeFilter();
-  }
-
   exports.data = function(x) {
     if (!arguments.length) return data;
     data = x;
+    return exports;
+  };
+
+  exports.datanames = function(x) {
+    if (!arguments.length) return datanames;
+    datanames = x;
     return exports;
   };
 
@@ -1294,13 +1301,12 @@ function displayLinearScale(sel,value,range,domain,selectScale,selectAttribute){
 
       var div = panel.append("div").style("padding-right",paddingRight+"px");
 
-      if(selectAttribute){
-        panel.select("img").style("padding-top","2.5em")
-        div.append("div")
+      panel.select("img").style("padding-top","2.5em")
+      div.append("div")
           .attr("class","title")
-          .text("Color / "+value)
-          .on("click",selectAttribute);
-      }
+          .text(texts["Color"] + " / "+value)
+          .style("cursor", selectAttribute ? "pointer" : null)
+          .on("click", selectAttribute ? selectAttribute : null);
 
       var scaleWidth = div.node().offsetWidth - paddingRight;
 
@@ -1351,4 +1357,6 @@ function addGradient(defs,id,range){
           return (offset*i)+"%";
         })
         .style("stop-color",String);
+
+    stops.order();
 }

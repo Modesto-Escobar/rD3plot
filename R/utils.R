@@ -44,14 +44,11 @@ createHTML <- function(directory, styles, dependencies, json){
   html[html=="<!--scripts-->"] <- scripts
 
   if(!is.null(json)){
-    if(is.function(json))
+    if(is.function(json)){
       json <- json()
-
-    enc <- Encoding(json)
-    if(enc=="latin1" || (l10n_info()[["Latin-1"]] && enc=="unknown")){
-      Encoding(json) <- "latin1"
-      json <- enc2utf8(json)
     }
+
+    json <- check_utf8(json)
 
     html[html=="<!--json-->"] <- paste0('<script type="application/json" id="data">',json,'</script>')
   }
@@ -59,6 +56,15 @@ createHTML <- function(directory, styles, dependencies, json){
   con <- file(indexfile, encoding = "UTF-8")
   writeLines(html,con)
   close(con)
+}
+
+check_utf8 <- function(text){
+    enc <- Encoding(text)
+    if(enc=="latin1" || (l10n_info()[["Latin-1"]] && enc=="unknown")){
+      Encoding(text) <- "latin1"
+      text <- enc2utf8(text)
+    }
+    return(text)
 }
 
 getLanguageScript <- function(obj){

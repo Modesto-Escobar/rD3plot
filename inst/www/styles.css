@@ -375,7 +375,6 @@ div.poweredby img {
   text-align: center;
   font-size: 1.4em;
   margin-bottom: 6px;
-  cursor: pointer;
 }
 .legend-panel > .scale > div > .domain1,
 .legend-panel > .scale > div > .domain2 {
@@ -1194,7 +1193,6 @@ svg .zoombutton.zoomreset rect {
 /* legend */
 .legend .title {
   font-size: 1.2em;
-  cursor: pointer;
 }
 .legend-check-box {
   background-color: #ffffff;

@@ -111,6 +111,7 @@ function timeline(json){
   // node filter in topBar
   var topFilterInst = topFilter()
     .data(nodes)
+    .datanames(getOptions(nodes))
     .attr(options.name)
     .displayGraph(displayGraph);
   topBar.call(topFilterInst);

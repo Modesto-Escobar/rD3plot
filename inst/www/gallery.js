@@ -94,7 +94,7 @@ function gallery(Graph){
       }
       displayGraph();
     })
-  var opt = getOptions(nodes);
+  var opt = getSelectOptions();
   opt.unshift("-"+texts.none+"-");
   colorSelect.selectAll("option")
         .data(opt)
@@ -115,6 +115,7 @@ function gallery(Graph){
   // node filter in topBar
   var topFilterInst = topFilter()
     .data(nodes)
+    .datanames(getSelectOptions())
     .attr(options.nodeName)
     .displayGraph(displayGraph);
   topBar.call(topFilterInst);
@@ -155,8 +156,9 @@ function gallery(Graph){
   var galleryItems = gallery.append("div").attr("class","gallery-items");
 
   var legend = displayLegend()
-                 .data(nodes)
+                 .type("Color")
                  .displayGraph(displayGraph)
+                 .newFilter(topFilterInst.newFilter)
                  .displayScalePicker(function(){
                    displayPicker(options,"nodeColor",displayGraph);
                  });
@@ -196,13 +198,13 @@ function gallery(Graph){
 
   makeZoomIn(zoomsvg,100)
     .on("click",function(){
-      gallery.call(zoom.scaleBy,2);
+      gallery.call(zoom.scaleBy,1.5);
     })
   makeZoomReset(zoomsvg,65)
     .on("click",resetZoom)
   makeZoomOut(zoomsvg,30)
     .on("click",function(){
-      gallery.call(zoom.scaleBy,0.5);
+      gallery.call(zoom.scaleBy,0.75);
     })
 
   if(options.note){
@@ -261,7 +263,7 @@ function gallery(Graph){
       data.sort(function(a,b){
         var aa = a[options.order],
             bb = b[options.order];
-        if((typeof aa == "number" && typeof bb == "number") ^ options.rev){
+        if(options.rev){
           var aux = bb;
           bb = aa;
           aa = aux;
@@ -390,6 +392,7 @@ function gallery(Graph){
       }
     }
     legend
+      .data(data)
       .value(options.nodeColor)
       .scale(colorScale)
     legendPanel.call(legend);
@@ -433,6 +436,12 @@ function gallery(Graph){
       return !filter || filter.indexOf(n[options.nodeName])!=-1 ? true : false;
   }
 
+  function getSelectOptions(){
+    return Graph.nodenames.filter(function(d){ return d.substring(0,1)!="_"; })
+        .filter(function(d){ return !options.imageItems || d!=options.imageItems; })
+        .sort(sortAsc);
+  }
+
   function topOrder(topBar,data,displayGraph){
 
     topBar.append("h3").text(texts.Order + ":")
@@ -447,7 +456,7 @@ function gallery(Graph){
       displayGraph();
     })
 
-    var opt = getOptions(data);
+    var opt = getSelectOptions();
     opt.unshift("-default-");
     selOrder.selectAll("option")
         .data(opt)
@@ -455,8 +464,8 @@ function gallery(Graph){
         .property("selected",function(d){
           return d==options.order;
         })
-        .property("value",function(d){ return d; })
-        .text(function(d){ return d; })
+        .property("value",String)
+        .text(String)
 
     topBar.append("h3")
     .text(texts.Reverse)
@@ -475,9 +484,11 @@ function gallery(Graph){
   function displayLegend(){
     var parent,
         value,
+        type,
         data,
         scale,
         displayGraph,
+        newFilter,
         scalePicker;
 
     function exports(parent){
@@ -496,11 +507,23 @@ function gallery(Graph){
           initialize = true;
           legends = parent.append("div").attr("class","legends");
           legends.append("div").attr("class","legends-content")
+            .append("div").attr("class","legend")
         }
         var content = legends.select(".legends-content");
+        var legend = legends.select(".legend");
 
-        var items = content.selectAll(".legend-item")
-              .data(scale.domain(),String)
+        if(initialize){
+          legend.append("div")
+            .attr("class","title")
+            .text(texts[type] + " / " + value)
+          legend.append("hr")
+            .attr("class","legend-separator")
+        }
+
+        var itemsData = d3.map(data.filter(function(d){ return d[value]!==null; }), function(d){ return d[value]; }).keys().sort(sortAsc);
+
+        var items = legend.selectAll(".legend-item")
+              .data(itemsData,String)
 
         var itemsEnter = items.enter()
         .append("div")
@@ -531,7 +554,6 @@ function gallery(Graph){
         items.exit().remove();
 
         items.order();
-
 
         var itemsUpdate = itemsEnter.merge(items);
         itemsUpdate.select(".legend-check-box")
@@ -574,7 +596,13 @@ function gallery(Graph){
           legendBottomControls.append("button")
           .attr("class","legend-bottom-button primary")
           .text(texts["filter"])
-          .on("click",filterSelection)
+          .on("click",function(){
+            var values = [];
+            legend.selectAll(".legend-item > .checked").each(function(d){
+              values.push(d);
+            });
+            newFilter(value,values);
+          })
           .attr("title",texts.filterInfo)
         }
 
@@ -608,6 +636,12 @@ function gallery(Graph){
       return exports;
     };
 
+    exports.type = function(x) {
+      if (!arguments.length) return type;
+      type = x;
+      return exports;
+    };
+
     exports.data = function(x) {
       if (!arguments.length) return data;
       data = x;
@@ -623,6 +657,13 @@ function gallery(Graph){
     exports.displayGraph = function(x) {
       if (!arguments.length) return displayGraph;
       displayGraph = x;
+      return exports;
+    };
+
+    exports.newFilter = function(x) {
+      if (!arguments.length) return newFilter;
+      newFilter = x;
+
       return exports;
     };
 

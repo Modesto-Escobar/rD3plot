@@ -191,6 +191,7 @@ function barplot(json){
   // node filter
   var topFilterInst = topFilter()
     .data(nodes)
+    .datanames(getOptions(nodes))
     .attr(options.name)
     .displayGraph(displayGraph);
 
@@ -678,7 +679,7 @@ function topOrder(topBar,data,displayGraph){
       displayGraph();
     })
 
-  var opt = getOptions(data,function(a,b){
+  var opt = getOptions(data).sort(function(a,b){
     if(a=="incidences")
       return -1;
     if(b=="incidences")

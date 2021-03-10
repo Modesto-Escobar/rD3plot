@@ -4157,6 +4157,7 @@ function displayLegend(){
     legend.append("div")
         .attr("class","title")
         .text(texts[type] + " / " + (typeof title == "undefined" ? key : title))
+        .style("cursor","pointer")
         .on("click",function(){
           displayVisualPicker(type);
         })
