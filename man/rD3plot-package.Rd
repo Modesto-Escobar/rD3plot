@@ -3,5 +3,5 @@
 \docType{package}
 \title{The rD3plot package.}
 \description{
-Creates interactive analytic networks with R. It joins the data analysis power of R and the visualization libraries of JavaScript in one package.
+Creates interactive analytic graphs with R. It joins the data analysis power of R and the visualization libraries of JavaScript in one package.
 }
