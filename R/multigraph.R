@@ -51,10 +51,24 @@ polyGraph <- function(multi,dir){
   multiGraph(multi,paste0(dir,"/multiGraph"))
 }
 
-frameGraph <- function(multi,frame,speed,dir){
+evolvingWrapper <- function(multi,frame,speed){
+  if(length(multi)<2){
+    stop("Cannot make an evolving network with only one graph")
+  }
 
-  if(!all(vapply(multi, inherits, TRUE, what = "network_rd3")))
+  if(!all(vapply(multi, inherits, TRUE, what = "network_rd3"))){
     stop("All graphs must be 'network_rd3' objects")
+  }
+
+  if(!(is.numeric(frame) && frame>=0)){
+      frame <- formals(evolNetwork_rd3)[["frame"]]
+      warning("frame: must be integer greater than 0")
+  }
+  if(!(is.numeric(speed) && speed>=0 && speed<=100)){
+      speed <- formals(evolNetwork_rd3)[["speed"]]
+      warning("speed: must be numeric between 0 and 100")
+  }
+
   name <- unique(vapply(multi,function(x){ return(x$options$nodeName) },character(1)))
   if(length(name)!=1)
     stop("name: all graphs must have the same name")
@@ -131,11 +145,10 @@ frameGraph <- function(multi,frame,speed,dir){
     net$tree <- tree
   }
 
-  netCreate(net,dir)
+  return(net)
 }
 
-#create html wrapper for multigraph
-multigraphCreate <- function(...,  mode = c("default","parallel","frame"), frame = 0, speed = 50, dir = "MultiGraph", show = TRUE){
+getGraphList <- function(...){
   graphs <- list(...)
   if(!length(graphs))
     stop("Cannot make a multigraph without graphs!")
@@ -144,28 +157,31 @@ multigraphCreate <- function(...,  mode = c("default","parallel","frame"), frame
     message("Graph names will be generated automatically")
     names(graphs) <- paste0("graph",seq_along(graphs))
   }
+  return(graphs)
+}
+
+#create html wrapper for multigraph
+multigraphCreate <- function(...,  mode = c("default","parallel","frame"), frame = 0, speed = 50, dir = "MultiGraph", show = TRUE){
+  graphs <- getGraphList(...)
 
   mode <- substr(mode[1],1,1)
-  if(mode=="f" && length(graphs)==1){
-    mode <- "d"
-    warning("Cannot make a dynamic graph with only one graph")
-  }
   if(mode=="p"){
     polyGraph(graphs,dir)
   }else if(mode=="f"){
-    if(!(is.numeric(frame) && frame>=0)){
-      frame <- formals(multigraphCreate)[["frame"]]
-      warning("frame: must be integer greater than 0")
-    }
-    if(!(is.numeric(speed) && speed>=0 && speed<=100)){
-      speed <- formals(multigraphCreate)[["speed"]]
-      warning("speed: must be numeric between 0 and 100")
-    }
-    frameGraph(graphs,frame,speed,dir)
+    net <- evolvingWrapper(graphs,frame,speed)
+    netCreate(net,dir)
   }else{
     multiGraph(graphs,dir)
   }
 
   if(identical(show,TRUE))
     browseURL(normalizePath(paste(dir, "index.html", sep = "/")))
+}
+
+# Evolving network
+evolNetwork_rd3 <- function(..., frame = 0, speed = 50, dir = NULL){
+  graphs <- getGraphList(...)
+  net <- evolvingWrapper(graphs,frame,speed)
+  if (!is.null(dir)) netCreate(net,dir)
+  return(net)
 }

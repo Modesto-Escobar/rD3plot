@@ -2,7 +2,7 @@
 \alias{fromIgraph}
 \title{Produce interactive networks from igraph objects.}
 \author{
-Modesto Escobar, Department of Sociology and Communication, University of Salamanca.}
+Modesto Escobar, Department of Sociology and Communication, University of Salamanca.
 }
 \value{
 This function returns a \code{network_rd3} object.

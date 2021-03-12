@@ -32,7 +32,6 @@ MultiGraph.prototype = {
 
     d3.select("body").on("keydown.multishortcut",function(){
       if(d3.event.ctrlKey){ 
-        d3.event.preventDefault();
         var key = getKey(d3.event);
         switch(key){
           case "ArrowUp":

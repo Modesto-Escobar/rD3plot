@@ -36,6 +36,9 @@ Modesto Escobar, Department of Sociology and Communication, University of Salama
 data("finches")
 finches$species <- system.file("extdata", finches$species,
         package="rD3plot") # copy path to the species field
-gallery_rd3(finches, image="species", main="Species in Galapagos Islands",
+gallery <- gallery_rd3(finches, image="species", main="Species in Galapagos Islands",
         note="Data source: Sanderson (2000)")
+\dontrun{
+plot(gallery)
+}
 }

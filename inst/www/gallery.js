@@ -25,7 +25,14 @@ function gallery(Graph){
       nodes.push(node);
   }
 
+  d3.selectAll("html, body")
+    .style("height","100%")
+    .style("width","100%")
+
   var body = d3.select("body");
+
+  var infoPanel = displayInfoPanel();
+  body.call(infoPanel);
 
   body.on("keydown.shortcut",function(){
     if(!body.select("body > div.window-background").empty()){
@@ -50,9 +57,12 @@ function gallery(Graph){
     }
   });
 
+  var galleryBox = body.append("div")
+        .attr("class","gallery-box")
+
   // top bar
-  var topBar = body.append("div")
-        .attr("class","topbar gallery-topbar")
+  var topBar = galleryBox.append("div")
+        .attr("class","topbar")
 
   if(options.main){
     topBar.append("h2").text(options.main)
@@ -120,20 +130,11 @@ function gallery(Graph){
     .displayGraph(displayGraph);
   topBar.call(topFilterInst);
 
-  var content = body.append("div")
+  var content = galleryBox.append("div")
         .attr("class","gallery-content");
 
   var gallery = content.append("div")
         .attr("class","grid-gallery");
-
-  var showPanelButton = gallery.append("div").attr("class","show-panel-button");
-  showPanelButton.append("span");
-  showPanelButton.append("span");
-  showPanelButton.append("span");
-  showPanelButton.on("click",function(){
-    content.classed("hide-panel",false);
-    panelSize();
-  })
 
   gallery.on("click",function(){
     nodes.forEach(function(n){ delete n.selected; });
@@ -153,16 +154,14 @@ function gallery(Graph){
 
   gallery.call(zoom);
 
-  var galleryItems = gallery.append("div").attr("class","gallery-items");
-
   var legend = displayLegend()
                  .type("Color")
                  .displayGraph(displayGraph)
-                 .newFilter(topFilterInst.newFilter)
+                 .filterHandler(topFilterInst)
                  .displayScalePicker(function(){
                    displayPicker(options,"nodeColor",displayGraph);
                  });
-  var legendPanel = gallery.append("div")
+  var legendPanel = content.append("div")
         .attr("class","legend-panel")
         .on("click",function(){
           d3.event.stopPropagation();
@@ -170,31 +169,11 @@ function gallery(Graph){
 
   resetZoom();
 
-  content.append("div")
-      .attr("class","split-bar")
-      .call(d3.drag()
-        .on("drag",function(){
-          panelSize(d3.mouse(content.node())[0]);
-        }))
-
-  var panel = content.append("div")
-        .attr("class","gallery-panel")
-
-  panel.append("div")
-    .attr("class","close-button")
-    .on("click",function(){
-      content.classed("hide-panel",true);
-      panelSize();
-    });
-
-  var panelContent = panel.append("div")
-        .attr("class","panel-content")
-        .append("div");
-
-  var zoomsvg = gallery.append("svg")
+  var zoomsvg = content.append("div")
     .attr("class","zoom-svg")
-    .attr("width",40)
-    .attr("height",100)
+    .append("svg")
+      .attr("width",40)
+      .attr("height",100)
 
   makeZoomIn(zoomsvg,100)
     .on("click",function(){
@@ -208,48 +187,17 @@ function gallery(Graph){
     })
 
   if(options.note){
-    var note = body.append("div")
+    var note = galleryBox.append("div")
       .attr("class","gallery-note")
       .html(options.note)
   }
 
   if(options.help){
-    panelContent.html(options.help);
-  }else{
-    content.classed("hide-panel",true);
+    infoPanel.changeInfo(options.help);
   }
-  panelSize();
-
-  content.style("height",(height - topBar.node().offsetHeight - 20 - (options.note ? note.node().offsetHeight : 0))+"px");
 
   function resetZoom(){
     gallery.call(zoom.transform,d3.zoomIdentity.scale(options.zoom));
-  }
-
-  function panelSize(size){
-    var w = parseInt(content.style("width")) - 20,
-        pw = 0,
-        gw = 0;
-    if(typeof size == "number"){
-      gw = size - 6;
-      if(gw < 100){
-        return;
-      }
-      pw = w - gw - 12;
-      if(pw < 100){
-        return;
-      }
-    }else{
-      if(!content.classed("hide-panel")){
-        pw = parseInt(panel.style("width"));
-        if(pw<100){
-          pw = (w/3) - 6;
-        }
-        gw = w - pw - 6;
-      }
-    }
-    panel.style("width", pw ? pw + "px" : null);
-    gallery.style("width", gw ? gw + "px" : null);
   }
 
   function displayGraph(newfilter){
@@ -272,7 +220,7 @@ function gallery(Graph){
       })
     }
 
-    var items = galleryItems.selectAll(".item").data(data, function(d){ return d[options.nodeName]; });
+    var items = gallery.selectAll(".item").data(data, function(d){ return d[options.nodeName]; });
 
     var itemsEnter = items.enter()
           .append("div").attr("class","item")
@@ -315,10 +263,8 @@ function gallery(Graph){
             n.selected = true;
           }
           displayGraph();
-          if(options.nodeInfo && n[options.nodeInfo]){
-            content.classed("hide-panel",false);
-            panelSize();
-            panelContent.html(n[options.nodeInfo]);
+          if(options.nodeInfo){
+            infoPanel.changeInfo(n[options.nodeInfo]);
           }
       })
 
@@ -400,17 +346,24 @@ function gallery(Graph){
     if(options.imageItems){
       itemsUpdate.style("border-color",function(d){
         if(!d.selected && options.nodeColor){
-            return colorScale(d[options.nodeColor]);
+            return applyColorScale(colorScale,d[options.nodeColor]);
         }
         return null;
       })
     }else{
       itemsUpdate.select("div:first-child").style("background-color",function(d){
         if(options.nodeColor){
-            return colorScale(d[options.nodeColor]);
+            return applyColorScale(colorScale,d[options.nodeColor]);
         }
         return options.defaultColor;
       })
+    }
+
+    function applyColorScale(scale, value){
+      if(value == null){
+        return basicColors.white;
+      }
+      return scale(value);
     }
 
     function imgWidth(img){
@@ -488,7 +441,7 @@ function gallery(Graph){
         data,
         scale,
         displayGraph,
-        newFilter,
+        filterHandler,
         scalePicker;
 
     function exports(parent){
@@ -501,14 +454,43 @@ function gallery(Graph){
       if(scale.name=="i"){
         parent.select("div.scale").remove();
 
-        var legends = parent.select(".legends");
+        var legends = parent.select(".legends"),
+            showPanelButton = parent.select(".show-panel-button");
+
         var initialize = false;
         if(legends.empty()){
           initialize = true;
+
+          var showPanelButton = parent.append("div").attr("class","show-panel-button");
+          showPanelButton.append("span");
+          showPanelButton.append("span");
+          showPanelButton.append("span");
+          showPanelButton.on("click",function(){
+            parent.classed("hide-legend",false);
+          })
+
           legends = parent.append("div").attr("class","legends");
+          legends.append("div")
+            .attr("class","highlight-header")
+            .text(texts.Legend)
+            .append("div")
+              .attr("class","close-button")
+              .on("click",function(){
+                parent.classed("hide-legend",true);
+              })
+
+          legends.append("div")
+              .attr("class","goback")
+              .on("click",function(){
+                filterHandler.removeFilter();
+              })
+
           legends.append("div").attr("class","legends-content")
             .append("div").attr("class","legend")
         }
+
+        legends.select(".goback").style("display", filterHandler.getFilteredNames()===false ? "none" : null)
+
         var content = legends.select(".legends-content");
         var legend = legends.select(".legend");
 
@@ -569,7 +551,7 @@ function gallery(Graph){
           return false;
         })
 
-        var legendsHeight = parent.node().parentNode.offsetHeight-100;
+        var legendsHeight = parent.node().parentNode.offsetHeight-250;
         if(content.node().offsetHeight>legendsHeight){
           content.style("height",legendsHeight+"px")
         }
@@ -601,7 +583,7 @@ function gallery(Graph){
             legend.selectAll(".legend-item > .checked").each(function(d){
               values.push(d);
             });
-            newFilter(value,values);
+            filterHandler.newFilter(value,values);
           })
           .attr("title",texts.filterInfo)
         }
@@ -620,6 +602,7 @@ function gallery(Graph){
       // linear scale
       if(scale.name=="h"){
         parent.select("div.legends").remove();
+        parent.select(".show-panel-button").remove();
         
         displayLinearScale(parent,
           value,
@@ -660,9 +643,9 @@ function gallery(Graph){
       return exports;
     };
 
-    exports.newFilter = function(x) {
-      if (!arguments.length) return newFilter;
-      newFilter = x;
+    exports.filterHandler = function(x) {
+      if (!arguments.length) return filterHandler;
+      filterHandler = x;
 
       return exports;
     };

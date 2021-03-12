@@ -38,21 +38,17 @@ multigraphCreate(..., mode = c("default","parallel","frame"),
 }
 \examples{
 \dontrun{
-nets <- list()
-N <- data.frame(name=paste0("node",1:2))
-E <- data.frame(Source="node1",Target="node2")
-nets[["net1"]] <- network_rd3(N, E, repulsion=98, label=FALSE)
+data(miserables)
+net <- network_rd3(miserables$nodes, miserables$links,
+         size="degree", color="group", lwidth="value")
 
-for(i in 3:100){
-  N <- rbind(N,data.frame(name=paste0("node",i)))
-  E <- rbind(E,data.frame(Source=paste0("node",i-1),Target=paste0("node",i)))
-  nets[[paste0("net",i-1)]] <- network_rd3(N, E, repulsion=100-i, label=FALSE)
-}
+data(finches)
+data(galapagos)
+bar <- barplot_rd3(finches, galapagos, select="Certhidea olivacea")
 
-nets$mode="frame"
-nets$dir="incremental"
-nets$speed=100
+data(sociologists)
+time <- timeline_rd3(sociologists,"name","birth","death","birthcountry")
 
-do.call(multigraphCreate,nets)
+multigraphCreate(network=net, barplot=bar, timeline=time)
 }
 }

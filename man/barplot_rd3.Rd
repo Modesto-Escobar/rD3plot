@@ -49,6 +49,9 @@ Modesto Escobar, Department of Sociology and Communication, University of Salama
 \examples{
 data(finches)
 data(galapagos)
-barplot_rd3(finches, galapagos, select="Certhidea olivacea",
+barplot <- barplot_rd3(finches, galapagos, select="Certhidea olivacea",
             note="Data source: Sanderson (2000)")
+\dontrun{
+plot(barplot)
+}
 }

@@ -1,3 +1,11 @@
+var basicColors = {
+  "black": "#000000", // black
+  "white": "#ffffff", // white
+  "darkGrey": "#777777", // dark grey
+  "mediumGrey": "#c6c6c6", // medium grey
+  "lightGrey": "#f5f5f5" // light grey
+}
+
 var categoryColors = [
   "#1f77b4", // blue
   "#ff7f0e", // orange

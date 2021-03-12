@@ -22,4 +22,7 @@ data(miserables)
 net <- network_rd3(miserables$nodes, miserables$links,
   size="degree", color="group", lwidth="value")
 gallery <- asGallery(net)
+\dontrun{
+plot(gallery)
+}
 }

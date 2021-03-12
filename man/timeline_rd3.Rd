@@ -41,5 +41,8 @@ Modesto Escobar, Department of Sociology and Communication, University of Salama
 \examples{
 # Database of 19th century sociologists
 data(sociologists)
-timeline_rd3(sociologists,"name","birth","death","birthcountry")
+timeline <- timeline_rd3(sociologists,"name","birth","death","birthcountry")
+\dontrun{
+plot(timeline)
+}
 }

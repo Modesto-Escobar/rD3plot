@@ -21,11 +21,6 @@ function network(Graph){
 
   var defaultColor = categoryColors[0], // nodes and areas default color
       defaultLinkColor = "#999999", // links default color
-      black = "#000000", // black
-      darkGrey = "#777777", // dark grey
-      mediumGrey = "#c6c6c6", // medium grey
-      lightGrey = "#f5f5f5", // light grey
-      white = "#ffffff", // white
       linkSelectedColor = "#BB0", // Color of selected links
       nodeSelectedColor = "#FF0", // Color of selected nodes
       defaultShape = "Circle", // node shape by default
@@ -72,6 +67,12 @@ function network(Graph){
   checkGraphData();
 
   width = computeWidth();
+
+  var infoPanel = displayInfoPanel();
+  body.call(infoPanel);
+  infoPanel.selection()
+    .style("position","absolute")
+    .style("height", (computeHeight() - 20) + "px")
 
   // main bar
   var main = body.append("div")
@@ -245,7 +246,7 @@ function network(Graph){
           return;
         case "h":
           if(options.help){
-            displayInfoPanel(options.help);
+            infoPanel.changeInfo(options.help);
           }
           return;
         case "i":
@@ -302,7 +303,7 @@ function network(Graph){
             displayBottomPanel();
             displaySidebar();
           }else{
-            body.select("div.infopanel div.close-button").dispatch("click");
+            infoPanel.close();
           }
           return;
         case "y":
@@ -352,7 +353,7 @@ function network(Graph){
   applyInitialFilter();
 
   if(options.helpOn){
-    displayInfoPanel(options.help);
+    infoPanel.changeInfo(options.help);
   }
 
   function selectedNodesLength(){
@@ -493,20 +494,20 @@ function network(Graph){
 
     if(options.nodeBipolar){
       switch(defaultColor) {
-        case black:
+        case basicColors.black:
           options.colorScalenodeColor = "RdWhBk";
           break;
         case categoryColors[2]: // green
           options.colorScalenodeColor = "RdWhGn";
           break;
         default:
-          colorScales['custom1'] = [categoryColors[4],white,defaultColor];
-          colorScales['custom2'] = [defaultColor,white,categoryColors[4]];
+          colorScales['custom1'] = [categoryColors[4],basicColors.white,defaultColor];
+          colorScales['custom2'] = [defaultColor,basicColors.white,categoryColors[4]];
           options.colorScalenodeColor = "custom1";
       }
     }else{
       switch(defaultColor) {
-        case black:
+        case basicColors.black:
           options.colorScalenodeColor = "WhBk";
           break;
         case categoryColors[1]: // blue
@@ -519,8 +520,8 @@ function network(Graph){
           options.colorScalenodeColor = "WhRd";
           break;
         default:
-          colorScales['custom1'] = [defaultColor,white];
-          colorScales['custom2'] = [white,defaultColor];
+          colorScales['custom1'] = [defaultColor,basicColors.white];
+          colorScales['custom2'] = [basicColors.white,defaultColor];
           options.colorScalenodeColor = "custom2";
       }
     }
@@ -683,7 +684,7 @@ function displayMain(){
         .height(24)
         .src(b64Icons.help)
         .title(texts.showHelp+" (ctrl + h)")
-        .job(function(){ displayInfoPanel(options.help); }));
+        .job(function(){ infoPanel.changeInfo(options.help); }));
     }
     if(options.showExport){
       main.call(iconButton()
@@ -1287,8 +1288,8 @@ showTables();
       .call(getSVG().d(d4paths.loop))
       .on("click",function(){
         frameControls.loop = !frameControls.loop;
-        d3.select(this).style("background-color",frameControls.loop?darkGrey:null)
-          .selectAll("path").style("fill",frameControls.loop?lightGrey:null);
+        d3.select(this).style("background-color",frameControls.loop?basicColors.darkGrey:null)
+          .selectAll("path").style("fill",frameControls.loop?basicColors.basicColors.lightGrey:null);
       })
       var stopRecord = function(){
           frameControls.recorder.stop();
@@ -1313,14 +1314,14 @@ showTables();
             frameControls.recorder = new CanvasRecorder(d3.select("div.plot > canvas").node());
             simulation.restart();
             if(frameControls.recorder.start && frameControls.recorder.start()){
-              d3.select(this).style("background-color",darkGrey)
+              d3.select(this).style("background-color",basicColors.darkGrey)
                 .select("path").style("fill","Red");
             }else{
               delete frameControls.recorder;
             }
           }
         }
-      }).style("background-color", frameControls.recorder ? darkGrey : null)
+      }).style("background-color", frameControls.recorder ? basicColors.darkGrey : null)
       .select("path").style("fill", frameControls.recorder ? "#d62728" : null);
       frameButons.append("button") // stop
       .call(getSVG().d(d4paths.stop))
@@ -2083,11 +2084,11 @@ function drawSVG(){
         .attr("width",20)
         .attr("height",16)
         .attr("rx",2)
-        .style("stroke",darkGrey)
-        .style("fill",white)
+        .style("stroke",basicColors.darkGrey)
+        .style("fill",basicColors.white)
       bubble.append("text")
         .attr("text-anchor","start")
-        .attr("fill",black)
+        .attr("fill",basicColors.black)
 
       brush.on("brush", brushed)
            .on("start",function(){
@@ -2227,12 +2228,12 @@ function clickFrameCtrlBtn(){
             .selectAll("path").style("fill",null);
           if(frameControls.play){
             divFrameCtrl.select("button.play")
-              .style("background-color",darkGrey)
+              .style("background-color",basicColors.darkGrey)
               .selectAll("path").style("fill","LawnGreen");
           }else{
             divFrameCtrl.select("button.pause")
-              .style("background-color",darkGrey)
-              .selectAll("path").style("fill",lightGrey);
+              .style("background-color",basicColors.darkGrey)
+              .selectAll("path").style("fill",basicColors.lightGrey);
           }
         }
 }
@@ -2478,7 +2479,7 @@ function drawNet(){
 
   row.append("line")
       .attr("x2", side)
-    .style("stroke",white);
+    .style("stroke",basicColors.white);
 
   appendText(row,true);
       
@@ -2490,7 +2491,7 @@ function drawNet(){
 
   column.append("line")
       .attr("x1", -side)
-    .style("stroke",white);
+    .style("stroke",basicColors.white);
 
   appendText(column,false);
 
@@ -2516,7 +2517,7 @@ function drawNet(){
         .data(d3.values(lines))
       .enter().append("path")
         .attr("class","cluster")
-        .style("stroke", darkGrey)
+        .style("stroke", basicColors.darkGrey)
         .style("fill", "none")
         .attr("d",function(d){
             var x1 = d[0]*x.bandwidth() + x.bandwidth()/2,
@@ -2625,7 +2626,7 @@ function drawNet(){
         .attr("dy", ".32em")
         .attr("text-anchor", "middle")
         .style("font-weight", "bold")
-        .style("fill", function(link){ return d3.hsl(VisualHandlers.linkIntensity(link)).l > 0.75 ? black : white; })
+        .style("fill", function(link){ return d3.hsl(VisualHandlers.linkIntensity(link)).l > 0.75 ? basicColors.black : basicColors.white; })
         .style("font-size", x.bandwidth()*2/5 + "px")
         .on("mouseover", mouseover)
         .text(function(d){
@@ -2876,14 +2877,14 @@ function drawNet(){
     ctx.clearRect(0, 0, width, height);
 
     if(frameControls.recorder){
-      ctx.fillStyle = options.background ? options.background : white;
+      ctx.fillStyle = options.background ? options.background : basicColors.white;
       ctx.fillRect(0, 0, width, height);
       var text = frameControls.frames[frameControls.frame];
       if(options.main && Array.isArray(options.main))
         text = options.main[frameControls.frame];
       ctx.font = 10*options.cex+"px "+fontFamily;
       ctx.textAlign = "right";
-      ctx.fillStyle = black;
+      ctx.fillStyle = basicColors.black;
       ctx.fillText(text,width-10,height-10);
     }
 
@@ -2982,7 +2983,7 @@ function drawNet(){
           if(options.nodeColor){
             strokeStyle = VisualHandlers.nodeColor(node);
           }else{
-            strokeStyle = darkGrey;
+            strokeStyle = basicColors.darkGrey;
           }
           ctx.strokeStyle = strokeStyle;
           ctx.lineWidth = 2;
@@ -3014,7 +3015,7 @@ function drawNet(){
     // write labels
     if(options.nodeLabel){
       ctx.textAlign = "left";
-      ctx.fillStyle = black;
+      ctx.fillStyle = basicColors.black;
       ctx.beginPath();
       ctx.font = 10*options.cex+"px "+fontFamily;
       nodes.forEach(function(node) {
@@ -3209,7 +3210,7 @@ function drawNet(){
 
       if(options.nodeLabel){
         doc.setFontSize(10*options.cex*scale);
-        doc.setTextColor(black);
+        doc.setTextColor(basicColors.black);
         nodes.forEach(function(node){
           var x = ((node.x + node.nodeSize + 8)*scale)+translate[0],
               y = ((node.y + 4)*scale)+translate[1],
@@ -3220,7 +3221,7 @@ function drawNet(){
       }
     }
 
-    doc.setTextColor(black);
+    doc.setTextColor(basicColors.black);
 
     d3.selectAll("div.main span.title").each(function(){
       doc.setFontSize(parseInt(d3.select(this).style("font-size")));
@@ -3375,7 +3376,7 @@ function clickNet(){
       showTooltip(node,true);
     }
     if(options.nodeInfo){
-      displayInfoPanel(node[options.nodeInfo]);
+      infoPanel.changeInfo(node[options.nodeInfo]);
     }
   }else{
     if(d3.event.shiftKey && options.heatmap){
@@ -3748,7 +3749,7 @@ function setShapeScale(){
 function setColorScale(){
   var config = setSomeSale(function(obj){
     if(config.scale){
-      return (obj[options[config.itemAttr]] === null)? (config.item == "node"? white : black) : config.scale(obj[options[config.itemAttr]]);
+      return (obj[options[config.itemAttr]] === null)? (config.item == "node"? basicColors.white : basicColors.black) : config.scale(obj[options[config.itemAttr]]);
     }else{
       return config.item == "link" && !options.heatmap ? defaultLinkColor : defaultColor;
     }
@@ -3872,57 +3873,6 @@ function displayVisualPicker(visual){
         displaySidebar();
         d3.select("div.window-background").remove();
       })
-}
-
-function displayInfoPanel(info){
-
-  var div = body.select("div.infopanel"),
-      prevPanel = !div.empty();
-
-  if(info){
-    div.remove();
-    if(!infoLeft){
-      infoLeft = docSize.width * 2/3;
-    }
-    div = body.append("div")
-          .attr("class","infopanel");
-    var infoHeight = ((options.showNodes || options.showLinks) ? 10 + height : docSize.height - 10)
-      - parseInt(div.style("top"))
-      - parseInt(div.style("padding-top"))
-      - parseInt(div.style("padding-bottom"));
-    div.style("height",infoHeight+"px");
-    div.style("left",docSize.width+"px").transition().duration(prevPanel?0:500)
-      .style("left",infoLeft+"px")
-    div.append("div")
-      .attr("class","drag")
-      .call(d3.drag()
-        .on("start", function() {
-          contentDiv.style("display","none");
-        })
-        .on("drag", function() {
-          var left = d3.mouse(body.node())[0]-parseInt(div.style("border-left-width"));
-          if(left>(docSize.width*2/4) && left<(docSize.width*3/4)){
-            infoLeft = left;
-            div.style("left",infoLeft+"px");
-          }
-        })
-        .on("end", function() {
-          contentDiv.style("display",null);
-        })
-      )
-    div.append("div")
-          .attr("class","close-button")
-          .on("click", function(){
-            div.transition().duration(500)
-              .style("left",docSize.width+"px")
-              .on("end",function(){
-                div.remove();
-              })
-          });
-    var contentDiv = div.append("div").append("div").html(info);
-  }else{
-    div.select("div.infopanel > div.close-button").dispatch("click");
-  }
 }
 
 function selectAllItems(){
@@ -4141,7 +4091,7 @@ function displayLegend(){
       key,
       title,
       text = String,
-      color = black,
+      color = basicColors.black,
       shape = defaultShape,
       data = [];
 
@@ -4564,8 +4514,8 @@ function showTables() {
   tableWrapper(linksData,"links",linkColumns);
 
   // hide infopanel
-  if(!body.select("div.infopanel").empty() && nodesData.length==0){
-    body.select("div.infopanel > div.close-button").dispatch("click");
+  if(nodesData.length==0){
+    infoPanel.close();
   }
 
   // update frequency bars
@@ -4921,7 +4871,7 @@ function displayFreqBars(){
   var div = body.select(".frequency-barplots");
 
   if(div.empty()){
-    displayInfoPanel("<div class=\"frequency-barplots\"><div>");
+    infoPanel.changeInfo("<div class=\"frequency-barplots\"><div>");
     div = body.select(".frequency-barplots");
     div.append("div")
     .attr("class","select-wrapper")
@@ -5135,7 +5085,7 @@ function displayFreqBars(){
           .attr("y", function(d) { return y(d.y2); })
           .attr("width", function(d) { return x(d.x1) - x(d.x0) -1 -8 ; })
           .attr("height", function(d) { return h - y(d.y2); })
-          .style("fill", mediumGrey)
+          .style("fill", basicColors.mediumGrey)
       }
     }
   })
@@ -5224,7 +5174,7 @@ function svg2png(callback){
   canvas.width = svg.attr("width");
   canvas.height = svg.attr("height");
   var ctx = canvas.getContext("2d");
-  ctx.fillStyle = white;
+  ctx.fillStyle = basicColors.white;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   svg.selectAll(".zoombutton").style("display","none");
@@ -5307,11 +5257,8 @@ function movePan(dir){
 
 function resetPan(){
   var w = width,
-      h = height,
-      infopanel = body.select(".infopanel");
-  if(!infopanel.empty()){
-    w = w-infopanel.node().offsetWidth;
-  }
+      h = height;
+  w = w - infoPanel.selection().node().offsetWidth;
   transform.x = w/2;
   transform.y = h/2;
   Sliders.zoom.update(options.zoomScale).brushedValue(false);

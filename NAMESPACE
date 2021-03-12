@@ -1,4 +1,5 @@
 export(multigraphCreate)
+export(evolNetwork_rd3)
 export(network_rd3)
 export(timeline_rd3)
 export(barplot_rd3)

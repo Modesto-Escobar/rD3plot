@@ -25,8 +25,9 @@ layoutCircle(N,nodes=seq_len(nrow(N)),deg=0,name=NULL)
 }
 \examples{
 A <- data.frame(name=letters)
-
 L <- layoutCircle(A,name="name")
-
-network_rd3(A,layout=L)
+net <- network_rd3(A,layout=L)
+\dontrun{
+plot(net)
+}
 }

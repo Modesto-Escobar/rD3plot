@@ -11,6 +11,9 @@ function timeline(json){
 
   var body = d3.select("body");
 
+  var infoPanel = displayInfoPanel();
+  body.call(infoPanel);
+
   if(options.cex)
     body.style("font-size", 10*options.cex + "px")
   else
@@ -32,7 +35,7 @@ function timeline(json){
     }
     if(d3.event.ctrlKey && key == "x"){
       body.selectAll(".tooltip.fixed").remove();
-      body.select("div.infopanel div.close-button").dispatch("click");
+      infoPanel.close();
       return;
     }
   })
@@ -74,7 +77,7 @@ function timeline(json){
 
   // top bar
   var topBar = body.append("div")
-        .attr("class","topbar")
+        .attr("class","topbar fixed-topbar")
 
   topBar.call(iconButton()
         .alt("pdf")
@@ -160,7 +163,7 @@ function timeline(json){
     ".mini text { font-size:  90%; }"+
     ".mini .item { fill-opacity: .7; stroke-width: 6;  }"+
     ".brush .selection { fill: dodgerblue; }"+
-    ".axis path, .axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }"+
+    ".axis path, .axis line { fill: none; stroke: "+basicColors.black+"; shape-rendering: crispEdges; }"+
     ".main text { font-size:  120%; }")
 
   displayGraph();
@@ -524,7 +527,7 @@ function timeline(json){
       .attr("height", margin[2]+10);
 
     timeHeader.append("rect")
-      .style("fill","#fff")
+      .style("fill",basicColors.white)
       .attr("x",margin[3])
       .attr("width", w)
       .attr("height", margin[2]+10);
@@ -621,12 +624,12 @@ function timeline(json){
       .style("left",((w/2)+margin[3])+"px")
       .style("width",0)
       .style("height",0)
-      .style("border-left","dashed 1px #000")
+      .style("border-left","dashed 1px "+basicColors.black)
       .style("z-index",-1);
 
     var pYear = plot.append("p")
       .attr("class","year")
-      .style("background-color","#fff")
+      .style("background-color",basicColors.white)
       .style("position","absolute")
       .style("top",yearGuideTop+"px")
       .style("margin-left","-16px")
@@ -731,7 +734,7 @@ function timeline(json){
           rectsEnter.append("text")
             .attr("y", -4)
 
-          rectsEnter.selectAll("rect, text").on("click.infopanel",function(d){ displayInfoPanel(d[options.info]); });
+          rectsEnter.selectAll("rect, text").on("click.infopanel",function(d){ infoPanel.changeInfo(d[options.info]); });
 
           tooltipActions(rectsEnter.selectAll("rect, text"),options.text);
 
@@ -770,7 +773,8 @@ function timeline(json){
                   .append("path")
                   .attr("class","event");
 
-            pointsEnter.on("click.infopanel",function(d){ displayInfoPanel(d[options.info]); });
+            pointsEnter.on("click.infopanel",function(d){ 
+              infoPanel.changeInfo(d[options.info]); });
 
             tooltipActions(pointsEnter,function(d){
               var html = "";
@@ -959,59 +963,6 @@ function timeline(json){
         .property("value",String)
         .text(String)
         .property("selected",function(d){ return d==options[option]?true:null; })
-  }
-
-  function displayInfoPanel(info){
-    if(!options.info)
-      return;
-
-    var docSize = viewport(),
-        div = body.select("div.infopanel"),
-        prevPanel = !div.empty();
-
-    if(info){
-      div.remove();
-      if(!infoLeft){
-        infoLeft = docSize.width * 2/3;
-      }
-      div = body.append("div")
-          .attr("class","infopanel");
-      var infoHeight = docSize.height
-      - parseInt(div.style("top"))
-      - parseInt(div.style("border-top-width"))
-      - parseInt(div.style("border-bottom-width"))
-      - parseInt(div.style("padding-top"))
-      - parseInt(div.style("padding-bottom"))
-      - 10;
-      div.style("position","fixed")
-         .style("height",infoHeight+"px")
-         .style("left",docSize.width+"px").transition().duration(prevPanel?0:500)
-           .style("left",infoLeft+"px")
-
-      div.append("div")
-      .attr("class","drag")
-      .call(d3.drag()
-        .on("drag", function() {
-          var left = d3.mouse(body.node())[0]-parseInt(div.style("border-left-width"));
-          if(left>(docSize.width*2/4) && left<(docSize.width*3/4)){
-            infoLeft = left;
-            div.style("left",infoLeft+"px");
-          }
-        })
-      )
-      div.append("div")
-          .attr("class","close-button")
-          .on("click", function(){
-            div.transition().duration(500)
-              .style("left",docSize.width+"px")
-              .on("end",function(){
-                div.remove();
-              })
-          });
-      div.append("div").append("div").html(info);
-    }else{
-      div.select("div.infopanel > div.close-button").dispatch("click");
-    }
   }
 
   function svgDownload(){

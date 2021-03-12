@@ -701,7 +701,8 @@ function topFilter(){
           .text(texts.apply)
           .on("click",function(){
             add2filter();
-            applyfilter();
+            displayGraph(getNames());
+            displayTags();
           })
       }
 
@@ -741,9 +742,11 @@ function topFilter(){
       .attr("class","filter-tags")
   }
 
-  function applyfilter(){
-      var keys = d3.keys(selectedValues);
-      var names = data.filter(function(d){
+  function getNames(){
+    var names = false;
+    var keys = d3.keys(selectedValues);
+    if(keys.length){
+      names = data.filter(function(d){
         for(var i = 0; i<keys.length; i++){
           var value = false;
           var k = keys[i];
@@ -776,8 +779,8 @@ function topFilter(){
         }
         return true;
       }).map(function(d){ return d[attr]; });
-      displayGraph(names);
-      displayTags();
+    }
+    return names;
   }
 
   function displayTags(){
@@ -789,7 +792,8 @@ function topFilter(){
           .html("&times;")
           .on("click",function(d){
             delete selectedValues[d];
-            applyfilter();
+            displayGraph(getNames());
+            displayTags();
           })
       tags.exit().remove()
   }
@@ -826,8 +830,15 @@ function topFilter(){
 
   exports.newFilter = function(key,values){
     selectedValues = {};
-    selectedValues[key] = values;
-    applyfilter();
+    if(key){
+      selectedValues[key] = values;
+    }
+    displayGraph(getNames());
+    displayTags();
+  }
+
+  exports.getFilteredNames = function(){
+    return getNames();
   }
 
   return exports;
@@ -1359,4 +1370,92 @@ function addGradient(defs,id,range){
         .style("stop-color",String);
 
     stops.order();
+}
+
+
+function displayInfoPanel(){
+  var docSize,
+      infoLeft = 0,
+      infoHeight = 0,
+      infopanel,
+      contentDiv,
+      paddingOffset = 0;
+
+  function exports(sel){
+    docSize = viewport();
+    infoLeft = docSize.width * 2/3;
+
+    infopanel = sel.append("div")
+      .attr("class","infopanel")
+      .style("display","none")
+      .style("left",docSize.width+"px")
+
+    infoHeight = docSize.height
+      - (parseInt(infopanel.style("top"))*2)
+      - parseInt(infopanel.style("border-top-width"))
+      - parseInt(infopanel.style("border-bottom-width"))
+      - parseInt(infopanel.style("padding-top"))
+      - parseInt(infopanel.style("padding-bottom"));
+    infopanel.style("height",infoHeight+"px");
+
+    infopanel.append("div")
+      .attr("class","drag")
+      .call(d3.drag()
+        .on("start", function() {
+          contentDiv.style("display","none");
+        })
+        .on("drag", function() {
+          var left = d3.mouse(sel.node())[0]-parseInt(infopanel.style("border-left-width"));
+          if(left>(docSize.width*2/4) && left<(docSize.width*3/4)){
+            infoLeft = left;
+            infopanel.style("left",infoLeft+"px");
+          }
+        })
+        .on("end", function() {
+          contentDiv.style("display",null);
+        })
+      )
+
+    infopanel.append("div")
+          .attr("class","close-button")
+          .on("click", closePanel);
+
+    contentDiv = infopanel.append("div")
+      .attr("class","panel-content")
+      .append("div")
+  }
+
+  function closePanel(){
+    if(infopanel.style("display")!="none"){
+      infopanel.transition().duration(500)
+        .style("left",docSize.width+"px")
+        .on("end",function(){
+          contentDiv.html("");
+          infopanel.style("display","none");
+        })
+    }
+  }
+
+  exports.changeInfo = function(info){
+    if(info){
+      contentDiv.html(info);
+      if(infopanel.style("display")=="none"){
+        infopanel.style("display",null);
+        infopanel.transition().duration(500)
+          .style("left",infoLeft+"px")
+      }
+    }else{
+      closePanel();
+    }
+  }
+
+  exports.close = function(){
+    closePanel();
+  }
+
+  exports.selection = function(){
+    return infopanel;
+  }
+
+  return exports;
 }

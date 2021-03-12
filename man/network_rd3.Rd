@@ -94,6 +94,9 @@ Modesto Escobar, Department of Sociology and Communication, University of Salama
 }
 \examples{
 data(miserables)
-network_rd3(miserables$nodes, miserables$links,
-            size="degree", color="group", lwidth="value")
+net <- network_rd3(miserables$nodes, miserables$links,
+         size="degree", color="group", lwidth="value")
+\dontrun{
+plot(net)
+}
 }

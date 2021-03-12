@@ -89,7 +89,7 @@ function barplot(json){
 
   // top bar
   var topBar = body.append("div")
-    .attr("class","topbar")
+    .attr("class","topbar fixed-topbar")
 
   topBar.call(iconButton()
         .alt("pdf")
@@ -232,12 +232,12 @@ function barplot(json){
          .on("click",function(){
             if(subject){
               sigFilter = !sigFilter;
-              d3.select(this).style("background-color",sigFilter?"#ccc":null)
+              d3.select(this).style("background-color",sigFilter?basicColors.mediumGrey:null)
               displayGraph();
             }
          })
       }
-      button.style("background-color",sigFilter?"#ccc":null);
+      button.style("background-color",sigFilter?basicColors.mediumGrey:null);
     }
   }
 
@@ -441,15 +441,15 @@ function barplot(json){
       })
 
     svg.append("style").text("svg { font-family: sans-serif; font-size: "+body.style("font-size")+"; } "+
-      ".main { font-size: 200%; }"+
-      (whiskers ? "" : ".bar, .legend path { stroke: #000; stroke-width: .4px; }") +
-      ".a { fill: "+colors[0]+"; }"+
-      ".b { fill: "+colors[1]+"; }"+
-      ".c { fill: "+colors[2]+"; }" +
-      (whiskers ? ".c, " : "") + ".axis path, .axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }"+
-      ".dotted { stroke: #ddd; stroke-width: 2; stroke-dasharray: 1, 10; stroke-linecap: round; }" +
-      ".y.axis path, .y.axis line { display: none; }"+
-      ".line { stroke-dasharray: 2, 2; stroke: #333; }");
+      ".main { font-size: 200%; } "+
+      (whiskers ? "" : ".bar, .legend path { stroke: "+basicColors.black+"; stroke-width: .4px; } ") +
+      ".a { fill: "+colors[0]+"; } "+
+      ".b { fill: "+colors[1]+"; } "+
+      ".c { fill: "+colors[2]+"; } " +
+      (whiskers ? ".c, " : "") + ".axis path, .axis line { fill: none; stroke: "+basicColors.black+"; shape-rendering: crispEdges; } "+
+      ".dotted { stroke: "+basicColors.mediumGrey+"; stroke-width: 2; stroke-dasharray: 1, 10; stroke-linecap: round; } " +
+      ".y.axis path, .y.axis line { display: none; } "+
+      ".line { stroke-dasharray: 2, 2; stroke: "+basicColors.black+"; }");
 
     svg.append("text")
         .attr("class","main")
@@ -580,7 +580,7 @@ function barplot(json){
         g.append("text")
           .attr("class","significance")
           .style("text-anchor","end")
-          .style("fill","#fff")
+          .style("fill",basicColors.white)
           .style("font-size",(bandwidth)+"px")
           .attr("x",x(value)-4)
           .attr("y",bandwidth*1.08)
