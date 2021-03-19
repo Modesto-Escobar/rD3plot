@@ -1379,7 +1379,8 @@ function displayInfoPanel(){
       infoHeight = 0,
       infopanel,
       contentDiv,
-      paddingOffset = 0;
+      paddingOffset = 0,
+      transitionDuration = 500;
 
   function exports(sel){
     docSize = viewport();
@@ -1427,10 +1428,9 @@ function displayInfoPanel(){
 
   function closePanel(){
     if(infopanel.style("display")!="none"){
-      infopanel.transition().duration(500)
+      infopanel.transition().duration(transitionDuration)
         .style("left",docSize.width+"px")
         .on("end",function(){
-          contentDiv.html("");
           infopanel.style("display","none");
         })
     }
@@ -1441,7 +1441,7 @@ function displayInfoPanel(){
       contentDiv.html(info);
       if(infopanel.style("display")=="none"){
         infopanel.style("display",null);
-        infopanel.transition().duration(500)
+        infopanel.transition().duration(transitionDuration)
           .style("left",infoLeft+"px")
       }
     }else{

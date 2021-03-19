@@ -123,10 +123,36 @@ function network(Graph){
       return;
     }
     if(d3.event.ctrlKey){
-      d3.event.preventDefault();
       var key = getKey(d3.event);
       switch(key){
+        case "Enter":
+        case "0":
+        case "1":
+        case "2":
+        case "3":
+        case "4":
+        case "5":
+        case "a":
+        case "b":
+        case "c":
+        case "d":
+        case "e":
+        case "f":
+        case "g":
+        case "h":
+        case "i":
+        case "l":
+        case "m":
+        case "o":
+        case "p":
+        case "r":
+        case "s":
+        case "x":
+        case "y":
+          d3.event.preventDefault();
+          return;
         case "+":
+          d3.event.preventDefault();
           if(d3.event.shiftKey){
             Sliders.repulsion.update(options['charge']+(chargeRange[1]/100));
           }else{
@@ -134,6 +160,7 @@ function network(Graph){
           }
           return;
         case "-":
+          d3.event.preventDefault();
           if(d3.event.shiftKey){
             Sliders.repulsion.update(options['charge']-(chargeRange[1]/100));
           }else{
@@ -144,6 +171,7 @@ function network(Graph){
         case "ArrowLeft":
         case "ArrowDown":
         case "ArrowRight":
+          d3.event.preventDefault();
           if(d3.event.shiftKey){
             moveShift(key);
           }else{
@@ -4304,7 +4332,7 @@ function getImageName(path){
 }
 
 function showTables() {
-  var hidden = hiddenFields.slice((options.showCoordinates && !options.heatmap) ? 2 : 0);
+  var hidden = getTableHiddenFields();
 
   var totalItems = {};
   ["nodes","links"].forEach(function(name){
@@ -4337,18 +4365,7 @@ function showTables() {
           return currentData[dd]._selected;
         });
       columns.forEach(function(col,i){
-          var txt = d[col];
-          if(txt == null)
-            txt = "";
-          if(typeof txt == 'object'){
-            if(frameControls)
-              txt = txt[frameControls.frame];
-            else
-              txt = txt.join("; ");
-          }
-          if(typeof txt == 'number'){
-            txt = formatter(txt);
-          }
+          var txt = renderCell(d[col]);
           tr.append("td").html(txt)
               .style("text-align",columnAlign[i])
               .on("mousedown",function(){ d3.event.preventDefault(); });
@@ -4580,6 +4597,27 @@ function showTables() {
   }
 }
 
+function getTableHiddenFields(){
+  return hiddenFields.slice((options.showCoordinates && !options.heatmap) ? 2 : 0);
+}
+
+function renderCell(txt){
+  if(txt == null){
+    return "";
+  }
+  if(typeof txt == 'object'){
+    if(frameControls){
+      return txt[frameControls.frame];
+    }else{
+      return txt.join("; ");
+    }
+  }
+  if(typeof txt == 'number'){
+    return formatter(txt);
+  }
+  return String(txt);
+}
+
 // check checkboxes after node selections
 function checkLegendItemsChecked() {
     var parent = legendPanel.select(".legends > div.legends-content"),
@@ -4616,40 +4654,32 @@ function checkLegendItemsChecked() {
 }
 
 function tables2xlsx(){
-      var nodes = [],
-          links = [],
-          tableNodes = d3.select(".tables .nodes table"),
-          tableLinks = d3.select(".tables .links table"),
-          loadData = function(table){
-            var items = [];
-            items.push([]);
-            table.selectAll("th").each(function(){
-              items[0].push(d3.select(this).text());
-            })
-            table.selectAll("tr").each(function(){
-              var row = [];
-              d3.select(this).selectAll("td").each(function(){
-                var dat = d3.select(this).text();
-                if(d3.select(this).style("text-align")=="right") dat = +dat;
-                row.push(dat);
-              })
-              items.push(row);
-            })
-            return items;
-          }
-      if(!tableNodes.empty()){
-        nodes = loadData(tableNodes);
-      }
-      if(!tableLinks.empty()){
-        links = loadData(tableLinks);
-      }
-      if(nodes.length == 0 && links.length == 0)
+      var hidden = getTableHiddenFields();
+      var nodenames = Graph.nodenames.filter(function(d){ return hidden.indexOf(d)==-1; }),
+          nodes = [nodenames],
+          linknames = Graph.linknames.filter(function(d){ return hidden.indexOf(d)==-1; }),
+          links = [linknames];
+      
+      Graph.nodes.forEach(function(node){
+        if(node.selected){
+          nodes.push(nodenames.map(function(col){ return renderCell(node[col]); }));
+        }
+      })
+
+      Graph.links.forEach(function(link){
+        if(link.selected){
+          links.push(linknames.map(function(col){ return renderCell(link[col]); }));
+        }
+      })
+
+      if(nodes.length == 1 && links.length == 1){
         displayWindow()
             .append("p")
               .attr("class","window-message")
               .text(texts.noitemsselected);
-      else
+      }else{
         downloadExcel({nodes: nodes, links: links}, d3.select("head>title").text());
+      }
 }
 
 function selectNodesFromTable(){

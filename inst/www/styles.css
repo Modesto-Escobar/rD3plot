@@ -1379,25 +1379,34 @@ div.grid-gallery {
   height: 100%;
   overflow: auto;
 }
-div.grid-gallery > .item {
+div.grid-gallery > .gallery-items > .item {
   display: inline-block;
   position: relative;
   margin: 0.5em;
-  border: solid #ffffff 3px;
 }
-div.grid-gallery > .item.selected {
-  border-color: yellow;
+div.grid-gallery > .gallery-items > .item > .img-wrapper {
+  border: solid 3px;
+  border-color: #ffffff;
 }
-div.grid-gallery > .item > img {
+div.grid-gallery > .gallery-items.rounded-items > .item > .img-wrapper {
+  border-radius: 50%;
+  overflow: hidden;
+}
+div.grid-gallery > .gallery-items > .item.selected > .img-wrapper {
+  border-color: #ffff00;
+}
+div.grid-gallery > .gallery-items > .item > .img-wrapper > img {
   display: block;
+  height: 100%;
 }
-div.grid-gallery > .item > span {
+div.grid-gallery > .gallery-items > .item > span {
   display: block;
   overflow: hidden;
   white-space: nowrap;
   position: relative;
+  padding: 3px;
 }
-div.grid-gallery > .item > span:after {
+div.grid-gallery > .gallery-items.fade-labels > .item > span:after {
   content: '';
   position: absolute;
   top: 0;
@@ -1407,7 +1416,7 @@ div.grid-gallery > .item > span:after {
   background: linear-gradient(to right, rgba(255,255,255,0) 75%, rgba(255,255,255,1));
   pointer-events: none;
 }
-div.grid-gallery > .item > .tooltip {
+div.grid-gallery > .gallery-items > .item > .tooltip {
   top: 0;
   left: 0;  
   z-index: 1;

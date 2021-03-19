@@ -9,12 +9,13 @@ galleryJSON <- function(gallery){
 
 galleryCreate <- function(gallery, dir){
   language <- getLanguageScript(gallery)
-  createHTML(dir, c("reset.css","styles.css"), c("d3.min.js","functions.js",language,"colorScales.js","gallery.js"), function(){ return(imgWrapper(gallery,galleryJSON,dir)) })
+  createHTML(dir, c("reset.css","styles.css"), c("d3.min.js","jspdf.min.js","jszip.min.js","html2canvas.min.js","functions.js",language,"colorScales.js","gallery.js"), function(){ return(imgWrapper(gallery,galleryJSON,dir)) })
 }
 
 gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
     ntext = NULL, info = NULL, image = NULL,
     zoom = 1, main = NULL, note = NULL, help = NULL,
+    roundedItems = FALSE,
     language = c("en", "es", "ca"), dir = NULL){
   if(is.null(name)){
     name <- colnames(nodes)[1]
@@ -40,6 +41,7 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
   if (!is.null(main)) options[["main"]] <- main
   if (!is.null(note)) options[["note"]] <- note
   if (!is.null(help)) options[["help"]] <- help
+  if (roundedItems) options[["roundedItems"]] <- TRUE
   options[["language"]] <- checkLanguage(language)
 
   if (!is.null(image)){

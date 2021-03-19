@@ -53,6 +53,33 @@ function gallery(Graph){
           d3.event.preventDefault();
           zoomsvg.select(".zoombutton.zoomreset").dispatch("click");
           return;
+        case "f":
+          d3.event.preventDefault();
+          filterSelection();
+          return;
+        case "h":
+          d3.event.preventDefault();
+          if(options.help){
+            infoPanel.changeInfo(options.help);
+          }
+          return;
+        case "l":
+          d3.event.preventDefault();
+          if(legendPanel.classed("hide-legend")){
+            legendPanel.select(".show-panel-button").dispatch("click");
+          }else{
+            legendPanel.select(".close-button").dispatch("click");
+          }
+          return;
+        case "r":
+          d3.event.preventDefault();
+          topFilterInst.removeFilter();
+          return;
+        case "s":
+          d3.event.preventDefault();
+          nodes.forEach(function(n){ n.selected = true; });
+          displayGraph();
+          return;
       }
     }
   });
@@ -63,6 +90,22 @@ function gallery(Graph){
   // top bar
   var topBar = galleryBox.append("div")
         .attr("class","topbar")
+
+  topBar.call(iconButton()
+        .alt("pdf")
+        .width(24)
+        .height(24)
+        .src(b64Icons.pdf)
+        .title(texts.pdfexport)
+        .job(gallery2pdf));
+
+  topBar.call(iconButton()
+        .alt("xlsx")
+        .width(24)
+        .height(24)
+        .src(b64Icons.xlsx)
+        .title(texts.downloadtable)
+        .job(nodes2xlsx));
 
   if(options.main){
     topBar.append("h2").text(options.main)
@@ -104,7 +147,7 @@ function gallery(Graph){
       }
       displayGraph();
     })
-  var opt = getSelectOptions();
+  var opt = getSelectOptions(sortAsc);
   opt.unshift("-"+texts.none+"-");
   colorSelect.selectAll("option")
         .data(opt)
@@ -125,7 +168,7 @@ function gallery(Graph){
   // node filter in topBar
   var topFilterInst = topFilter()
     .data(nodes)
-    .datanames(getSelectOptions())
+    .datanames(getSelectOptions(sortAsc))
     .attr(options.nodeName)
     .displayGraph(displayGraph);
   topBar.call(topFilterInst);
@@ -153,6 +196,10 @@ function gallery(Graph){
       })
 
   gallery.call(zoom);
+
+  var galleryItems = gallery.append("div")
+        .attr("class","gallery-items fade-labels")
+        .classed("rounded-items",options.roundedItems);
 
   var legend = displayLegend()
                  .type("Color")
@@ -220,23 +267,22 @@ function gallery(Graph){
       })
     }
 
-    var items = gallery.selectAll(".item").data(data, function(d){ return d[options.nodeName]; });
+    var items = galleryItems.selectAll(".item").data(data, function(d){ return d[options.nodeName]; });
 
     var itemsEnter = items.enter()
           .append("div").attr("class","item")
+    var imgWrapper = itemsEnter
+        .append("div")
+          .attr("class","img-wrapper")
     if(options.imageItems){
-      itemsEnter.append("img")
+      imgWrapper.append("img")
           .on("load", function(){
-            imgWidth(this);
+            itemWidth(d3.select(this.parentNode.parentNode),imgWidth(this));
           })
           .on("error", function(){
-            d3.select(this.parentNode).style("width",currentGridHeight+"px")
+            itemWidth(d3.select(this.parentNode.parentNode),currentGridHeight);
           })
           .attr("src",function(n){ return n[options.imageItems]; });
-    }else{
-      itemsEnter
-          .append("div")
-            .style("width","100%")
     }
 
     itemsEnter.append("span")
@@ -293,18 +339,19 @@ function gallery(Graph){
 
     var itemsUpdate = itemsEnter.merge(items);
     itemsUpdate.classed("selected",function(n){ return n.selected; });
-    if(options.imageItems){
-      itemsUpdate
-        .select("img")
-          .style("height",currentGridHeight+"px")
-          .each(function(){
-            imgWidth(this);
-          })
-    }else{
-       itemsUpdate.style("width",currentGridHeight+"px")
-          .select("div")
-            .style("height",currentGridHeight+"px")
-    }
+
+    itemsUpdate
+      .select(".img-wrapper")
+        .style("height",currentGridHeight+"px")
+    itemsUpdate.each(function(){
+      var item = d3.select(this),
+          w = currentGridHeight;
+      if(options.imageItems){
+        w = imgWidth(item.select(".img-wrapper > img").node());
+      }
+      itemWidth(item,w);
+    })
+
     itemsUpdate.selectAll("span, .tooltip").style("font-size",(currentGridHeight/gridHeight)+"em")
 
     var colorScale;
@@ -344,7 +391,7 @@ function gallery(Graph){
     legendPanel.call(legend);
 
     if(options.imageItems){
-      itemsUpdate.style("border-color",function(d){
+      itemsUpdate.select(".img-wrapper").style("border-color",function(d){
         if(!d.selected && options.nodeColor){
             return applyColorScale(colorScale,d[options.nodeColor]);
         }
@@ -371,7 +418,15 @@ function gallery(Graph){
       if(img.complete && img.naturalHeight!==0){
         ratio = img.naturalWidth / img.naturalHeight;
       }
-      d3.select(img.parentNode).style("width",(currentGridHeight*ratio)+"px")
+      return currentGridHeight*ratio;
+    }
+
+    function itemWidth(item,w){
+      var wrapperBorderWidth = 0;
+      ["left","right"].forEach(function(d){
+        wrapperBorderWidth += parseInt(item.select(".img-wrapper").style("border-"+d+"-width"));
+      })
+      item.style("width",(w + wrapperBorderWidth)+"px");
     }
   }
 
@@ -389,10 +444,10 @@ function gallery(Graph){
       return !filter || filter.indexOf(n[options.nodeName])!=-1 ? true : false;
   }
 
-  function getSelectOptions(){
+  function getSelectOptions(order){
     return Graph.nodenames.filter(function(d){ return d.substring(0,1)!="_"; })
         .filter(function(d){ return !options.imageItems || d!=options.imageItems; })
-        .sort(sortAsc);
+        .sort(order ? order : function(){ return 0; });
   }
 
   function topOrder(topBar,data,displayGraph){
@@ -409,7 +464,7 @@ function gallery(Graph){
       displayGraph();
     })
 
-    var opt = getSelectOptions();
+    var opt = getSelectOptions(sortAsc);
     opt.unshift("-default-");
     selOrder.selectAll("option")
         .data(opt)
@@ -658,6 +713,48 @@ function gallery(Graph){
     };
 
     return exports;
+  }
+
+  function gallery2pdf(){
+    var win = displayWindow(300);
+    win.html("<h2>"+texts.loading+"</h2>");
+    var close = d3.select(win.node().parentNode).select(".close-button")
+      .style("display","none");
+
+    galleryItems.classed("fade-labels",false)
+
+    var margin = 10,
+        w = galleryItems.node().offsetWidth + margin*2
+        h = galleryItems.node().offsetHeight + margin*2;
+    if(height>h){
+      h = height;
+    }
+    var doc = new jsPDF({
+      orientation: (w>h)?"l":"p",
+      unit: 'pt',
+      format: [w,h]
+    });
+
+    doc.html(gallery.node(), {
+       callback: function (doc) {
+         doc.save(d3.select("head>title").text()+".pdf");
+         galleryItems.classed("fade-labels",true)
+         close.dispatch("click");
+       },
+       x: margin,
+       y: margin
+    });
+  }
+
+  function nodes2xlsx(){
+      var opt = getSelectOptions(),
+          data = nodes.filter(filterNodes).map(function(d){
+            return opt.map(function(dd){ return d[dd]; });
+          });
+      data.unshift(opt);
+      if(data.length != 0){
+        downloadExcel({items: data}, d3.select("head>title").text());
+      }
   }
 } // gallery function end
 

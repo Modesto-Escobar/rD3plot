@@ -12,6 +12,7 @@ Object of class \code{gallery_rd3}.
 gallery_rd3(nodes, name = NULL, label = NULL, color = NULL,
     ntext = NULL, info = NULL, image = NULL,
     zoom = 1, main = NULL, note = NULL, help = NULL,
+    roundedItems = FALSE,
     language = c("en", "es", "ca"), dir = NULL)
 }
 \arguments{
@@ -24,6 +25,7 @@ gallery_rd3(nodes, name = NULL, label = NULL, color = NULL,
 \item{note}{lower title of the graph.}
 \item{ntext}{column name with html text in the nodes data frame.}
 \item{info}{column name with information to display in a panel in the nodes data frame.}
+\item{roundedItems}{Display items with rounded borders.}
 \item{language}{a character string indicating the language of the graph (en=english (default); es=spanish; ca=catalan).}
 \item{help}{a character string indicating a help text of the graph.}
 \item{image}{column name which indicates the image paths in the nodes data frame.}
