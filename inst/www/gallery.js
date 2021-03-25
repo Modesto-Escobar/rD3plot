@@ -91,6 +91,16 @@ function gallery(Graph){
   var topBar = galleryBox.append("div")
         .attr("class","topbar")
 
+  if(options.help){
+      topBar.call(iconButton()
+        .alt("help")
+        .width(24)
+        .height(24)
+        .src(b64Icons.help)
+        .title(texts.showHelp+" (ctrl + h)")
+        .job(function(){ infoPanel.changeInfo(options.help); }));
+  }
+
   topBar.call(iconButton()
         .alt("pdf")
         .width(24)
@@ -109,14 +119,14 @@ function gallery(Graph){
 
   if(options.main){
     topBar.append("h2").text(options.main)
-    topBar.append("span").style("padding","0 10px");
+    topBar.append("span").attr("class","separator");
   }
 
   // multigraph
   if(typeof multiGraph != 'undefined'){
       topBar.append("h3").text(texts.graph + ":")
       multiGraph.graphSelect(topBar);
-      topBar.append("span").style("padding","0 10px");
+      topBar.append("span").attr("class","separator");
   }
 
   // node multi search
@@ -127,7 +137,12 @@ function gallery(Graph){
         .update2(filterSelection)
         .filterData(filterNodes));
 
-  topBar.append("span").style("padding","0 10px");
+  topBar.append("span").attr("class","separator");
+
+  // count elements
+  topBar.append("h3").text(texts.Elements + ":")
+  var elementsCount = topBar.append("span").attr("class","elements-count");
+  topBar.append("span").attr("class","separator");
 
   // node order
   topOrder(topBar,nodes,displayGraph);
@@ -140,22 +155,22 @@ function gallery(Graph){
     .append("select")
     .on("change",function(){
       options.nodeColor = this.value;
-      if(options.nodeColor=="-"+texts.none+"-"){
-        options.nodeColor = false;
+      if(options.nodeColor=="_none_"){
+        delete options.nodeColor;
       }else if(dataType(nodes,options.nodeColor)=="number"){
         displayPicker(options,"nodeColor",displayGraph);
       }
       displayGraph();
     })
-  var opt = getSelectOptions(sortAsc);
-  opt.unshift("-"+texts.none+"-");
+  var opt = getSelectOptions(sortAsc).map(function(d){ return [d,d]; });
+  opt.unshift(["_none_","-"+texts.none+"-"]);
   colorSelect.selectAll("option")
         .data(opt)
       .enter().append("option")
-        .property("value",String)
-        .text(String)
-        .property("selected",function(d){ return d==options.nodeColor?true:null; })
-  topBar.append("span").style("padding","0 10px");
+        .property("value",function(d){ return d[0]; })
+        .text(function(d){ return d[1]; })
+        .property("selected",function(d){ return d==options.nodeColor ? true : null; })
+  topBar.append("span").attr("class","separator");
 
   // filter selection
   topBar.append("button")
@@ -163,7 +178,7 @@ function gallery(Graph){
     .text(texts.filterselection)
     .on("click",filterSelection)
 
-  topBar.append("span").style("padding","0 10px");
+  topBar.append("span").attr("class","separator");
 
   // node filter in topBar
   var topFilterInst = topFilter()
@@ -207,7 +222,13 @@ function gallery(Graph){
                  .filterHandler(topFilterInst)
                  .displayScalePicker(function(){
                    displayPicker(options,"nodeColor",displayGraph);
-                 });
+                 })
+                 .selectionWindow(attrSelectionWindow()
+                   .list(getSelectOptions(sortAsc))
+                   .clickAction(function(val){
+                     colorSelect.property("value",val)
+                      .dispatch("change");
+                   }));
   var legendPanel = content.append("div")
         .attr("class","legend-panel")
         .on("click",function(){
@@ -253,6 +274,8 @@ function gallery(Graph){
       filter = newfilter;
 
     var data = nodes.filter(filterNodes);
+
+    elementsCount.text(data.length);
 
     if(options.order){
       data.sort(function(a,b){
@@ -352,7 +375,7 @@ function gallery(Graph){
       itemWidth(item,w);
     })
 
-    itemsUpdate.selectAll("span, .tooltip").style("font-size",(currentGridHeight/gridHeight)+"em")
+    itemsUpdate.selectAll("span, .tooltip").style("font-size",(currentGridHeight/gridHeight)*0.8+"em")
 
     var colorScale;
     if(options.nodeColor){
@@ -486,7 +509,7 @@ function gallery(Graph){
       displayGraph();
     })
 
-    topBar.append("span").style("padding","0 10px")
+    topBar.append("span").attr("class","separator");
   }
 
   function displayLegend(){
@@ -504,6 +527,10 @@ function gallery(Graph){
         parent.selectAll("*").remove();
         return;
       }
+
+      selectionWindow
+        .visual(type)
+        .active(value)
 
       // ordinal scale
       if(scale.name=="i"){
@@ -552,10 +579,13 @@ function gallery(Graph){
         if(initialize){
           legend.append("div")
             .attr("class","title")
-            .text(texts[type] + " / " + value)
+            .style("cursor","pointer")
+            .on("click",selectionWindow)
+
           legend.append("hr")
             .attr("class","legend-separator")
         }
+        legend.select(".title").text(texts[type] + " / " + value);
 
         var itemsData = d3.map(data.filter(function(d){ return d[value]!==null; }), function(d){ return d[value]; }).keys().sort(sortAsc);
 
@@ -607,9 +637,7 @@ function gallery(Graph){
         })
 
         var legendsHeight = parent.node().parentNode.offsetHeight-250;
-        if(content.node().offsetHeight>legendsHeight){
-          content.style("height",legendsHeight+"px")
-        }
+        content.style("height",content.node().offsetHeight>legendsHeight ? legendsHeight+"px" : null)
 
         if(initialize){
           var legendBottomControls = legends.append("div")
@@ -638,7 +666,7 @@ function gallery(Graph){
             legend.selectAll(".legend-item > .checked").each(function(d){
               values.push(d);
             });
-            filterHandler.newFilter(value,values);
+            filterHandler.addFilter(value,values);
           })
           .attr("title",texts.filterInfo)
         }
@@ -663,7 +691,8 @@ function gallery(Graph){
           value,
           scale.range(),
           scale.domain(),
-          scalePicker
+          scalePicker,
+          selectionWindow
         );
       }
     }
@@ -712,6 +741,13 @@ function gallery(Graph){
       return exports;
     };
 
+    exports.selectionWindow = function(x){
+      if (!arguments.length) return selectionWindow;
+      selectionWindow = x;
+
+      return exports;
+    }
+
     return exports;
   }
 
@@ -749,7 +785,16 @@ function gallery(Graph){
   function nodes2xlsx(){
       var opt = getSelectOptions(),
           data = nodes.filter(filterNodes).map(function(d){
-            return opt.map(function(dd){ return d[dd]; });
+            return opt.map(function(dd){
+                     var txt = d[dd];
+                     if(txt == null){
+                       return "";
+                     }
+                     if(typeof txt == 'number'){
+                       return formatter(txt);
+                     }
+                     return String(txt);
+                   });
           });
       data.unshift(opt);
       if(data.length != 0){

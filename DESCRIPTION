@@ -1,7 +1,7 @@
 Package: rD3plot
 Type: Package
-Version: 1.0.8
-Date: 2021-03-19
+Version: 1.0.9
+Date: 2021-03-25
 Title: Interactive Networks, Timelines, Barplots, Galeries with R
 Description: Creates interactive analytic graphs with R. It joins the data analysis power of R and the visualization libraries of JavaScript in one package.
 License: GPL-3 + file LICENSE

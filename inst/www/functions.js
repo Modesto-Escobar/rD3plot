@@ -837,6 +837,14 @@ function topFilter(){
     displayTags();
   }
 
+  exports.addFilter = function(key,values){
+    if(key){
+      selectedValues[key] = values;
+    }
+    displayGraph(getNames());
+    displayTags();
+  }
+
   exports.getFilteredNames = function(){
     return getNames();
   }
@@ -1456,6 +1464,63 @@ function displayInfoPanel(){
   exports.selection = function(){
     return infopanel;
   }
+
+  return exports;
+}
+
+function attrSelectionWindow(){
+  var visual = "",
+      active = "",
+      list = [],
+      clickAction = function(){ };
+
+  function exports(){
+    var win = displayWindow(400);
+    win.append("h2")
+      .text(texts.selectattribute+texts[visual])
+    var ul = win.append("ul")
+      .attr("class","visual-selector")
+    var options = list.map(function(d){ return [d,d]; });
+    options.unshift(["_none_","-"+texts.none+"-"]);
+    ul.selectAll("li")
+        .data(options)
+      .enter().append("li")
+        .text(function(d){ return d[1]; })
+        .property("val",function(d){ return d[0]; })
+        .classed("active",function(d){
+          return d[0]==active;
+        })
+        .on("click",function(attr){
+          ul.selectAll("li").classed("active",false);
+          d3.select(this).classed("active",true);
+          clickAction(attr[0]);
+          d3.select("div.window-background").remove();
+        })
+  }
+
+  exports.visual = function(x) {
+    if (!arguments.length) return visual;
+    visual = x;
+    return exports;
+  };
+
+  exports.active = function(x) {
+    if (!arguments.length) return active;
+    active = x;
+    return exports;
+  };
+
+  exports.list = function(x) {
+    if (!arguments.length) return list;
+    list = x;
+    return exports;
+  };
+
+  exports.clickAction = function(x) {
+    if (!arguments.length) return clickAction;
+    clickAction = x;
+    return exports;
+  };
 
   return exports;
 }

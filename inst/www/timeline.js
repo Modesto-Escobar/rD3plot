@@ -119,7 +119,7 @@ function timeline(json){
     .displayGraph(displayGraph);
   topBar.call(topFilterInst);
 
-  topBar.append("span").style("padding","0 10px");
+  topBar.append("span").attr("class","separator");
 
   // expand/collpse bars displaying
   topBar.append("h3")
@@ -133,7 +133,7 @@ function timeline(json){
       displayGraph();
     })
 
-  topBar.append("span").style("padding","0 10px");
+  topBar.append("span").attr("class","separator");
 
   // reset button
   topBar.append("button")

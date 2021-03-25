@@ -830,6 +830,9 @@ div.topbar.fixed-topbar {
   width: 180px;
   vertical-align: middle;
 }
+div.topbar span.separator {
+  padding: 0 10px;
+}
 .header {
   position: relative;
   margin-top: 5em;

@@ -186,7 +186,7 @@ function barplot(json){
               d3.select("div.window-background").remove();
             })
       })
-  topBar.append("span").style("padding","0 10px");
+  topBar.append("span").attr("class","separator");
 
   // node filter
   var topFilterInst = topFilter()
@@ -196,7 +196,7 @@ function barplot(json){
     .displayGraph(displayGraph);
 
   topBar.call(topFilterInst);
-  topBar.append("span").style("padding","0 10px");
+  topBar.append("span").attr("class","separator");
 
   if(subject != null)
     sigButton();
@@ -709,7 +709,7 @@ function topOrder(topBar,data,displayGraph){
       displayGraph();
     })
 
-  topBar.append("span").style("padding","0 10px")
+  topBar.append("span").attr("class","separator");
 }
 
 function tooltip(sel,text){

@@ -3825,6 +3825,14 @@ function setColorScale(){
 
   config.exports.displayScale = function(){
     if(config.scale && config.datatype == "number"){
+      var selectionWindow = attrSelectionWindow()
+            .visual("Color")
+            .active(options.nodeColor)
+            .list(Graph.nodenames.filter(function(d){ return hiddenFields.indexOf(d)==-1; }))
+            .clickAction(function(val){
+              applyAuto("nodeColor",val);
+              displaySidebar();
+            });
       displayLinearScale(legendPanel,
         options[config.itemAttr],
         config.scale.range(),
@@ -3835,9 +3843,7 @@ function setColorScale(){
             drawNet();
           });
         },
-        function(){
-          displayVisualPicker("Color");
-        }
+        selectionWindow
       );
     }
   }
@@ -3876,31 +3882,6 @@ function getNumAttr(data,itemAttr,range,def){
       }
     }
     return function(){ return def; }
-}
-
-function displayVisualPicker(visual){
-  var win = displayWindow(400),
-      attributes = Graph.nodenames.filter(function(d){ return hiddenFields.indexOf(d)==-1; }).map(function(d){ return [d,d]; });
-  attributes.unshift(["_none_","-"+texts.none+"-"]);
-  win.append("h2")
-    .text(texts.selectattribute+texts[visual])
-  var ul = win.append("ul")
-    .attr("class","visual-selector")
-  ul.selectAll("li")
-      .data(attributes)
-    .enter().append("li")
-      .text(function(d){ return d[1]; })
-      .property("val",function(d){ return d[0]; })
-      .classed("active",function(d){
-        return d[0]==options["node"+visual];
-      })
-      .on("click",function(attr){
-        ul.selectAll("li").classed("active",false);
-        d3.select(this).classed("active",true);
-        applyAuto("node"+visual,attr[0]);
-        displaySidebar();
-        d3.select("div.window-background").remove();
-      })
 }
 
 function selectAllItems(){
@@ -4132,13 +4113,20 @@ function displayLegend(){
     .attr("class","legend")
     .property("key",key)
 
+    var selectionWindow = attrSelectionWindow()
+            .visual(type)
+            .active(options["node"+type])
+            .list(Graph.nodenames.filter(function(d){ return hiddenFields.indexOf(d)==-1; }))
+            .clickAction(function(val){
+              applyAuto("node"+type,val);
+              displaySidebar();
+            });
+
     legend.append("div")
         .attr("class","title")
         .text(texts[type] + " / " + (typeof title == "undefined" ? key : title))
         .style("cursor","pointer")
-        .on("click",function(){
-          displayVisualPicker(type);
-        })
+        .on("click",selectionWindow)
 
     legend.append("hr")
     .attr("class","legend-separator")
