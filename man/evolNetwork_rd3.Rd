@@ -12,9 +12,9 @@ This function returns a \code{network_rd3} object.
 evolNetwork_rd3(..., frame = 0, speed = 50, dir = NULL)
 }
 \arguments{
-\item{...}{\code{network_rd3} graphs objects.}
-\item{frame}{number of frame to start a dynamic network.}
-\item{speed}{a percentage for frame speed in dynamic networks.}
+\item{...}{\code{network_rd3} objects that will be integrated as temporal frames in the evolving network.}
+\item{frame}{a frame ordinal position where the playback will start.}
+\item{speed}{a percentage value for the playback speed of network frames.}
 \item{dir}{a "character" string representing the directory where the graph will be saved.}
 }
 \description{
