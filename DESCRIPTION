@@ -14,4 +14,5 @@ Authors@R: c(
     person("Carlos", "Prieto", email = "cprietos@usal.es", role = c("aut"), comment = c(ORCID = "0000-0001-8178-9768")),
     person("David", "Barrios", email = "metal@usal.es", role = "aut")
     )
+Maintainer: Modesto Escobar <modesto@usal.es> 
 Encoding: UTF-8
