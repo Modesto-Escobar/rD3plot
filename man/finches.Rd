@@ -2,7 +2,7 @@
 \alias{finches}
 \docType{data}
 \title{
-Data: Finches'attributes in Galapagos islands.
+Data: Finches' attributes in Galapagos islands.
 }
 \description{
 Data frame with events as result.

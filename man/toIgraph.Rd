@@ -1,7 +1,7 @@
 \name{toIgraph}
 \alias{toIgraph}
-\title{igraph object.}
-\description{\code{igraph} object from a \code{network_rd3} object.}
+\title{'igraph' object.}
+\description{creates an \code{igraph} object from a \code{network_rd3} object.}
 \usage{
 toIgraph(net)
 }

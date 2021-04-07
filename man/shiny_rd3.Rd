@@ -1,7 +1,7 @@
 \name{shiny_rd3}
 \alias{shiny_rd3}
-\title{Include rD3plot graphs in Shiny.}
-\description{Load a rD3plot graph to display in Shiny.}
+\title{Include rD3plot graphs in 'Shiny'.}
+\description{Load a rD3plot graph to display in 'Shiny'.}
 \usage{
 shiny_rd3(x)
 }
@@ -10,4 +10,7 @@ shiny_rd3(x)
 }
 \author{
 Modesto Escobar, Department of Sociology and Communication, University of Salamanca. 
+}
+\value{
+This function returns a \code{shiny.tag} object.
 }

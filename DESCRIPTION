@@ -1,9 +1,9 @@
 Package: rD3plot
 Type: Package
 Version: 1.0.9
-Date: 2021-03-25
-Title: Interactive Networks, Timelines, Barplots, Galeries with R
-Description: Creates interactive analytic graphs with R. It joins the data analysis power of R and the visualization libraries of JavaScript in one package.
+Date: 2021-04-07
+Title: Interactive Networks, Timelines, Barplots, Galleries with 'R'
+Description: Creates interactive analytic graphs with 'R'. It joins the data analysis power of R and the visualization libraries of JavaScript in one package. The package provides interactive networks, timelines, barplots, image galleries and evolving networks. Graphs are represented as D3 graphs embedded in a web page ready for its interactive analysis and exploration.
 License: GPL-3 + file LICENSE
 Depends: R (>= 3.5.0)
 Imports: igraph (>= 1.0.1)
@@ -11,7 +11,7 @@ Suggests: shiny
 NeedsCompilation: no
 Authors@R: c( 
     person("Modesto", "Escobar", email = "modesto@usal.es", role = c("aut", "cph","cre"), comment = c(ORCID = "0000-0003-2072-6071")), 
-    person("Carlos", "Prieto", email = "cprietos@usal.es", role = c("aut")),
+    person("Carlos", "Prieto", email = "cprietos@usal.es", role = c("aut"), comment = c(ORCID = "0000-0001-8178-9768")),
     person("David", "Barrios", email = "metal@usal.es", role = "aut")
     )
 Encoding: UTF-8

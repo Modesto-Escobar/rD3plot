@@ -1,6 +1,6 @@
 \name{multigraphCreate}
 \alias{multigraphCreate}
-\title{Integrates interactive rD3plot graphs.}
+\title{Integrates interactive 'rD3plot' graphs.}
 \author{
 Modesto Escobar, Department of Sociology and Communication, University of Salamanca. 
 }
@@ -34,7 +34,7 @@ multigraphCreate(..., mode = c("default","parallel","frame"),
 \item{show}{a logical value true if the graph is to be shown. Default = TRUE.}
 }
 \description{
-\code{multigraphCreate} produce an interactive multi graph.
+\code{multigraphCreate} produce an interactive multi graph with the integration of 'rD3plot' graphs in the final result.
 }
 \examples{
 \dontrun{
