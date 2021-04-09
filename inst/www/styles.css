@@ -1377,10 +1377,20 @@ div.gallery-note {
   background-color: #ffffff;
   padding: 1em;
 }
+div.description-panel {
+  display: inline-block;
+  width: 25%;
+  height: 100%;
+  overflow: auto;
+}
 div.grid-gallery {
   width: 100%;
   height: 100%;
   overflow: auto;
+}
+div.description-panel + div.grid-gallery {
+  display: inline-block;
+  width: 75%;
 }
 div.grid-gallery > .gallery-items > .item {
   display: inline-block;

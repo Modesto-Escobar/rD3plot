@@ -191,12 +191,22 @@ function gallery(Graph){
   var content = galleryBox.append("div")
         .attr("class","gallery-content");
 
+  var descriptionPanel = false;
+  if(options.description){
+    descriptionPanel = content.append("div")
+        .attr("class","description-panel")
+        .html(options.description);
+  }
+
   var gallery = content.append("div")
         .attr("class","grid-gallery");
 
   gallery.on("click",function(){
     nodes.forEach(function(n){ delete n.selected; });
     displayGraph();
+    if(descriptionPanel){
+      descriptionPanel.html(options.description);
+    }
   });
 
   if(!options.hasOwnProperty("zoom"))
@@ -231,6 +241,7 @@ function gallery(Graph){
                    }));
   var legendPanel = content.append("div")
         .attr("class","legend-panel")
+        .classed("hide-legend",!options.showLegend)
         .on("click",function(){
           d3.event.stopPropagation();
         })
@@ -260,7 +271,7 @@ function gallery(Graph){
       .html(options.note)
   }
 
-  if(options.help){
+  if(options.help && options.helpOn){
     infoPanel.changeInfo(options.help);
   }
 
@@ -312,31 +323,6 @@ function gallery(Graph){
         .attr("title",function(d){ return d[options.nodeLabel]; })
         .text(function(d){ return d[options.nodeLabel]; })
 
-    itemsEnter.style("cursor","pointer")
-      .on("click",function(n){
-          d3.event.stopPropagation();
-          if(d3.event.ctrlKey){
-            if(n.selected){
-              delete n.selected;
-            }else{
-              n.selected = true;
-            }
-          }else if(d3.event.shiftKey){
-            n.selected = true;
-            var ext = d3.extent(data.map(function(d,i){ return [i,d.selected]; }).filter(function(d){ return d[1]; }).map(function(d){ return d[0]; }));
-            d3.range(ext[0],ext[1]).forEach(function(i){
-              data[i].selected = true;
-            });
-          }else{
-            data.forEach(function(n){ delete n.selected; });
-            n.selected = true;
-          }
-          displayGraph();
-          if(options.nodeInfo){
-            infoPanel.changeInfo(n[options.nodeInfo]);
-          }
-      })
-
     if(options.nodeText){
       itemsEnter.each(function(d){
         if(d[options.nodeText]){
@@ -376,6 +362,36 @@ function gallery(Graph){
     })
 
     itemsUpdate.selectAll("span, .tooltip").style("font-size",(currentGridHeight/gridHeight)*0.8+"em")
+
+    itemsUpdate.style("cursor","pointer")
+      .on("click",function(n){
+          d3.event.stopPropagation();
+          if(d3.event.ctrlKey){
+
+            if(n.selected){
+              delete n.selected;
+            }else{
+              n.selected = true;
+            }
+          }else if(d3.event.shiftKey){
+            n.selected = true;
+            var ext = d3.extent(data.map(function(d,i){ return [i,d.selected]; }).filter(function(d){ return d[1]; }).map(function(d){ return d[0]; }));
+            d3.range(ext[0],ext[1]).forEach(function(i){
+              data[i].selected = true;
+            });
+          }else{
+            data.forEach(function(n){ delete n.selected; });
+            n.selected = true;
+          }
+          displayGraph();
+          if(options.nodeInfo){
+            if(descriptionPanel){
+              descriptionPanel.html(n[options.nodeInfo] ? n[options.nodeInfo] : options.description);
+            }else{
+              infoPanel.changeInfo(n[options.nodeInfo]);
+            }
+          }
+      })
 
     var colorScale;
     if(options.nodeColor){
@@ -523,7 +539,7 @@ function gallery(Graph){
         scalePicker;
 
     function exports(parent){
-      if(!value){
+      if(!value || !scale){
         parent.selectAll("*").remove();
         return;
       }

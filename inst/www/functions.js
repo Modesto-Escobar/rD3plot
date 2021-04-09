@@ -1383,7 +1383,7 @@ function addGradient(defs,id,range){
 
 function displayInfoPanel(){
   var docSize,
-      infoLeft = 0,
+      infoWidth = 0,
       infoHeight = 0,
       infopanel,
       contentDiv,
@@ -1391,21 +1391,11 @@ function displayInfoPanel(){
       transitionDuration = 500;
 
   function exports(sel){
-    docSize = viewport();
-    infoLeft = docSize.width * 2/3;
-
     infopanel = sel.append("div")
       .attr("class","infopanel")
       .style("display","none")
-      .style("left",docSize.width+"px")
 
-    infoHeight = docSize.height
-      - (parseInt(infopanel.style("top"))*2)
-      - parseInt(infopanel.style("border-top-width"))
-      - parseInt(infopanel.style("border-bottom-width"))
-      - parseInt(infopanel.style("padding-top"))
-      - parseInt(infopanel.style("padding-bottom"));
-    infopanel.style("height",infoHeight+"px");
+    panelSize();
 
     infopanel.append("div")
       .attr("class","drag")
@@ -1416,8 +1406,8 @@ function displayInfoPanel(){
         .on("drag", function() {
           var left = d3.mouse(sel.node())[0]-parseInt(infopanel.style("border-left-width"));
           if(left>(docSize.width*2/4) && left<(docSize.width*3/4)){
-            infoLeft = left;
-            infopanel.style("left",infoLeft+"px");
+            infoWidth = docSize.width-left;
+            infopanel.style("left",(docSize.width-infoWidth)+"px");
           }
         })
         .on("end", function() {
@@ -1432,6 +1422,23 @@ function displayInfoPanel(){
     contentDiv = infopanel.append("div")
       .attr("class","panel-content")
       .append("div")
+
+    d3.select(window).on("resize.infopanel",panelSize)
+  }
+
+  function panelSize(){
+    if(infopanel){
+      docSize = viewport();
+      infoWidth = docSize.width * 1/3;
+      infoHeight = docSize.height
+      - (parseInt(infopanel.style("top"))*2)
+      - parseInt(infopanel.style("border-top-width"))
+      - parseInt(infopanel.style("border-bottom-width"))
+      - parseInt(infopanel.style("padding-top"))
+      - parseInt(infopanel.style("padding-bottom"));
+      infopanel.style("height",infoHeight+"px");
+      infopanel.style("left",(infopanel.style("display")=="none" ? docSize.width : docSize.width-infoWidth)+"px")
+    }
   }
 
   function closePanel(){
@@ -1450,7 +1457,7 @@ function displayInfoPanel(){
       if(infopanel.style("display")=="none"){
         infopanel.style("display",null);
         infopanel.transition().duration(transitionDuration)
-          .style("left",infoLeft+"px")
+          .style("left",(docSize.width-infoWidth)+"px")
       }
     }else{
       closePanel();

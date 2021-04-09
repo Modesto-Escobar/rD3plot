@@ -14,8 +14,8 @@ galleryCreate <- function(gallery, dir){
 
 gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
     ntext = NULL, info = NULL, image = NULL,
-    zoom = 1, main = NULL, note = NULL, help = NULL,
-    roundedItems = FALSE,
+    zoom = 1, main = NULL, note = NULL, showLegend = TRUE, 
+    help = NULL, helpOn = FALSE, roundedItems = FALSE,
     language = c("en", "es", "ca"), dir = NULL){
   if(is.null(name)){
     name <- colnames(nodes)[1]
@@ -41,7 +41,9 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
   if (!is.null(main)) options[["main"]] <- main
   if (!is.null(note)) options[["note"]] <- note
   if (!is.null(help)) options[["help"]] <- help
-  if (roundedItems) options[["roundedItems"]] <- TRUE
+  options <- showSomething(options,"roundedItems",roundedItems)
+  options <- showSomething(options,"showLegend",showLegend)
+  options <- showSomething(options,"helpOn",helpOn)
   options[["language"]] <- checkLanguage(language)
 
   if (!is.null(image)){
@@ -69,7 +71,8 @@ asGallery <- function(net){
     options <- net$options
     gallery <- gallery_rd3(nodes = nodes, name = options$nodeName, label = options$nodeLabel,
       color = options$nodeColor, ntext = options$nodeText, info = options$nodeInfo, image = options$imageItems,
-      zoom = options$zoom, main = options$main, note = options$note, help = options$help,
+      zoom = options$zoom, main = options$main, note = options$note,
+      help = options$help, helpOn = options$helpOn, roundedItems = options$roundedItems,
       language = options$language)
     return(gallery)
   }else{
