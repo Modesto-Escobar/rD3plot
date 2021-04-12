@@ -12,7 +12,8 @@ Object of class \code{gallery_rd3}.
 gallery_rd3(nodes, name = NULL, label = NULL, color = NULL,
     ntext = NULL, info = NULL, image = NULL,
     zoom = 1, main = NULL, note = NULL, showLegend = TRUE,
-    help = NULL, helpOn = FALSE, roundedItems = FALSE,
+    help = NULL, helpOn = FALSE, description = NULL,
+    roundedItems = FALSE,
     language = c("en", "es", "ca"), dir = NULL)
 }
 \arguments{
@@ -30,6 +31,7 @@ gallery_rd3(nodes, name = NULL, label = NULL, color = NULL,
 \item{language}{a character string indicating the language of the graph (en=english (default); es=spanish; ca=catalan).}
 \item{help}{a character string indicating a help text of the graph.}
 \item{helpOn}{Should the help be shown at the beginning?}
+\item{description}{a character string indicating a desription text for the graph.}
 \item{image}{column name which indicates the image paths in the nodes data frame.}
 \item{dir}{a character string representing the directory where the web files will be saved.}
 }
