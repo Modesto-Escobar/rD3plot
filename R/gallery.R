@@ -14,9 +14,10 @@ galleryCreate <- function(gallery, dir){
 
 gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
     ntext = NULL, info = NULL, image = NULL,
-    zoom = 1, main = NULL, note = NULL, showLegend = TRUE, 
+    zoom = 1, itemsPerRow = NULL,
+    main = NULL, note = NULL, showLegend = TRUE,
     help = NULL, helpOn = FALSE, description = NULL,
-    roundedItems = FALSE,
+    descriptionWidth = NULL, roundedItems = FALSE,
     language = c("en", "es", "ca"), dir = NULL){
   if(is.null(name)){
     name <- colnames(nodes)[1]
@@ -39,10 +40,24 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
   }
   options[["zoom"]] <- zoom
 
+  if(!is.null(itemsPerRow)){
+    if(!is.numeric(itemsPerRow) || itemsPerRow<=0){
+      warning("itemsPerRow: must be numeric greater than 0")
+    }else{
+      options[["itemsPerRow"]] <- itemsPerRow
+    }
+  }
   if (!is.null(main)) options[["main"]] <- main
   if (!is.null(note)) options[["note"]] <- note
   if (!is.null(help)) options[["help"]] <- help
   if (!is.null(description)) options[["description"]] <- description
+  if (!is.null(descriptionWidth)){
+    if(is.numeric(descriptionWidth) && descriptionWidth>=0 && descriptionWidth<=100){
+      options[["descriptionWidth"]] <- descriptionWidth
+    }else{
+      warning("descriptionWidth: not a valid percentage.")
+    }
+  }
   options <- showSomething(options,"roundedItems",roundedItems)
   options <- showSomething(options,"showLegend",showLegend)
   options <- showSomething(options,"helpOn",helpOn)

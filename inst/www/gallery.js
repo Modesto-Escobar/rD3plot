@@ -201,6 +201,11 @@ function gallery(Graph){
   var gallery = content.append("div")
         .attr("class","grid-gallery");
 
+  if(descriptionPanel && options.descriptionWidth){
+      descriptionPanel.style("width",options.descriptionWidth+"%")
+      gallery.style("width",(100-options.descriptionWidth)+"%")
+  }
+
   gallery.on("click",function(){
     nodes.forEach(function(n){ delete n.selected; });
     displayGraph();
@@ -212,11 +217,13 @@ function gallery(Graph){
   if(!options.hasOwnProperty("zoom"))
     options.zoom = 1;
 
+  var getCurrentHeight = function(k){ return gridHeight * k; };
+
   var zoom = d3.zoom()
       .filter(function(){ return d3.event.ctrlKey; })
       .scaleExtent(zoomRange)
       .on("zoom", function(){
-        currentGridHeight = gridHeight*d3.event.transform.k;
+        currentGridHeight = getCurrentHeight(d3.event.transform.k);
         displayGraph();
       })
 
@@ -246,8 +253,6 @@ function gallery(Graph){
           d3.event.stopPropagation();
         })
 
-  resetZoom();
-
   var zoomsvg = content.append("div")
     .attr("class","zoom-svg")
     .append("svg")
@@ -273,6 +278,43 @@ function gallery(Graph){
 
   if(options.help && options.helpOn){
     infoPanel.changeInfo(options.help);
+  }
+
+  if(options.itemsPerRow){
+    options.zoom = 1;
+
+    var currentItemsPerRow = options.itemsPerRow,
+        prevk = options.zoom,
+        sizeByItemsPerRow = function(itemsPerRow){
+          var w = Math.floor((gallery.node().offsetWidth-12) / itemsPerRow)-18;
+          return w/options.aspectRatio;
+        }
+    
+    getCurrentHeight = function(k){
+          if(k == 1){
+            currentItemsPerRow = options.itemsPerRow;
+          }else{
+            if(k < prevk){
+              currentItemsPerRow = currentItemsPerRow+1;
+            }else if(k > prevk){
+              currentItemsPerRow = currentItemsPerRow-1;
+            }
+          }
+          prevk = k;
+          return sizeByItemsPerRow(currentItemsPerRow);
+    }
+
+    // check aspect ratio
+    var img = new Image();
+    img.onload = function() {
+      options.aspectRatio = getImgRatio(this);
+      currentGridHeight = sizeByItemsPerRow(currentItemsPerRow);
+      gridHeight = currentGridHeight;
+      resetZoom();
+    }
+    img.src = nodes[0][options.imageItems];
+  }else{
+    resetZoom();
   }
 
   function resetZoom(){
@@ -310,11 +352,10 @@ function gallery(Graph){
           .attr("class","img-wrapper")
     if(options.imageItems){
       imgWrapper.append("img")
-          .on("load", function(){
-            itemWidth(d3.select(this.parentNode.parentNode),imgWidth(this));
-          })
-          .on("error", function(){
-            itemWidth(d3.select(this.parentNode.parentNode),currentGridHeight);
+          .on("load", options.aspectRatio ? function(){
+            imgMarginLeft(this,getImgRatio(this));
+          } : function(){
+            itemWidth(d3.select(this.parentNode.parentNode),getImgRatio(this));
           })
           .attr("src",function(n){ return n[options.imageItems]; });
     }
@@ -329,7 +370,7 @@ function gallery(Graph){
           var tooltip = d3.select(this).append("div")
             .attr("class","tooltip")
             .style("display","none")
-            .text(d[options.nodeText])
+            .html(d[options.nodeText])
             
           d3.select(this)
               .on("mouseenter",function(){
@@ -354,14 +395,17 @@ function gallery(Graph){
         .style("height",currentGridHeight+"px")
     itemsUpdate.each(function(){
       var item = d3.select(this),
-          w = currentGridHeight;
-      if(options.imageItems){
-        w = imgWidth(item.select(".img-wrapper > img").node());
+          ratio = 1;
+      if(options.aspectRatio){
+        ratio = options.aspectRatio;
+      }else if(options.imageItems){
+        var img = item.select(".img-wrapper > img").node();
+        ratio = getImgRatio(img);
       }
-      itemWidth(item,w);
+      itemWidth(item,ratio);
     })
 
-    itemsUpdate.selectAll("span, .tooltip").style("font-size",(currentGridHeight/gridHeight)*0.8+"em")
+    itemsUpdate.selectAll(".item > span").style("font-size",(currentGridHeight/72)+"em")
 
     itemsUpdate.style("cursor","pointer")
       .on("click",function(n){
@@ -452,21 +496,26 @@ function gallery(Graph){
       return scale(value);
     }
 
-    function imgWidth(img){
-      var ratio = 1;
-      if(img.complete && img.naturalHeight!==0){
-        ratio = img.naturalWidth / img.naturalHeight;
-      }
-      return currentGridHeight*ratio;
-    }
-
-    function itemWidth(item,w){
+    function itemWidth(item,ratio){
       var wrapperBorderWidth = 0;
       ["left","right"].forEach(function(d){
         wrapperBorderWidth += parseInt(item.select(".img-wrapper").style("border-"+d+"-width"));
       })
-      item.style("width",(w + wrapperBorderWidth)+"px");
+      item.style("width",((currentGridHeight*ratio) + wrapperBorderWidth)+"px");
     }
+
+    function imgMarginLeft(img,ratio){
+        var ml = (100 - (100/options.aspectRatio*ratio)) / 2;
+        d3.select(img).style("margin-left",ml+"%");
+    }
+  }
+
+  function getImgRatio(img){
+      var ratio = 1;
+      if(img.complete && img.naturalHeight!==0){
+        ratio = img.naturalWidth / img.naturalHeight;
+      }
+      return ratio;
   }
 
   function filterSelection(){

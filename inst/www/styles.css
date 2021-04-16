@@ -716,10 +716,12 @@ ul.visual-selector > li.active {
   padding: 4px 8px 4px 8px;
   margin: 2px;
   border-radius: 9999px;
-}
-.filter-tags > .tag > span {
-  margin-left: 5px;
   cursor: pointer;
+}
+.filter-tags > .tag:after {
+  content: "\D7";
+  margin-left: 5px;
+  font-weight: bold;
 }
 textarea[name=query] {
   font-family: monospace;
@@ -1395,7 +1397,7 @@ div.description-panel + div.grid-gallery {
 div.grid-gallery > .gallery-items > .item {
   display: inline-block;
   position: relative;
-  margin: 0.5em;
+  margin: 6px;
 }
 div.grid-gallery > .gallery-items > .item > .img-wrapper {
   border: solid 3px;

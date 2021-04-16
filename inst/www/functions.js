@@ -788,13 +788,12 @@ function topFilter(){
       tags.enter().append("div")
         .attr("class","tag")
         .text(String)
-        .append("span")
-          .html("&times;")
-          .on("click",function(d){
+        .on("click",function(d){
             delete selectedValues[d];
             displayGraph(getNames());
             displayTags();
-          })
+         })
+
       tags.exit().remove()
   }
 

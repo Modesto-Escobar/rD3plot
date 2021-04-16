@@ -11,9 +11,10 @@ Object of class \code{gallery_rd3}.
 \usage{
 gallery_rd3(nodes, name = NULL, label = NULL, color = NULL,
     ntext = NULL, info = NULL, image = NULL,
-    zoom = 1, main = NULL, note = NULL, showLegend = TRUE,
+    zoom = 1, itemsPerRow = NULL,
+    main = NULL, note = NULL, showLegend = TRUE,
     help = NULL, helpOn = FALSE, description = NULL,
-    roundedItems = FALSE,
+    descriptionWidth = NULL, roundedItems = FALSE,
     language = c("en", "es", "ca"), dir = NULL)
 }
 \arguments{
@@ -21,18 +22,20 @@ gallery_rd3(nodes, name = NULL, label = NULL, color = NULL,
 \item{name}{column name with image names in the nodes data frame.}
 \item{label}{column name with image labels in the nodes data frame.}
 \item{color}{column name with image background color variable in the nodes data frame.}
-\item{zoom}{a number between 0.1 and 10 as initial displaying zoom.}
-\item{main}{upper title of the graph.}
-\item{note}{lower title of the graph.}
 \item{ntext}{column name with html text in the nodes data frame.}
 \item{info}{column name with information to display in a panel in the nodes data frame.}
-\item{roundedItems}{Display items with rounded borders.}
+\item{image}{column name which indicates the image paths in the nodes data frame.}
+\item{zoom}{a number between 0.1 and 10 as initial displaying zoom.}
+\item{itemsPerRow}{number of items in each row.}
+\item{main}{upper title of the graph.}
+\item{note}{lower title of the graph.}
 \item{showLegend}{a logical value true if the legend is to be shown.}
-\item{language}{a character string indicating the language of the graph (en=english (default); es=spanish; ca=catalan).}
 \item{help}{a character string indicating a help text of the graph.}
 \item{helpOn}{Should the help be shown at the beginning?}
 \item{description}{a character string indicating a desription text for the graph.}
-\item{image}{column name which indicates the image paths in the nodes data frame.}
+\item{descriptionWidth}{a percentage indicating a width for the description panel (25 by default).}
+\item{roundedItems}{Display items with rounded borders.}
+\item{language}{a character string indicating the language of the graph (en=english (default); es=spanish; ca=catalan).}
 \item{dir}{a character string representing the directory where the web files will be saved.}
 }
 \author{
