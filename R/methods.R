@@ -1,37 +1,57 @@
 print.network_rd3 <- function(x, ...) {
-  printNet(x)
+  printNetwork(x)
 }
 
 print.barplot_rd3 <- function(x, ...) {
-  printNet(x)
+  printNetwork(x)
 }
 
 print.timeline_rd3 <- function(x, ...) {
-  printNet(x)
+  printTimeline(x)
 }
 
 print.gallery_rd3 <- function(x, ...) {
-  printNet(x)
+  printNetwork(x)
 }
 
-printNet <- function(x){
-  if(!is.null(x$options$main))
+printMain <- function(x){
+  if(!is.null(x$options$main)){
     cat("Title:",x$options$main,"\n")
-    cat("\nNodes(",nrow(x$nodes),"):\n",sep="")
-  row.names(x$nodes)<-NULL
-  print(as.data.frame(head(x$nodes[,setdiff(names(x$nodes),c("hidden","chaine","fx","fy")),drop=FALSE])),row.names=F)
-  if (nrow(x$nodes)>6) cat("...\n")
-  if(!is.null(x$links)){
-    cat("\nLinks(",nrow(x$links),"):\n",sep="")
-    row.names(x$links)<-NULL
-    print(as.data.frame(head(x$links[,setdiff(names(x$links),c("hidden","chaine"))])),row.names=F)
-    if (nrow(x$links)>6) cat("...\n")
   }
-  cat("\n")
+}
+
+printTable <- function(x, name){
+  cat("\n",name,"(",nrow(x),"):\n",sep="")
+  row.names(x)<-NULL
+  print(as.data.frame(head(x)),row.names=F)
+  if (nrow(x)>6) cat("...\n")
+}
+
+printNote <- function(x){
   if(!is.null(x$options$note)){
     cat(x$options$note)
     cat("\n")
   }
+}
+
+printNetwork <- function(x){
+  printMain(x)
+  printTable(x$nodes[,setdiff(names(x$nodes),c("hidden","chaine","fx","fy")),drop=FALSE],"Nodes")
+  if(!is.null(x$links)){
+    printTable(x$links[,setdiff(names(x$links),c("hidden","chaine"))],"Nodes")
+  }
+  cat("\n")
+  printNote(x)
+}
+
+printTimeline <- function(x){
+  printMain(x)
+  printTable(x$periods,"Periods")
+  if(!is.null(x$events)){
+    printTable(x$events,"Events")
+  }
+  cat("\n")
+  printNote(x)
 }
 
 plot.network_rd3 <- function(x, dir = tempDir(), ...){

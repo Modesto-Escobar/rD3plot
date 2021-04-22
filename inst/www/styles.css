@@ -1420,6 +1420,7 @@ div.grid-gallery > .gallery-items > .item > span {
   white-space: nowrap;
   position: relative;
   padding: 3px;
+  text-align: center;
 }
 div.grid-gallery > .gallery-items.fade-labels > .item > span:after {
   content: '';

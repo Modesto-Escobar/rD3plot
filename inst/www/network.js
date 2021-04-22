@@ -1317,7 +1317,7 @@ showTables();
       .on("click",function(){
         frameControls.loop = !frameControls.loop;
         d3.select(this).style("background-color",frameControls.loop?basicColors.darkGrey:null)
-          .selectAll("path").style("fill",frameControls.loop?basicColors.basicColors.lightGrey:null);
+          .selectAll("path").style("fill",frameControls.loop?basicColors.lightGrey:null);
       })
       var stopRecord = function(){
           frameControls.recorder.stop();

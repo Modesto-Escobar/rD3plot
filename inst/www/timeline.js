@@ -1,6 +1,6 @@
 function timeline(json){
 
-  var nodes = json.nodes,
+  var periods = json.periods,
       options = json.options,
 
       defaultShape = "Circle", // node shape by default
@@ -43,8 +43,8 @@ function timeline(json){
   // default linear scale for events
   options.colorScaleeventColor = "WhBu";
 
-  // sort nodes by start
-  nodes.sort(function(nodea, nodeb){
+  // sort periods by start
+  periods.sort(function(nodea, nodeb){
     var a = nodea[options.start],
         b = nodeb[options.start];
     return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;
@@ -54,18 +54,18 @@ function timeline(json){
   if(json.events){
     var events = {};
     json.events.forEach(function(d,i){
-      if(typeof events[d[options.eventParent]] == "undefined")
-        events[d[options.eventParent]] = [];
-      events[d[options.eventParent]].push(i);
+      if(typeof events[d[options.eventPeriod]] == "undefined")
+        events[d[options.eventPeriod]] = [];
+      events[d[options.eventPeriod]].push(i);
     })
-    nodes.forEach(function(node){
+    periods.forEach(function(node){
       if(events.hasOwnProperty(node[options.name]))
         node['_events_'] = events[node[options.name]].map(function(i){ return json.events[i]; });
     });
   }
 
   // split multivariables
-  nodes.forEach(function(d){
+  periods.forEach(function(d){
       for(var p in d) {
         if(p!=options.name){
           if(typeof d[p] == "string" && d[p].indexOf("|")!=-1){
@@ -102,7 +102,7 @@ function timeline(json){
   }
 
   // groups selection in topBar
-  topBarVisual(topBar,"Group","group",getOptions(nodes));
+  topBarVisual(topBar,"Group","group",getOptions(periods));
 
   if(json.events){
     // event colors in topBar
@@ -113,8 +113,8 @@ function timeline(json){
 
   // node filter in topBar
   var topFilterInst = topFilter()
-    .data(nodes)
-    .datanames(getOptions(nodes))
+    .data(periods)
+    .datanames(getOptions(periods))
     .attr(options.name)
     .displayGraph(displayGraph);
   topBar.call(topFilterInst);
@@ -198,7 +198,7 @@ function timeline(json){
           return y === null ? currentYear : y;
         };
 
-    var items = (filter ? nodes.filter(function(d){ return filter.indexOf(d[options.name])!=-1; }) : nodes).filter(function(d){ return d[options.group]!==null; });
+    var items = (filter ? periods.filter(function(d){ return filter.indexOf(d[options.name])!=-1; }) : periods).filter(function(d){ return d[options.group]!==null; });
 
     var lanes = options.group?d3.set(items.map(function(d){ return String(d[options.group]); })).values().sort():[""],
         laneLength = lanes.length,
@@ -338,7 +338,7 @@ function timeline(json){
     if(options.group){
       color = d3.scaleOrdinal()
         .range(categoryColors)
-        .domain(nodes.map(function(n){ return n[options.group]; }).sort());
+        .domain(periods.map(function(n){ return n[options.group]; }).sort());
 
       getMiniY = function(d){ return y2((lanes.indexOf(String(d[options.group]))) + 0.5) - 5; }
     }else{
@@ -759,7 +759,7 @@ function timeline(json){
             else
               self.attr("text-anchor",null);
 
-            if(options.eventColor && options.eventColor==options.eventParent)
+            if(options.eventColor && options.eventColor==options.eventPeriod)
               self.style("fill",eventColorScale(d[options.name]));
           });
 
@@ -767,7 +767,7 @@ function timeline(json){
             if(!d['_events_'])
               return;
 
-            var points = d3.select(this).selectAll(".event").data(d['_events_'],function(dd){ return dd[options.eventChild]; });
+            var points = d3.select(this).selectAll(".event").data(d['_events_'],function(dd){ return dd[options.eventNames]; });
 
             var pointsEnter = points.enter()
                   .append("path")
@@ -783,9 +783,9 @@ function timeline(json){
               }else{
                 for(var s in d){
                   if(d.hasOwnProperty(s)){
-                    if(s==options.eventParent){
+                    if(s==options.eventPeriod){
                       continue;
-                    }else if(s==options.eventChild){
+                    }else if(s==options.eventNames){
                       html = d[s]+"<br>"+html;
                     }else if(d[s]){
                       html += s+": "+d[s]+"<br>";

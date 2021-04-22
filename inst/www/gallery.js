@@ -169,7 +169,16 @@ function gallery(Graph){
       .enter().append("option")
         .property("value",function(d){ return d[0]; })
         .text(function(d){ return d[1]; })
-        .property("selected",function(d){ return d==options.nodeColor ? true : null; })
+        .property("selected",function(d){ return d[0]==options.nodeColor ? true : null; })
+  topBar.append("span").attr("class","separator");
+
+  // Deselect
+  topBar.append("button")
+    .attr("class","primary")
+    .text(texts.Deselect)
+    .on("click",deselectAllItems)
+
+
   topBar.append("span").attr("class","separator");
 
   // filter selection
@@ -206,13 +215,7 @@ function gallery(Graph){
       gallery.style("width",(100-options.descriptionWidth)+"%")
   }
 
-  gallery.on("click",function(){
-    nodes.forEach(function(n){ delete n.selected; });
-    displayGraph();
-    if(descriptionPanel){
-      descriptionPanel.html(options.description);
-    }
-  });
+  gallery.on("click",deselectAllItems);
 
   if(!options.hasOwnProperty("zoom"))
     options.zoom = 1;
@@ -375,9 +378,16 @@ function gallery(Graph){
           d3.select(this)
               .on("mouseenter",function(){
                 tooltip.style("display","block");
+                if(d3.mouse(gallery.node())[0]>(gallery.node().offsetWidth/2)){
+                  tooltip
+                    .style("left","unset")
+                    .style("right",0);
+                }
               })
               .on("mouseleave",function(){
-                tooltip.style("display","none");
+                tooltip.style("display","none")
+                  .style("left",null)
+                  .style("right",null);
               })
         }
       });
@@ -518,6 +528,14 @@ function gallery(Graph){
       return ratio;
   }
 
+  function deselectAllItems(){
+    nodes.forEach(function(n){ delete n.selected; });
+    displayGraph();
+    if(descriptionPanel){
+      descriptionPanel.html(options.description);
+    }
+  }
+
   function filterSelection(){
       var values = nodes.filter(function(n){
           return n.selected;
@@ -617,6 +635,17 @@ function gallery(Graph){
           })
 
           legends = parent.append("div").attr("class","legends");
+          legends.style("opacity",0.8)
+            .on("mouseenter",function(){
+              d3.select(this).transition()
+                  .duration(500)
+                  .style("opacity",1);
+            })
+            .on("mouseleave",function(){
+              d3.select(this).transition()
+                  .duration(500)
+                  .style("opacity",0.8);
+            })
           legends.append("div")
             .attr("class","highlight-header")
             .text(texts.Legend)
@@ -702,7 +731,7 @@ function gallery(Graph){
         })
 
         var legendsHeight = parent.node().parentNode.offsetHeight-250;
-        content.style("height",content.node().offsetHeight>legendsHeight ? legendsHeight+"px" : null)
+        content.style("height",legend.node().offsetHeight>legendsHeight ? legendsHeight+"px" : null)
 
         if(initialize){
           var legendBottomControls = legends.append("div")
