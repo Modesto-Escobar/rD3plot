@@ -14,11 +14,8 @@ networkJSON<-function(net){
 
     idx <- seq_along(name)-1
     names(idx) <- name
-    source <- idx[as.character(links$Source)]
-    target <- idx[as.character(links$Target)]
-
-    links$Source <- source
-    links$Target <- target
+    links[[options$linkSource]] <- idx[as.character(links[[options$linkSource]])]
+    links[[options$linkTarget]] <- idx[as.character(links[[options$linkTarget]])]
   }
 
   #prepare tree

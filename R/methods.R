@@ -38,7 +38,7 @@ printNetwork <- function(x){
   printMain(x)
   printTable(x$nodes[,setdiff(names(x$nodes),c("hidden","chaine","fx","fy")),drop=FALSE],"Nodes")
   if(!is.null(x$links)){
-    printTable(x$links[,setdiff(names(x$links),c("hidden","chaine"))],"Nodes")
+    printTable(x$links[,setdiff(names(x$links),c("hidden","chaine"))],"Links")
   }
   cat("\n")
   printNote(x)
