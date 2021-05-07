@@ -405,8 +405,8 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
     if(is.character(layout)){ 
       layoutName <- layoutControl(layout)
       if(exists("layoutName")){
-        if(layoutName=="fo") layout <- coords[[layoutName]](toIgraph(net), criteria=lweight) 
-        else layout <- coords[[layoutName]](toIgraph(net))
+        if(layoutName=="fo") layout <- coords[[layoutName]](rd3_toIgraph(net), criteria=lweight) 
+        else layout <- coords[[layoutName]](rd3_toIgraph(net))
         if(layoutName=="su")layout=layout$layout
       }
     }
@@ -416,7 +416,7 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
   #community
   community <- congloControl(community)
   if (!is.null(community)) {
-    net$nodes$community <- igraph::membership(conglos[[community]](toIgraph(net)))
+    net$nodes$community <- igraph::membership(conglos[[community]](rd3_toIgraph(net)))
     net$nodes$community <- paste0("G.",sprintf(paste0("%0",nchar(max(net$nodes$community)),"d"),net$nodes$community))
     if (!("community" %in% unlist(net$options[c("nodeShape","nodeColor")])))
        net$options$nodeGroup <- "community"

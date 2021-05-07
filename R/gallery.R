@@ -13,9 +13,9 @@ galleryCreate <- function(gallery, dir){
 }
 
 gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
-    ntext = NULL, info = NULL, image = NULL,
-    zoom = 1, itemsPerRow = NULL,
-    main = NULL, note = NULL, showLegend = TRUE,
+    ntext = NULL, info = NULL, image = NULL, zoom = 1,
+    itemsPerRow = NULL, main = NULL, note = NULL,
+    showLegend = TRUE, frequencies = FALSE,
     help = NULL, helpOn = FALSE, description = NULL,
     descriptionWidth = NULL, roundedItems = FALSE,
     language = c("en", "es", "ca"), dir = NULL){
@@ -61,6 +61,7 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
   options <- showSomething(options,"roundedItems",roundedItems)
   options <- showSomething(options,"showLegend",showLegend)
   options <- showSomething(options,"helpOn",helpOn)
+  options <- showSomething(options,"frequencies",frequencies)
   options[["language"]] <- checkLanguage(language)
 
   if (!is.null(image)){
@@ -82,17 +83,3 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
   return(gallery)
 }
 
-asGallery <- function(net){
-  if(inherits(net,"network_rd3")){
-    nodes <- net$nodes
-    options <- net$options
-    gallery <- gallery_rd3(nodes = nodes, name = options$nodeName, label = options$nodeLabel,
-      color = options$nodeColor, ntext = options$nodeText, info = options$nodeInfo, image = options$imageItems,
-      zoom = options$zoom, main = options$main, note = options$note,
-      help = options$help, helpOn = options$helpOn, roundedItems = options$roundedItems,
-      language = options$language)
-    return(gallery)
-  }else{
-    stop("net: must be a network object")
-  }
-}

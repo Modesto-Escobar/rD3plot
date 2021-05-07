@@ -53,7 +53,7 @@ congloControl<-function(conglo){
   return(conglo)
 }
 
-layoutCircle <- function(N,nodes=seq_len(nrow(N)),deg=0,name=NULL){
+rd3_layoutCircle <- function(N,nodes=seq_len(nrow(N)),deg=0,name=NULL){
   N[,"x"] <- NA
   N[,"y"] <- NA
 
@@ -78,7 +78,7 @@ layoutCircle <- function(N,nodes=seq_len(nrow(N)),deg=0,name=NULL){
   return(as.matrix(N[,c("x","y")]))
 }
 
-layoutGrid <- function(N,string,name=NULL,byrow=FALSE){
+rd3_layoutGrid <- function(N,string,name=NULL,byrow=FALSE){
   N[,"x"] <- NA
   N[,"y"] <- NA
 

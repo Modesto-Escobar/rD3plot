@@ -25,6 +25,13 @@ timeline_rd3 <- function(periods, name = "name", start = "start", end = "end", g
   if (!is.null(note)) options[['note']] <- note
   if (!is.null(info)) options[['info']] <- info
   options[["language"]] <- checkLanguage(language)
+
+  if(inherits(periods[[start]],"POSIXct") && inherits(periods[[end]],"POSIXct")){
+    options[["POSIXct"]] <- TRUE
+  }
+  periods[[start]] <- as.numeric(periods[[start]])
+  periods[[end]] <- as.numeric(periods[[end]])
+
   time <- structure(list(periods=periods,options=options),class="timeline_rd3")
   if(!is.null(events)){
     events <- events[order(events[[eventTime]]),]

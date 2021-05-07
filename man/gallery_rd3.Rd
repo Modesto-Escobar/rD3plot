@@ -10,9 +10,9 @@ Object of class \code{gallery_rd3}.
 
 \usage{
 gallery_rd3(nodes, name = NULL, label = NULL, color = NULL,
-    ntext = NULL, info = NULL, image = NULL,
-    zoom = 1, itemsPerRow = NULL,
-    main = NULL, note = NULL, showLegend = TRUE,
+    ntext = NULL, info = NULL, image = NULL, zoom = 1,
+    itemsPerRow = NULL, main = NULL, note = NULL,
+    showLegend = TRUE, frequencies = FALSE,
     help = NULL, helpOn = FALSE, description = NULL,
     descriptionWidth = NULL, roundedItems = FALSE,
     language = c("en", "es", "ca"), dir = NULL)
@@ -29,6 +29,7 @@ gallery_rd3(nodes, name = NULL, label = NULL, color = NULL,
 \item{itemsPerRow}{number of items in each row.}
 \item{main}{upper title of the graph.}
 \item{note}{lower title of the graph.}
+\item{frequencies}{a logical value true if barplots representing node attributes frequencies will be added to the final graph.}
 \item{showLegend}{a logical value true if the legend is to be shown.}
 \item{help}{a character string indicating a help text of the graph.}
 \item{helpOn}{Should the help be shown at the beginning?}

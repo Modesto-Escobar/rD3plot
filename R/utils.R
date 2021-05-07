@@ -382,7 +382,7 @@ showSomething <- function(opt,item,show){
 }
 
 # igraph -> network_rd3
-fromIgraph <- function(G, ...){
+rd3_fromIgraph <- function(G, ...){
   if (inherits(G,"igraph")){
 
     #arguments
@@ -434,7 +434,7 @@ fromIgraph <- function(G, ...){
 }
 
 # network_rd3 -> igraph
-toIgraph <- function(net){
+rd3_toIgraph <- function(net){
   if (inherits(net,"network_rd3")){
     nodes <- net$nodes
     links <- net$links

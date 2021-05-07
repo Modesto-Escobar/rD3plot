@@ -117,6 +117,28 @@ function gallery(Graph){
         .title(texts.downloadtable)
         .job(nodes2xlsx));
 
+  var frequencyBars = false;
+  if(options.frequencies){
+      frequencyBars = displayFreqBars()
+        .infopanel(infoPanel)
+        .nodenames(Graph.nodenames.filter(filterNodeNames))
+        .updateSelection(displayGraph)
+        .applyColor(function(val){
+          colorSelect.property("value",val)
+                     .dispatch("change");
+        })
+      topBar.call(iconButton()
+        .alt("freq")
+        .width(24)
+        .height(24)
+        .src(b64Icons.chart)
+        .title("frequencies")
+        .job(function(){
+          frequencyBars.show(true);
+          displayGraph();
+        }));
+  }
+
   if(options.main){
     topBar.append("h2").text(options.main)
     topBar.append("span").attr("class","separator");
@@ -499,6 +521,14 @@ function gallery(Graph){
       })
     }
 
+    if(frequencyBars && frequencyBars.show()){
+      frequencyBars
+            .nodes(data)
+            .nodeColor(options.nodeColor)
+            .colorScale(colorScale);
+      frequencyBars();
+    }
+
     function applyColorScale(scale, value){
       if(value == null){
         return basicColors.white;
@@ -550,8 +580,12 @@ function gallery(Graph){
       return !filter || filter.indexOf(n[options.nodeName])!=-1 ? true : false;
   }
 
+  function filterNodeNames(d){
+    return d.substring(0,1)!="_" && d!=options.nodeText && d!=options.nodeInfo; 
+  }
+
   function getSelectOptions(order){
-    return Graph.nodenames.filter(function(d){ return d.substring(0,1)!="_"; })
+    return Graph.nodenames.filter(filterNodeNames)
         .filter(function(d){ return !options.imageItems || d!=options.imageItems; })
         .sort(order ? order : function(){ return 0; });
   }

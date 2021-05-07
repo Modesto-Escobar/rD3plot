@@ -9,6 +9,15 @@ function timeline(json){
       selectedGroups, // temporarily selected in checkboxes
       filter = false; // global filter
 
+  var renderTime = function(t){
+    return formatter(t);
+  }
+  if(options.POSIXct){
+    renderTime = function(t){
+      return (new Date(t*1000)).toUTCString();
+    }
+  }
+
   var body = d3.select("body");
 
   var infoPanel = displayInfoPanel();
@@ -193,9 +202,9 @@ function timeline(json){
       }
     });
 
-    var currentYear = new Date().getFullYear(),
+    var currentTime = options.POSIXct ? Math.floor(Date.now() / 1000) : new Date().getFullYear(),
         getEnd = function(y){
-          return y === null ? currentYear : y;
+          return y === null ? currentTime : y;
         };
 
     var items = (filter ? periods.filter(function(d){ return filter.indexOf(d[options.name])!=-1; }) : periods).filter(function(d){ return d[options.group]!==null; });
@@ -207,7 +216,7 @@ function timeline(json){
 
     if(!options.text){
       items.forEach(function(d){
-        d["text"] = d[options.name]+" </br>"+d[options.start]+((d[options.end]===null)?"":" - "+d[options.end]);
+        d["text"] = d[options.name]+" </br>"+renderTime(d[options.start])+((d[options.end]===null)?"":" - "+renderTime(d[options.end]));
       })
       options.text = "text";
     }
@@ -502,7 +511,7 @@ function timeline(json){
     }
 
     //mini axis
-    var xAxis = d3.axisBottom(x).tickFormat(formatter);
+    var xAxis = d3.axisBottom(x).tickFormat(renderTime);
 
     mini.append("g")
       .attr("class", "x axis")
@@ -613,53 +622,52 @@ function timeline(json){
 
     // dotted vertical guide
     var rect = plot.node().getBoundingClientRect(),
-        yearGuideTop = rect.top
+        timeGuideTop = rect.top
           + topSVG.node().clientHeight
           + timeHeader.node().clientHeight
           + 3,
-        yearGuide = plot.append("div")
-      .attr("class","year-guide")
+        timeGuide = plot.append("div")
+      .attr("class","time-guide")
       .style("position","absolute")
-      .style("top",yearGuideTop+"px")
+      .style("top",timeGuideTop+"px")
       .style("left",((w/2)+margin[3])+"px")
       .style("width",0)
       .style("height",0)
       .style("border-left","dashed 1px "+basicColors.black)
       .style("z-index",-1);
 
-    var pYear = plot.append("p")
-      .attr("class","year")
+    var pTime = plot.append("p")
+      .attr("class","time")
       .style("background-color",basicColors.white)
       .style("position","absolute")
-      .style("top",yearGuideTop+"px")
+      .style("top",timeGuideTop+"px")
       .style("margin-left","-16px")
-      .style("padding","2px 0")
+      .style("padding","2px 4px")
       .style("border-radius","0 0 5px 5px")
-      .style("width","32px")
       .style("text-align","center");
 
     body.on("mousemove",function(){
       var coords = d3.mouse(body.node());
-      if(coords[1]>yearGuideTop && coords[0]>margin[3] && coords[0]<(margin[3]+w)){
-        yearGuide.style("left",coords[0]+"px");
-        pYear.style("left",coords[0]+"px");
-        var year = parseInt(x1.invert(coords[0]-margin[3]));
-        pYear.text(year);
+      if(coords[1]>timeGuideTop && coords[0]>margin[3] && coords[0]<(margin[3]+w)){
+        timeGuide.style("left",coords[0]+"px");
+        pTime.style("left",coords[0]+"px");
+        var time = parseInt(x1.invert(coords[0]-margin[3]));
+        pTime.text(renderTime(time));
       }
     })
 
     window.onscroll = function(){
-      if(window.pageYOffset > (yearGuideTop - topBar.node().offsetHeight)){
+      if(window.pageYOffset > (timeGuideTop - topBar.node().offsetHeight)){
         timeHeader.style("position","fixed")
           .style("top",(topBar.node().offsetHeight)+"px")
           .style("left",0)
-        pYear.style("position","fixed")
+        pTime.style("position","fixed")
           .style("top",(topBar.node().offsetHeight + margin[2]+10)+"px")
       }else{
         timeHeader.style("position",null)
           .style("top",null)
-        pYear.style("position","absolute")
-          .style("top",yearGuideTop+"px")
+        pTime.style("position","absolute")
+          .style("top",timeGuideTop+"px")
       }
     }
 
@@ -672,10 +680,10 @@ function timeline(json){
 
     function keyflip(){
       if(!d3.event.button && (d3.event.ctrlKey || d3.event.metaKey)){
-        if(window.pageYOffset>yearGuideTop){
+        if(window.pageYOffset>timeGuideTop){
           zoomArea.style("top",margin[2]+"px");
         }else{
-          zoomArea.style("top",(yearGuideTop-window.pageYOffset)+"px");
+          zoomArea.style("top",(timeGuideTop-window.pageYOffset)+"px");
         }
         zoomArea.style("display","block");
       }else{
@@ -697,7 +705,7 @@ function timeline(json){
       x1.domain([minExtent, maxExtent]);
 
       if(minExtent < maxExtent){
-        var x1Axis = d3.axisTop(x1).tickFormat(formatter);
+        var x1Axis = d3.axisTop(x1).tickFormat(renderTime);
         timeHeader.select("g").call(x1Axis);
       }else{
         timeHeader.select("g").selectAll("*").remove();
@@ -857,7 +865,7 @@ function timeline(json){
       });
 
       var guideHeight = (parseInt(plot.style("height")) - parseInt(plot.select(".plot>svg:first-child").style("height"))) + "px";
-      yearGuide.style("height",guideHeight);
+      timeGuide.style("height",guideHeight);
 
     }
   }

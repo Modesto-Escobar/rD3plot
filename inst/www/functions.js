@@ -1400,6 +1400,7 @@ function displayInfoPanel(){
       .attr("class","drag")
       .call(d3.drag()
         .on("start", function() {
+          docSize = viewport();
           contentDiv.style("display","none");
         })
         .on("drag", function() {
@@ -1443,9 +1444,10 @@ function displayInfoPanel(){
   function closePanel(){
     if(infopanel.style("display")!="none"){
       infopanel.transition().duration(transitionDuration)
-        .style("left",docSize.width+"px")
+        .style("left",viewport().width+"px")
         .on("end",function(){
           infopanel.style("display","none");
+          contentDiv.html("");
         })
     }
   }
@@ -1456,7 +1458,7 @@ function displayInfoPanel(){
       if(infopanel.style("display")=="none"){
         infopanel.style("display",null);
         infopanel.transition().duration(transitionDuration)
-          .style("left",(docSize.width-infoWidth)+"px")
+          .style("left",(viewport().width-infoWidth)+"px")
       }
     }else{
       closePanel();
@@ -1466,6 +1468,10 @@ function displayInfoPanel(){
   exports.close = function(){
     closePanel();
   }
+
+  exports.getWidth = function() {
+    return infoWidth;
+  };
 
   exports.selection = function(){
     return infopanel;
@@ -1525,6 +1531,334 @@ function attrSelectionWindow(){
   exports.clickAction = function(x) {
     if (!arguments.length) return clickAction;
     clickAction = x;
+    return exports;
+  };
+
+  return exports;
+}
+
+// display frequency bars
+function displayFreqBars(){
+  var options = {},
+      nodenames,
+      nodes,
+      infopanel,
+      updateSelection,
+      colorScale,
+      nodeColor,
+      applyShape,
+      applyColor,
+      show = false,
+      frequencies = "relative",
+      div;
+  
+  function exports(){
+    show = true;
+
+  div = infopanel.selection().select(".frequency-barplots");
+
+  if(div.empty()){
+    infopanel.changeInfo("<div class=\"frequency-barplots\"><div>");
+    div = infopanel.selection().select(".frequency-barplots");
+    div.append("div")
+    .attr("class","select-wrapper")
+    .append("select")
+    .on("change",function(){
+      frequencies = this.value;
+      exports(infopanel);
+    })
+    .selectAll("option")
+      .data(["absolute","relative"])
+    .enter().append("option")
+      .property("selected",function(d){ return frequencies==d; })
+      .property("value",String)
+      .text(String)
+  }
+
+  var renderPercentage = frequencies=="relative" ? "%" : "";
+
+  nodenames.forEach(function(name){
+    var type = dataType(nodes,name);
+    if(type=="string" || type=="object"){
+      var values = {},
+          selectedValues = {};
+      nodes.forEach(function(node){
+        var loadValue = function(val){
+            val = String(val);
+            if(!values.hasOwnProperty(val)){
+              values[val] = 1;
+            }else{
+              values[val] += 1;
+            }
+            if(node.selected){
+              if(!selectedValues.hasOwnProperty(val)){
+                selectedValues[val] = 1;
+              }else{
+                selectedValues[val] += 1;
+              }
+            }
+        }
+        if(type=="object" && typeof node[name] == "object"){
+          node[name].forEach(loadValue);
+        }else{
+          loadValue(node[name]);
+        }
+      });
+
+      var maxvalue = d3.max(d3.values(values)),
+          keyvalues = d3.keys(values).sort(function(a,b){
+            a = values[a];
+            b = values[b];
+            return a > b ? -1 : a < b ? 1 : a <= b ? 0 : NaN;
+          });
+          selectedlength = nodes.filter(function(n){ return n.selected; }).length;
+
+      if(frequencies=="relative"){
+        for(v in values){
+          values[v] = values[v]/nodes.length*100;
+        }
+        for(v in selectedValues){
+          selectedValues[v] = selectedValues[v]/selectedlength*100;
+        }
+
+        maxvalue = d3.max([d3.max(d3.values(values)),d3.max(d3.values(selectedValues))]);
+      }
+
+      if(keyvalues.length!=nodes.length){
+        var barplot = getBarPlot(name,true);
+
+        keyvalues.forEach(function(v){
+          var percentage = values[v]/maxvalue*100,
+              percentage2 =  0;
+
+          if(selectedValues[v]){
+            percentage2 = selectedValues[v]/maxvalue*100;
+          }
+
+          var getValue = function(values,value){
+            return frequencies=="relative" ? formatter(values[value])+"%" : values[value];
+          }
+
+          var row = barplot.append("div")
+            .attr("class","freq-bar")
+            .attr("title",v+": "+getValue(values,v) + (selectedValues[v] ? "\nSelection: "+getValue(selectedValues,v) : ""))
+            .on("click",function(){
+              nodes.forEach(function(node){
+                delete node.selected;
+                if(type=="object" && typeof node[name] == "object"){
+                  if(node[name].indexOf(v)!=-1){
+                    node.selected = true;
+                  }
+                }else{
+                  if(node[name]==v){
+                    node.selected = true;
+                  }
+                }
+              })
+              updateSelection();
+            })
+          row.append("div")
+            .attr("class","freq1")
+            .style("width",percentage+"%")
+            .style("background-color",nodeColor==name && colorScale ? colorScale(v) : null)
+            .html("&nbsp;");
+          row.append("div")
+            .attr("class","freq2")
+            .style("width",percentage2+"%")
+            .html("&nbsp;");
+          row.append("span")
+            .text(v)
+        })
+
+        var axis = barplot.append("div")
+          .attr("class","freq-axis")
+
+        var x = d3.scaleLinear()
+          .domain([0,maxvalue])
+
+        x.ticks(5).forEach(function(t){
+          axis.append("span").style("left",(t/maxvalue*100)+"%").text(t+renderPercentage);
+        })
+      }
+    }else if(type=="number"){
+      var values = nodes.map(function(node){ return +node[name]; }),
+          selectedValues = nodes.filter(function(n){ return n.selected; }).map(function(node){ return +node[name]; });
+
+      var barplot = getBarPlot(name);
+
+      // set the dimensions and margins of the graph
+      var margin = {top: 10, right: 10, bottom: 30, left: 40},
+          w = (infopanel.getWidth() - 72) - margin.left - margin.right,
+          h = 200 - margin.top - margin.bottom;
+
+      // append the svg object
+      var svg = barplot.append("svg")
+          .attr("width", w + margin.left + margin.right)
+          .attr("height", h + margin.top + margin.bottom)
+        .append("g")
+          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+      // X axis: scale and draw
+      var x = d3.scaleLinear()
+        .domain(d3.extent(values,function(d) { return d; }))
+        .range([0, w]);
+
+      svg.append("g")
+      .attr("transform", "translate(0," + h + ")")
+      .call(d3.axisBottom(x));
+
+      // set the parameters for the histogram
+      var histogram = d3.histogram()
+        .value(function(d) { return d; })
+        .domain(x.domain())
+        .thresholds(x.ticks(10));
+
+      // And apply this function to data to get the bins
+      var bins = histogram(values),
+          bins2 = selectedValues.length ? histogram(selectedValues) : [];
+
+      for(var i = 0; i<bins.length; i++){
+          bins[i].y = frequencies=="relative" ? bins[i].length/nodes.length*100 : bins[i].length;
+          if(selectedValues.length){
+            bins[i].y2 = frequencies=="relative" ? bins2[i].length/selectedValues.length*100 : bins2[i].length;
+          }
+      }
+
+      // Y axis: scale and draw
+      var y = d3.scaleLinear()
+        .range([h, 0])
+        .domain([0, d3.max(bins, function(d) { return d.y; })]);
+
+      svg.append("g")
+      .call(d3.axisLeft(y)
+        .tickFormat(function(d){
+          return d + renderPercentage;
+        }));
+
+      // append the bar rectangles to the svg element
+      var columns = svg.selectAll("g.freq-bar")
+        .data(bins)
+        .enter()
+        .append("g")
+          .attr("class","freq-bar")
+          .attr("transform", function(d) { return "translate(" + x(d.x0) + ",0)"; })
+          .style("cursor","pointer")
+          .on("click",function(d,i){
+              nodes.forEach(function(node){
+                delete node.selected;
+                if(node[name]>=d.x0 && ((i<bins.length-1 && node[name]<d.x1) || (i==bins.length-1 && node[name]<=d.x1))){
+                  node.selected = true;
+                }
+              })
+              updateSelection();
+          })
+
+      columns.append("rect")
+          .attr("class","freq1")
+          .attr("x", 1)
+          .attr("y", function(d) { return y(d.y); })
+          .attr("width", function(d) { return x(d.x1) - x(d.x0) -1 ; })
+          .attr("height", function(d) { return h - y(d.y); })
+          .style("fill", nodeColor==name && colorScale ? function(d){
+            return colorScale((d.x0+d.x1)/2);
+          } : "#cbdefb")
+
+      if(selectedValues.length){
+        columns.append("rect")
+          .attr("class","freq2")
+          .attr("x", 1 + 4)
+          .attr("y", function(d) { return y(d.y2); })
+          .attr("width", function(d) { return x(d.x1) - x(d.x0) -1 -8 ; })
+          .attr("height", function(d) { return h - y(d.y2); })
+          .style("fill", basicColors.mediumGrey)
+      }
+    }
+  })
+  }
+
+  function getBarPlot(name,shape){
+      var barplot = div.selectAll("div.bar-plot").filter(function(){ return this.variable==name; });
+      if(barplot.empty()){
+        barplot = div.append("div")
+          .attr("class","bar-plot")
+          .property("variable",name);
+        var h2 = barplot.append("h2").text(name);
+        if(shape && applyShape){
+          h2.append("img")
+          .attr("title",texts.Shape)
+          .attr("src",b64Icons.shapes)
+          .on("click",function(){
+            applyShape(name);
+          })
+        }
+        if(applyColor){
+          h2.append("img")
+          .attr("title",texts.Color)
+          .attr("src",b64Icons.drop)
+          .on("click",function(){
+            applyColor(name);
+          })
+        }
+      }else{
+        barplot.selectAll(".bar-plot > h2 ~ *").remove();
+      }
+    return barplot;
+  }
+
+  exports.nodenames = function(x) {
+    if (!arguments.length) return nodenames;
+    nodenames = x;
+    return exports;
+  };
+
+  exports.nodes = function(x) {
+    if (!arguments.length) return nodes;
+    nodes = x;
+    return exports;
+  };
+
+  exports.infopanel = function(x) {
+    if (!arguments.length) return infopanel;
+    infopanel = x;
+    infopanel.selection().select(".infopanel > .close-button").on("click.hidefreq",function(){
+      show = false;
+    });
+    return exports;
+  };
+
+  exports.updateSelection = function(x) {
+    if (!arguments.length) return updateSelection;
+    updateSelection = x;
+    return exports;
+  };
+
+  exports.colorScale = function(x) {
+    if (!arguments.length) return colorScale;
+    colorScale = x;
+    return exports;
+  };
+
+  exports.nodeColor = function(x) {
+    if (!arguments.length) return nodeColor;
+    nodeColor = x;
+    return exports;
+  };
+
+  exports.applyColor = function(x) {
+    if (!arguments.length) return applyColor;
+    applyColor = x;
+    return exports;
+  };
+
+  exports.applyShape = function(x) {
+    if (!arguments.length) return applyShape;
+    applyShape = x;
+    return exports;
+  };
+
+  exports.show = function(x) {
+    if (!arguments.length) return show;
+    show = x ? true : false;
     return exports;
   };
 

@@ -1,5 +1,5 @@
-\name{multigraphCreate}
-\alias{multigraphCreate}
+\name{rd3_multigraph}
+\alias{rd3_multigraph}
 \title{Integrates interactive 'rD3plot' graphs.}
 \author{
 Modesto Escobar, Department of Sociology and Communication, University of Salamanca. 
@@ -9,7 +9,7 @@ The function creates a folder in your computer with an HTML document named index
 }
 
 \usage{
-multigraphCreate(..., mode = c("default","parallel","frame"),
+rd3_multigraph(..., mode = c("default","parallel","frame"),
                  frame = 0, speed = 50, dir = "MultiGraph", show = TRUE)
 }
 \arguments{
@@ -34,7 +34,7 @@ multigraphCreate(..., mode = c("default","parallel","frame"),
 \item{show}{a logical value true if the graph is to be shown. Default = TRUE.}
 }
 \description{
-\code{multigraphCreate} produce an interactive multi graph with the integration of 'rD3plot' graphs in the final result.
+\code{rd3_multigraph} produce an interactive multi graph with the integration of 'rD3plot' graphs in the final result.
 }
 \examples{
 \dontrun{
@@ -49,6 +49,6 @@ bar <- barplot_rd3(finches, galapagos, select="Certhidea olivacea")
 data(sociologists)
 time <- timeline_rd3(sociologists,"name","birth","death","birthcountry")
 
-multigraphCreate(network=net, barplot=bar, timeline=time)
+rd3_multigraph(network=net, barplot=bar, timeline=time)
 }
 }

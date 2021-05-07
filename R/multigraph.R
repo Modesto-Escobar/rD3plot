@@ -161,7 +161,7 @@ getGraphList <- function(...){
 }
 
 #create html wrapper for multigraph
-multigraphCreate <- function(...,  mode = c("default","parallel","frame"), frame = 0, speed = 50, dir = "MultiGraph", show = TRUE){
+rd3_multigraph <- function(...,  mode = c("default","parallel","frame"), frame = 0, speed = 50, dir = "MultiGraph", show = TRUE){
   graphs <- getGraphList(...)
 
   mode <- substr(mode[1],1,1)
