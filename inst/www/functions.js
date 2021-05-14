@@ -1443,26 +1443,36 @@ function displayInfoPanel(){
 
   function closePanel(){
     if(infopanel.style("display")!="none"){
+      contentDiv.html("");
       infopanel.transition().duration(transitionDuration)
         .style("left",viewport().width+"px")
         .on("end",function(){
           infopanel.style("display","none");
-          contentDiv.html("");
         })
+    }
+  }
+
+  function openPanel(callback){
+    if(infopanel.style("display")=="none"){
+      infopanel.style("display",null);
+      infopanel.transition().duration(transitionDuration)
+        .style("left",(viewport().width-infoWidth)+"px")
+        .on("end",callback ? function(){ callback(contentDiv); } : null)
+    }else if(callback){
+      callback(contentDiv);
     }
   }
 
   exports.changeInfo = function(info){
     if(info){
-      contentDiv.html(info);
-      if(infopanel.style("display")=="none"){
-        infopanel.style("display",null);
-        infopanel.transition().duration(transitionDuration)
-          .style("left",(viewport().width-infoWidth)+"px")
-      }
+      openPanel(function(div){ div.html(info); });
     }else{
       closePanel();
     }
+  }
+
+  exports.open = function(callback){
+    openPanel(callback);
   }
 
   exports.close = function(){
@@ -1542,30 +1552,28 @@ function displayFreqBars(){
   var options = {},
       nodenames,
       nodes,
-      infopanel,
       updateSelection,
       colorScale,
       nodeColor,
       applyShape,
       applyColor,
-      show = false,
       frequencies = "relative",
       div;
   
-  function exports(){
-    show = true;
+  function exports(sel){
 
-  div = infopanel.selection().select(".frequency-barplots");
+  div = sel.select("div.frequency-barplots");
 
   if(div.empty()){
-    infopanel.changeInfo("<div class=\"frequency-barplots\"><div>");
-    div = infopanel.selection().select(".frequency-barplots");
+    sel.selectAll("*").remove();
+    div = sel.append("div");
+    div.attr("class","frequency-barplots");
     div.append("div")
     .attr("class","select-wrapper")
     .append("select")
     .on("change",function(){
       frequencies = this.value;
-      exports(infopanel);
+      exports(sel);
     })
     .selectAll("option")
       .data(["absolute","relative"])
@@ -1627,7 +1635,7 @@ function displayFreqBars(){
       if(keyvalues.length!=nodes.length){
         var barplot = getBarPlot(name,true);
 
-        keyvalues.forEach(function(v){
+        keyvalues.forEach(function(v,i){
           var percentage = values[v]/maxvalue*100,
               percentage2 =  0;
 
@@ -1641,6 +1649,7 @@ function displayFreqBars(){
 
           var row = barplot.append("div")
             .attr("class","freq-bar")
+            .style("display",i>9 ? "none" : null)
             .attr("title",v+": "+getValue(values,v) + (selectedValues[v] ? "\nSelection: "+getValue(selectedValues,v) : ""))
             .on("click",function(){
               nodes.forEach(function(node){
@@ -1650,7 +1659,7 @@ function displayFreqBars(){
                     node.selected = true;
                   }
                 }else{
-                  if(node[name]==v){
+                  if(String(node[name])==v){
                     node.selected = true;
                   }
                 }
@@ -1670,6 +1679,56 @@ function displayFreqBars(){
             .text(v)
         })
 
+
+        if(keyvalues.length>10){
+          var moreLessBars = barplot.append("div")
+            .attr("class","show-more-less-bars")
+          var moreBars = moreLessBars.append("span")
+            .attr("class","show-more-bars")
+            .style("cursor","pointer")
+            .text(texts.Show + " " + Math.min(keyvalues.length-10,10) + " " + texts.more)
+            .on("click",function(){
+              var count = 0;
+              barplot.selectAll(".freq-bar")
+                .style("display",function(d){
+                  if(d3.select(this).style("display")=="none"){
+                    if(count>=10){
+                      return "none";
+                    }else{
+                      count++;
+                    }
+                  }
+                });
+              if(count<10){
+                moreBars.style("visibility","hidden")
+                  .style("cursor",null);
+              }else{
+                moreBars.text(texts.Show + " " + Math.min(barplot.selectAll(".freq-bar").filter(function(){
+                  return d3.select(this).style("display")=="none";
+                }).size(),10) + " " + texts.more)
+              }
+              lessBars.style("visibility",null)
+                .style("cursor","pointer");
+            });
+          var lessBars = moreLessBars.append("span")
+            .attr("class","show-less-bars")
+            .style("visibility","hidden")
+            .text(texts.Show + " " + texts.less)
+            .on("click",function(){
+              barplot.selectAll(".freq-bar")
+                .style("display",function(d,i){
+                  if(i>9){
+                    return "none";
+                  }
+                });
+              lessBars.style("visibility","hidden")
+                .style("cursor",null);
+              moreBars.style("visibility",null)
+                .style("cursor","pointer")
+                .text(texts.Show + " " + Math.min(keyvalues.length-10,10) + " " + texts.more)
+            });
+        }
+
         var axis = barplot.append("div")
           .attr("class","freq-axis")
 
@@ -1681,14 +1740,14 @@ function displayFreqBars(){
         })
       }
     }else if(type=="number"){
-      var values = nodes.map(function(node){ return +node[name]; }),
-          selectedValues = nodes.filter(function(n){ return n.selected; }).map(function(node){ return +node[name]; });
+      var values = nodes.filter(function(n){ return n[name]!==null; }).map(function(node){ return +node[name]; }),
+          selectedValues = nodes.filter(function(n){ return n[name]!==null && n.selected; }).map(function(node){ return +node[name]; });
 
       var barplot = getBarPlot(name);
 
       // set the dimensions and margins of the graph
       var margin = {top: 10, right: 10, bottom: 30, left: 40},
-          w = (infopanel.getWidth() - 72) - margin.left - margin.right,
+          w = (sel.node().offsetWidth - 72) - margin.left - margin.right,
           h = 200 - margin.top - margin.bottom;
 
       // append the svg object
@@ -1705,7 +1764,10 @@ function displayFreqBars(){
 
       svg.append("g")
       .attr("transform", "translate(0," + h + ")")
-      .call(d3.axisBottom(x));
+      .call(d3.axisBottom(x)
+        .tickFormat(function(d){
+          return formatter(d);
+        }));
 
       // set the parameters for the histogram
       var histogram = d3.histogram()
@@ -1817,15 +1879,6 @@ function displayFreqBars(){
     return exports;
   };
 
-  exports.infopanel = function(x) {
-    if (!arguments.length) return infopanel;
-    infopanel = x;
-    infopanel.selection().select(".infopanel > .close-button").on("click.hidefreq",function(){
-      show = false;
-    });
-    return exports;
-  };
-
   exports.updateSelection = function(x) {
     if (!arguments.length) return updateSelection;
     updateSelection = x;
@@ -1853,12 +1906,6 @@ function displayFreqBars(){
   exports.applyShape = function(x) {
     if (!arguments.length) return applyShape;
     applyShape = x;
-    return exports;
-  };
-
-  exports.show = function(x) {
-    if (!arguments.length) return show;
-    show = x ? true : false;
     return exports;
   };
 

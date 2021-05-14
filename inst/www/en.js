@@ -108,5 +108,7 @@ var texts = {
     selectcustomcolor: "Select a custom color",
     filterselection: "Filter selection",
     Elements: "Elements",
-    Deselect: "Deselect"
+    Deselect: "Deselect",
+    more: "more",
+    less: "less"
   };

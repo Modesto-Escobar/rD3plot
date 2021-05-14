@@ -14,6 +14,17 @@ function gallery(Graph){
   }
   options.colorScalenodeColor = "RdWhGn"; // default linear scale
 
+  var splitMultiVariable = function(d){
+      for(var p in d) {
+        if(p!=options.nodeName){
+          if(typeof d[p] == "string" && d[p].indexOf("|")!=-1){
+            var aux = d[p].split("|");
+            d[p] = aux.map(function(d){ return d=="" ? null : (isNaN(parseInt(d)) ? d : +d); });
+          }
+        }
+      }
+  }
+
   var nodes = [],
       len = Graph.nodes[0].length;
   for(var i = 0; i<len; i++){
@@ -21,6 +32,7 @@ function gallery(Graph){
       Graph.nodenames.forEach(function(d,j){
         node[d] = Graph.nodes[j][i];
       })
+      splitMultiVariable(node);
       node[options.nodeName] = String(node[options.nodeName]);
       nodes.push(node);
   }
@@ -119,8 +131,8 @@ function gallery(Graph){
 
   var frequencyBars = false;
   if(options.frequencies){
+      options.frequencies = false;
       frequencyBars = displayFreqBars()
-        .infopanel(infoPanel)
         .nodenames(Graph.nodenames.filter(filterNodeNames))
         .updateSelection(displayGraph)
         .applyColor(function(val){
@@ -134,7 +146,7 @@ function gallery(Graph){
         .src(b64Icons.chart)
         .title("frequencies")
         .job(function(){
-          frequencyBars.show(true);
+          options.frequencies = true;
           displayGraph();
         }));
   }
@@ -223,10 +235,33 @@ function gallery(Graph){
         .attr("class","gallery-content");
 
   var descriptionPanel = false;
-  if(options.description){
+  if(options.description || frequencyBars){
+    var displayInDescription = function(info){
+        descriptionPanel.select(".description-content").html(info ? info : options.description);
+        descriptionPanel.select(".close-button").style("display",info ? "block" : "none");
+    }
+
     descriptionPanel = content.append("div")
         .attr("class","description-panel")
-        .html(options.description);
+    descriptionPanel.append("div")
+      .attr("class","close-button")
+      .on("click",function(){
+        if(options.description){
+          displayInDescription();
+        }else{
+          content.classed("hide-description",true);
+        }
+        if(frequencyBars){
+          options.frequencies = false;
+        }
+      })
+    descriptionPanel.append("div")
+      .attr("class","description-content");
+    if(options.description){
+      displayInDescription();
+    }else{
+      content.classed("hide-description",true);
+    }
   }
 
   var gallery = content.append("div")
@@ -462,7 +497,9 @@ function gallery(Graph){
           displayGraph();
           if(options.nodeInfo){
             if(descriptionPanel){
-              descriptionPanel.html(n[options.nodeInfo] ? n[options.nodeInfo] : options.description);
+              if(options.description && !options.frequencies){
+                displayInDescription(n[options.nodeInfo]);
+              }
             }else{
               infoPanel.changeInfo(n[options.nodeInfo]);
             }
@@ -497,6 +534,21 @@ function gallery(Graph){
               return node[options.nodeColor];
             }).keys())
         }
+        if(type=="object"){
+          var values = [];
+          nodes.forEach(function(node){
+            if(typeof node[options.nodeColor] == "string"){
+              values.push(node[options.nodeColor]);
+            }else{
+              node[options.nodeColor].forEach(function(v){
+                values.push(v);
+              })
+            }
+          });
+          colorScale = d3.scaleOrdinal()
+            .range(categoryColors)
+            .domain(d3.set(values).values())
+        }
       }
     }
     legend
@@ -521,17 +573,22 @@ function gallery(Graph){
       })
     }
 
-    if(frequencyBars && frequencyBars.show()){
+    if(descriptionPanel && frequencyBars && options.frequencies){
       frequencyBars
             .nodes(data)
             .nodeColor(options.nodeColor)
             .colorScale(colorScale);
-      frequencyBars();
+      content.classed("hide-description",false);
+      frequencyBars(descriptionPanel.select(".description-content"));
+      descriptionPanel.select(".close-button").style("display","block");
     }
 
     function applyColorScale(scale, value){
       if(value == null){
         return basicColors.white;
+      }
+      if(typeof value == "object"){
+        value = value[0];
       }
       return scale(value);
     }
@@ -561,8 +618,8 @@ function gallery(Graph){
   function deselectAllItems(){
     nodes.forEach(function(n){ delete n.selected; });
     displayGraph();
-    if(descriptionPanel){
-      descriptionPanel.html(options.description);
+    if(descriptionPanel && options.description && !options.frequencies){
+      displayInDescription();
     }
   }
 
@@ -715,7 +772,19 @@ function gallery(Graph){
         }
         legend.select(".title").text(texts[type] + " / " + value);
 
-        var itemsData = d3.map(data.filter(function(d){ return d[value]!==null; }), function(d){ return d[value]; }).keys().sort(sortAsc);
+        var itemsData = [];
+        data.forEach(function(d){
+          if(d[value]!==null){
+            if(typeof d[value] == "object"){
+              d[value].forEach(function(dd){
+                itemsData.push(dd);
+              });
+            }else{
+              itemsData.push(d[value]);
+            }
+          }
+        });
+        itemsData = d3.set(itemsData).values().sort(sortAsc);
 
         var items = legend.selectAll(".legend-item")
               .data(itemsData,String)
@@ -727,8 +796,14 @@ function gallery(Graph){
             .on("click",function(v){
               var checked = d3.select(this).select(".legend-check-box").classed("checked");
               data.forEach(function(d){
-                if(String(d[value])==v){
-                  d.selected = !checked ? true : false;
+                if(Array.isArray(d[value])){
+                  if(d[value].indexOf(v)!=-1){
+                    d.selected = !checked ? true : false;
+                  }
+                }else{
+                  if(String(d[value])==v){
+                    d.selected = !checked ? true : false;
+                  }
                 }
               })
               displayGraph();
@@ -739,8 +814,8 @@ function gallery(Graph){
 
         itemsEnter.append("div")
         .attr("class","legend-bullet")
-        .style("background-color",function(d){
-          return scale(d);
+        .style("background-color",function(value){
+          return scale(value);
         })
 
         itemsEnter.append("span")

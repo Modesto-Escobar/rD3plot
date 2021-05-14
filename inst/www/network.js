@@ -742,12 +742,15 @@ function displayMain(){
         }));
     }
     if(options.frequencies){
+      options.frequencies = false;
       frequencyBars = displayFreqBars()
-        .infopanel(infoPanel)
         .nodenames(Graph.nodenames.filter(function(d){ return hiddenFields.indexOf(d)==-1; }))
         .updateSelection(showTables)
         .applyColor(function(name){ applyAuto("nodeColor",name); })
         .applyShape(function(name){ applyAuto("nodeShape",name); })
+      infoPanel.selection().select(".infopanel > .close-button").on("click.hidefreq",function(){
+        options.frequencies = false;
+      });
       main.call(iconButton()
         .alt("freq")
         .width(24)
@@ -755,7 +758,7 @@ function displayMain(){
         .src(b64Icons.chart)
         .title("frequencies")
         .job(function(){
-          frequencyBars.show(true);
+          options.frequencies = true;
           showTables();
         }));
     }
@@ -4529,12 +4532,14 @@ function showTables() {
   tableWrapper(linksData,"links",linkColumns);
 
   // update frequency bars
-  if(frequencyBars && frequencyBars.show()){
+  if(frequencyBars && options.frequencies){
     frequencyBars
       .nodes(Graph.nodes.filter(checkSelectable))
       .nodeColor(options.nodeColor)
       .colorScale(VisualHandlers.nodeColor.getScale());
-    frequencyBars();
+    infoPanel.open(function(div){
+      frequencyBars(div);
+    });
   }else if(nodesData.length==0){
     infoPanel.close();
   }
