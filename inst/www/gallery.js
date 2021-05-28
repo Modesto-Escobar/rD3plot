@@ -37,11 +37,20 @@ function gallery(Graph){
       nodes.push(node);
   }
 
+  options.showTopbar = showControls(options,1);
+  options.showExport = showControls(options,2);
+
   d3.selectAll("html, body")
     .style("height","100%")
     .style("width","100%")
 
   var body = d3.select("body");
+
+  if(options.cex){
+      body.style("font-size", 10*options.cex + "px")
+  }else{
+      options.cex = 1;
+  }
 
   var infoPanel = displayInfoPanel();
   body.call(infoPanel);
@@ -97,7 +106,7 @@ function gallery(Graph){
   });
 
   var galleryBox = body.append("div")
-        .attr("class","gallery-box")
+        .attr("class","gallery-box"+(options.showTopbar ? "" : " hide-topbar"))
 
   // top bar
   var topBar = galleryBox.append("div")
@@ -113,7 +122,8 @@ function gallery(Graph){
         .job(function(){ infoPanel.changeInfo(options.help); }));
   }
 
-  topBar.call(iconButton()
+  if(options.showExport){
+    topBar.call(iconButton()
         .alt("pdf")
         .width(24)
         .height(24)
@@ -121,13 +131,14 @@ function gallery(Graph){
         .title(texts.pdfexport)
         .job(gallery2pdf));
 
-  topBar.call(iconButton()
+    topBar.call(iconButton()
         .alt("xlsx")
         .width(24)
         .height(24)
         .src(b64Icons.xlsx)
         .title(texts.downloadtable)
         .job(nodes2xlsx));
+  }
 
   var frequencyBars = false;
   if(options.frequencies){
@@ -135,6 +146,7 @@ function gallery(Graph){
       frequencyBars = displayFreqBars()
         .nodenames(Graph.nodenames.filter(filterNodeNames))
         .updateSelection(displayGraph)
+        .filterSelection(filterSelection)
         .applyColor(function(val){
           colorSelect.property("value",val)
                      .dispatch("change");
@@ -143,12 +155,14 @@ function gallery(Graph){
         .alt("freq")
         .width(24)
         .height(24)
+        .float("left")
         .src(b64Icons.chart)
         .title("frequencies")
         .job(function(){
           options.frequencies = true;
           displayGraph();
         }));
+    topBar.append("span").attr("class","separator");
   }
 
   if(options.main){
@@ -537,12 +551,14 @@ function gallery(Graph){
         if(type=="object"){
           var values = [];
           nodes.forEach(function(node){
-            if(typeof node[options.nodeColor] == "string"){
-              values.push(node[options.nodeColor]);
-            }else{
-              node[options.nodeColor].forEach(function(v){
-                values.push(v);
-              })
+            if(node[options.nodeColor]){
+              if(typeof node[options.nodeColor] == "string"){
+                values.push(node[options.nodeColor]);
+              }else{
+                node[options.nodeColor].forEach(function(v){
+                  values.push(v);
+                })
+              }
             }
           });
           colorScale = d3.scaleOrdinal()
@@ -630,7 +646,11 @@ function gallery(Graph){
         .map(function(n){
           return n[options.nodeName];
         });
-      topFilterInst.newFilter(options.nodeName,values);
+      if(!values.length){
+        topFilterInst.removeFilter();
+      }else{
+        topFilterInst.newFilter(options.nodeName,values);
+      }
   }
 
   function filterNodes(n){
@@ -710,18 +730,13 @@ function gallery(Graph){
       if(scale.name=="i"){
         parent.select("div.scale").remove();
 
-        var legends = parent.select(".legends"),
-            showPanelButton = parent.select(".show-panel-button");
+        var legends = parent.select(".legends");
 
         var initialize = false;
         if(legends.empty()){
           initialize = true;
 
-          var showPanelButton = parent.append("div").attr("class","show-panel-button");
-          showPanelButton.append("span");
-          showPanelButton.append("span");
-          showPanelButton.append("span");
-          showPanelButton.on("click",function(){
+          displayShowPanelButton(parent,function(){
             parent.classed("hide-legend",false);
           })
 
@@ -798,11 +813,11 @@ function gallery(Graph){
               data.forEach(function(d){
                 if(Array.isArray(d[value])){
                   if(d[value].indexOf(v)!=-1){
-                    d.selected = !checked ? true : false;
+                    d.selected = !checked;
                   }
                 }else{
                   if(String(d[value])==v){
-                    d.selected = !checked ? true : false;
+                    d.selected = !checked;
                   }
                 }
               })
@@ -829,7 +844,11 @@ function gallery(Graph){
         itemsUpdate.select(".legend-check-box")
         .classed("checked",function(v){
           var aux = data.filter(function(d){
-            return String(d[value])==v;
+            if(Array.isArray(d[value])){
+              return d[value].indexOf(v)!=-1;
+            }else{
+              return String(d[value])==v;
+            }
           });
           if(aux.length){
             return aux.filter(function(d){

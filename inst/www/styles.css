@@ -261,7 +261,6 @@ th.sorting_desc:after {
 }
 img.icon {
   cursor: pointer;
-  float: right;
   margin: 0 5px;
 }
 div.switchNodeLink{
@@ -785,6 +784,7 @@ p.window-message {
 }
 .filter-options {
   margin: 20px 0;
+  overflow-y: auto;
 }
 .filter-options > div > div:first-child {
   margin-right: 10px;
@@ -1392,12 +1392,27 @@ svg .legend-bottom-button > text{
   left: 15px;
 }
 
+.frequency-barplots > .freq-header > div {
+  display: inline-block;
+  width: 50%;
+  vertical-align: top;
+}
+.frequency-barplots > .freq-header > div:nth-child(2) {
+  text-align: right;
+}
+.frequency-barplots > .freq-header > div:nth-child(2) > img {
+  cursor: pointer;
+}
+
 /* grid gallery */
 div.gallery-box {
   display: flex;
   flex-direction: column;
   width: 100%;
   height: 100%;
+}
+div.gallery-box.hide-topbar > .topbar {
+  display: none;
 }
 div.gallery-content {
   margin: 10px;
@@ -1487,7 +1502,7 @@ div.gallery-content > .legend-panel > .show-panel-button {
   display: none;
 }
 div.gallery-content > .legend-panel.hide-legend > .show-panel-button  {
-  display: block;
+  display: inline-block;
 }
 div.gallery-content > .legend-panel.hide-legend > .legends {
   display: none;

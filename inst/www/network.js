@@ -594,11 +594,11 @@ function network(Graph){
       hiddenFields.push(d);
     })
 
-    options.showSidebar = showControls(1);
-    options.showButtons2 = showControls(2);
-    options.showExport = showControls(3);
-    options.showNodes = showControls(4);
-    options.showLinks = showControls(5);
+    options.showSidebar = showControls(options,1);
+    options.showButtons2 = showControls(options,2);
+    options.showExport = showControls(options,3);
+    options.showNodes = showControls(options,4);
+    options.showLinks = showControls(options,5);
 
     if(!GraphLinksLength){
       options.showLinks = undefined;
@@ -640,23 +640,6 @@ function network(Graph){
       }
     }
 
-    function showControls(n){
-      if(options.hasOwnProperty("controls")){
-        if(options.controls===0)
-          return undefined;
-        if(options.controls==-n)
-          return undefined;
-        if(options.controls==n)
-          return true;
-        if(Array.isArray(options.controls)){
-          if(options.controls.indexOf(-n)!=-1)
-            return undefined;
-          if(options.controls.indexOf(n)!=-1)
-            return true;
-        }
-      }
-      return false;
-    }
   } // end of checkGraphData
 
   function loadFrameData(frame){
@@ -1733,15 +1716,6 @@ function updateSidebarFilters(onlyslider){
   if(Controllers.linkFilter){
     Controllers.linkFilter.update(onlyslider);
   }
-}
-
-function displayShowPanelButton(sel,callback){
-    var showPanelButton = sel.append("div")
-      .attr("class","show-panel-button")
-      .on("click",callback)
-    showPanelButton.append("span");
-    showPanelButton.append("span");
-    showPanelButton.append("span");
 }
 
 function applyInitialFilter(){

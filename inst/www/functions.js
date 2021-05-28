@@ -660,7 +660,10 @@ function topFilter(){
 
         panel.append("h2").text(val)
 
-        var content = panel.append("div").attr("class", "filter-options");
+        var content = panel.append("div")
+          .attr("class", "filter-options")
+          .style("height",w+"px");
+        
 
         var type = dataType(data.filter(function(d){ return d[val] !== null; }),val);
         if(type == 'number'){
@@ -784,6 +787,7 @@ function topFilter(){
   }
 
   function displayTags(){
+    if(filterTags){
       var tags = filterTags.selectAll(".tag").data(d3.keys(selectedValues),String)
       tags.enter().append("div")
         .attr("class","tag")
@@ -795,6 +799,7 @@ function topFilter(){
          })
 
       tags.exit().remove()
+    }
   }
 
   exports.removeFilter = function(){
@@ -988,9 +993,15 @@ var b64Icons = {
 
   chart: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path d="M0 0h24v24H0V0z" fill="none"/><path fill="#777777" d="M5 9.2h3V19H5V9.2zM10.6 5h2.8v14h-2.8V5zm5.6 8H19v6h-2.8v-6z"/></svg>'),
 
-  drop: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path d="M0 0h24v24H0z" fill="none"/><path transform="rotate(180)" transform-origin="50% 50%" fill="#2F7BEE" d="M12 4c1.93 0 5 1.4 5 5.15 0 2.16-1.72 4.67-5 7.32-3.28-2.65-5-5.17-5-7.32C7 5.4 10.07 4 12 4m0-2C8.73 2 5 4.46 5 9.15c0 3.12 2.33 6.41 7 9.85 4.67-3.44 7-6.73 7-9.85C19 4.46 15.27 2 12 2z"/></svg>'),
+  drop: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" fill="#2F7BEE"><path d="M0 0h24v24H0z" fill="none"/><path d="M12,2c-5.33,4.55-8,8.48-8,11.8c0,4.98,3.8,8.2,8,8.2s8-3.22,8-8.2C20,10.48,17.33,6.55,12,2z M12,20c-3.35,0-6-2.57-6-6.2 c0-2.34,1.95-5.44,6-9.14c4.05,3.7,6,6.79,6,9.14C18,17.43,15.35,20,12,20z M7.83,14c0.37,0,0.67,0.26,0.74,0.62 c0.41,2.22,2.28,2.98,3.64,2.87c0.43-0.02,0.79,0.32,0.79,0.75c0,0.4-0.32,0.73-0.72,0.75c-2.13,0.13-4.62-1.09-5.19-4.12 C7.01,14.42,7.37,14,7.83,14z"/></svg>'),
 
-  shapes: "data:image/svg+xml;base64,"+btoa('<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" version="1.1" viewBox="0 0 24 24"><path d="m0 0h24v24h-24v-24z" fill="none"/><circle fill="none" stroke="#2F7BEE" cx="6.4068" cy="17.39" r="4.0887" stroke-width="2"/><rect fill="none" stroke="#2F7BEE" height="7.6271" width="7.6271" y="13.322" x="13.627" stroke-width="2"/><path fill="none" stroke="#2F7BEE" stroke-width="2" d="m17.905 10.202h-8.2165l4.1083-7.1157z"/></svg>')
+  shapes: "data:image/svg+xml;base64,"+btoa('<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" version="1.1" viewBox="0 0 24 24"><path d="m0 0h24v24h-24v-24z" fill="none"/><circle fill="none" stroke="#2F7BEE" cx="6.4068" cy="17.39" r="4.0887" stroke-width="2"/><rect fill="none" stroke="#2F7BEE" height="7.6271" width="7.6271" y="13.322" x="13.627" stroke-width="2"/><path fill="none" stroke="#2F7BEE" stroke-width="2" d="m17.905 10.202h-8.2165l4.1083-7.1157z"/></svg>'),
+
+  wordcloud: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#2F7BEE"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6m0-2C9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96C18.67 6.59 15.64 4 12 4z"/><path d="m7.2385 10.065h1.6467l1.1513 4.8418 1.1424-4.8418h1.6556l1.1424 4.8418 1.1513-4.8418h1.6333l-1.5708 6.6625h-1.9814l-1.2093-5.065-1.196 5.065h-1.9814z"/></svg>'),
+
+  filter: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px"><g fill="#2F7BEE"><path d="M7,6h10l-5.01,6.3L7,6z M4.25,5.61C6.27,8.2,10,13,10,13v6c0,0.55,0.45,1,1,1h2c0.55,0,1-0.45,1-1v-6 c0,0,3.72-4.8,5.74-7.39C20.25,4.95,19.78,4,18.95,4H5.04C4.21,4,3.74,4.95,4.25,5.61z"/><path d="M0,0h24v24H0V0z" fill="none"/></g></svg>'),
+
+  removefilter: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px"><g fill="#2F7BEE"><path d="M7,6h10l-5.01,6.3L7,6z M4.25,5.61C6.27,8.2,10,13,10,13v6c0,0.55,0.45,1,1,1h2c0.55,0,1-0.45,1-1v-6 c0,0,3.72-4.8,5.74-7.39C20.25,4.95,19.78,4,18.95,4H5.04C4.21,4,3.74,4.95,4.25,5.61z"/><path d="m16.397 15.738-0.70703 0.70703 1.4238 1.4238-1.4238 1.4238 0.70703 0.70703 1.4238-1.4238 1.4238 1.4238 0.70703-0.70703-1.4238-1.4238 1.4238-1.4238-0.70703-0.70703-1.4238 1.4238z"/></g></svg>')
 }
 
 function iconButton(){
@@ -999,7 +1010,8 @@ function iconButton(){
       title,
       job,
       width,
-      height;
+      height,
+      float = "right";
 
   function exports(sel){
     sel.append("img")
@@ -1007,6 +1019,7 @@ function iconButton(){
       .attr("alt", alt ? alt : null)
       .attr("width", width ? width : 14)
       .attr("height", height ? height : 14)
+      .style("float", float)
       .attr("src", src ? src : null)
       .attr("title", title ? title : null)
       .on("click", job ? job : null);
@@ -1045,6 +1058,12 @@ function iconButton(){
   exports.height = function(x) {
     if (!arguments.length) return height;
     height = x;
+    return exports;
+  };
+
+  exports.float = function(x) {
+    if (!arguments.length) return float;
+    float = x;
     return exports;
   };
 
@@ -1553,11 +1572,13 @@ function displayFreqBars(){
       nodenames,
       nodes,
       updateSelection,
+      filterSelection,
       colorScale,
       nodeColor,
       applyShape,
       applyColor,
       frequencies = "relative",
+      wordclouds = d3.set(),
       div;
   
   function exports(sel){
@@ -1568,19 +1589,35 @@ function displayFreqBars(){
     sel.selectAll("*").remove();
     div = sel.append("div");
     div.attr("class","frequency-barplots");
-    div.append("div")
-    .attr("class","select-wrapper")
-    .append("select")
-    .on("change",function(){
-      frequencies = this.value;
-      exports(sel);
-    })
-    .selectAll("option")
-      .data(["absolute","relative"])
-    .enter().append("option")
-      .property("selected",function(d){ return frequencies==d; })
-      .property("value",String)
-      .text(String)
+    var header = div.append("div")
+      .attr("class","freq-header")
+    header.append("div")
+      .append("div")
+      .attr("class","select-wrapper")
+      .append("select")
+      .on("change",function(){
+        frequencies = this.value;
+        exports(sel);
+      })
+      .selectAll("option")
+        .data(["absolute","relative"])
+      .enter().append("option")
+        .property("selected",function(d){ return frequencies==d; })
+        .property("value",String)
+        .text(String)
+
+    var headerButtons = header.append("div")
+    if(filterSelection){
+      headerButtons.append("img")
+          .attr("title",texts.resetfilter)
+          .attr("src",b64Icons.removefilter)
+          .on("click",function(){
+            nodes.forEach(function(node){
+              delete node.selected;
+            })
+            filterSelection();
+          })
+    }
   }
 
   var renderPercentage = frequencies=="relative" ? "%" : "";
@@ -1606,7 +1643,7 @@ function displayFreqBars(){
               }
             }
         }
-        if(type=="object" && typeof node[name] == "object"){
+        if(node[name] && type=="object" && typeof node[name] == "object"){
           node[name].forEach(loadValue);
         }else{
           loadValue(node[name]);
@@ -1633,7 +1670,76 @@ function displayFreqBars(){
       }
 
       if(keyvalues.length!=nodes.length){
-        var barplot = getBarPlot(name,true);
+        var barplot = getBarPlot(name,true,true);
+
+        var selectNodes = function(v){
+              nodes.forEach(function(node){
+                delete node.selected;
+                if(node[name] && type=="object" && typeof node[name] == "object"){
+                  if(node[name].indexOf(v)!=-1){
+                    node.selected = true;
+                  }
+                }else{
+                  if(String(node[name])==v){
+                    node.selected = true;
+                  }
+                }
+              })
+              updateSelection();
+        };
+
+        // display wordcloud
+        if(wordclouds.has(name)){
+          // set the dimensions and margins of the graph
+          var w = (sel.node().offsetWidth - 72),
+              h = 300;
+
+          // append the svg object
+          var svg = barplot.append("svg")
+              .attr("class","wordcloud")
+              .attr("width", w)
+              .attr("height", h)
+                .append("g")
+                  .attr("transform", "translate(" + w/2 + "," + h/2 + ")")
+
+          var data = keyvalues.map(function(k){
+            return {text: k, count: values[k]};
+          });
+
+        var font = "Roboto",
+            xScale = d3.scaleLinear()
+           .domain([0, d3.max(d3.values(values))])
+           .range([4,50]);
+
+        var layout = d3.layout.cloud()
+    .size([w, h])
+    .words(data)
+    .padding(2)
+    .rotate(function(){ return ~~(Math.random() * 2) * 90; })
+    .font(font)
+    .fontSize(function(d){ return xScale(d.count); })
+    .on("end", function (words) {
+
+        svg.selectAll("text")
+      .data(words, function(d){ return d.text; })
+        .enter().append("text")
+      .text(function(d) { return d.text; })
+      .attr("text-anchor", "middle")
+      .style("font-size", function(d) { return d.size + "px"; })
+      .style("font-family", font)
+      .style("fill", function(d) { return nodeColor==name && colorScale ? colorScale(d.text) :  basicColors.darkGrey; })
+      .attr("transform", function(d) {
+        return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+      })
+      .style("cursor","pointer")
+      .on("click",function(d){
+        selectNodes(d.text);
+      })
+
+          });
+
+          layout.start();
+        }else{
 
         keyvalues.forEach(function(v,i){
           var percentage = values[v]/maxvalue*100,
@@ -1652,19 +1758,7 @@ function displayFreqBars(){
             .style("display",i>9 ? "none" : null)
             .attr("title",v+": "+getValue(values,v) + (selectedValues[v] ? "\nSelection: "+getValue(selectedValues,v) : ""))
             .on("click",function(){
-              nodes.forEach(function(node){
-                delete node.selected;
-                if(type=="object" && typeof node[name] == "object"){
-                  if(node[name].indexOf(v)!=-1){
-                    node.selected = true;
-                  }
-                }else{
-                  if(String(node[name])==v){
-                    node.selected = true;
-                  }
-                }
-              })
-              updateSelection();
+              selectNodes(v);
             })
           row.append("div")
             .attr("class","freq1")
@@ -1738,6 +1832,8 @@ function displayFreqBars(){
         x.ticks(5).forEach(function(t){
           axis.append("span").style("left",(t/maxvalue*100)+"%").text(t+renderPercentage);
         })
+
+        }
       }
     }else if(type=="number"){
       var values = nodes.filter(function(n){ return n[name]!==null; }).map(function(node){ return +node[name]; }),
@@ -1765,6 +1861,7 @@ function displayFreqBars(){
       svg.append("g")
       .attr("transform", "translate(0," + h + ")")
       .call(d3.axisBottom(x)
+        .ticks(Math.floor(w/60))
         .tickFormat(function(d){
           return formatter(d);
         }));
@@ -1838,13 +1935,27 @@ function displayFreqBars(){
   })
   }
 
-  function getBarPlot(name,shape){
+  function getBarPlot(name,shape,wordcloud){
       var barplot = div.selectAll("div.bar-plot").filter(function(){ return this.variable==name; });
       if(barplot.empty()){
         barplot = div.append("div")
           .attr("class","bar-plot")
           .property("variable",name);
         var h2 = barplot.append("h2").text(name);
+        if(wordcloud && d3.hasOwnProperty("layout") && d3.layout.hasOwnProperty("cloud")){
+          h2.append("img")
+          .attr("title","wordcloud")
+          .attr("src",b64Icons.wordcloud)
+          .on("click",function(){
+            if(wordclouds.has(name)){
+              wordclouds.remove(name);
+              exports(d3.select(div.node().parentNode));
+            }else{
+              wordclouds.add(name);
+              applyColor(name);
+            }
+          })
+        }
         if(shape && applyShape){
           h2.append("img")
           .attr("title",texts.Shape)
@@ -1859,6 +1970,14 @@ function displayFreqBars(){
           .attr("src",b64Icons.drop)
           .on("click",function(){
             applyColor(name);
+          })
+        }
+        if(filterSelection){
+          h2.append("img")
+          .attr("title",texts.filter)
+          .attr("src",b64Icons.filter)
+          .on("click",function(){
+            filterSelection();
           })
         }
       }else{
@@ -1882,6 +2001,12 @@ function displayFreqBars(){
   exports.updateSelection = function(x) {
     if (!arguments.length) return updateSelection;
     updateSelection = x;
+    return exports;
+  };
+
+  exports.filterSelection = function(x) {
+    if (!arguments.length) return filterSelection;
+    filterSelection = x;
     return exports;
   };
 
@@ -1910,4 +2035,31 @@ function displayFreqBars(){
   };
 
   return exports;
+}
+
+function showControls(options,n){
+    if(options.hasOwnProperty("controls")){
+        if(options.controls===0)
+          return undefined;
+        if(options.controls==-n)
+          return undefined;
+        if(options.controls==n)
+          return true;
+        if(Array.isArray(options.controls)){
+          if(options.controls.indexOf(-n)!=-1)
+            return undefined;
+          if(options.controls.indexOf(n)!=-1)
+            return true;
+        }
+    }
+    return false;
+}
+
+function displayShowPanelButton(sel,callback){
+    var showPanelButton = sel.append("div")
+      .attr("class","show-panel-button")
+      .on("click",callback)
+    showPanelButton.append("span");
+    showPanelButton.append("span");
+    showPanelButton.append("span");
 }

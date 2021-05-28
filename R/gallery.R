@@ -9,7 +9,11 @@ galleryJSON <- function(gallery){
 
 galleryCreate <- function(gallery, dir){
   language <- getLanguageScript(gallery)
-  createHTML(dir, c("reset.css","styles.css"), c("d3.min.js","jspdf.min.js","jszip.min.js","html2canvas.min.js","functions.js",language,"colorScales.js","gallery.js"), function(){ return(imgWrapper(gallery,galleryJSON,dir)) })
+  scripts <- c("d3.min.js","jspdf.min.js","jszip.min.js","html2canvas.min.js","functions.js",language,"colorScales.js","gallery.js")
+  if(!is.null(gallery$options$frequencies)){
+    scripts <- c(scripts,"d3.layout.cloud.js")
+  }
+  createHTML(dir, c("reset.css","styles.css"), scripts, function(){ return(imgWrapper(gallery,galleryJSON,dir)) })
 }
 
 gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
@@ -17,8 +21,8 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
     itemsPerRow = NULL, main = NULL, note = NULL,
     showLegend = TRUE, frequencies = FALSE,
     help = NULL, helpOn = FALSE, description = NULL,
-    descriptionWidth = NULL, roundedItems = FALSE,
-    language = c("en", "es", "ca"), dir = NULL){
+    descriptionWidth = NULL, roundedItems = FALSE, controls = 1:2,
+    cex = 1, language = c("en", "es", "ca"), dir = NULL){
   if(is.null(name)){
     name <- colnames(nodes)[1]
   }
@@ -62,6 +66,13 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
   options <- showSomething(options,"showLegend",showLegend)
   options <- showSomething(options,"helpOn",helpOn)
   options <- showSomething(options,"frequencies",frequencies)
+
+  if (!is.null(controls)) options[["controls"]] <- as.numeric(controls)
+  if(!is.numeric(cex)){
+    cex <- formals(gallery_rd3)[["cex"]]
+    warning("cex: must be numeric")
+  }
+  options[["cex"]] <- check_cex(cex)
   options[["language"]] <- checkLanguage(language)
 
   if (!is.null(image)){

@@ -218,11 +218,7 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
   
   # graph options
 
-  if(!is.numeric(cex)){
-    cex <- formals(network_rd3)[["cex"]]
-    warning("cex: must be numeric")
-  }
-  options[["cex"]] <- cex
+  options[["cex"]] <- check_cex(cex)
 
   if(!(is.numeric(distance) && distance>=0 && distance<=100)){
     distance <- formals(network_rd3)[["distance"]]

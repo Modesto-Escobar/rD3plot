@@ -201,6 +201,16 @@ checkLanguage <- function(language){
   return(language)
 }
 
+check_cex <- function(cex){
+  if(!is.numeric(cex)){
+    cex <- 1
+    warning("cex: must be numeric")
+  }else if(cex>2){
+    warning("cex: the font may be too large for proper display")
+  }
+  return(cex)
+}
+
 tempDir <- function(){
   dir.create("temp", showWarnings = FALSE)
   return(paste("temp",round(as.numeric(Sys.time())),sep="/"))

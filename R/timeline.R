@@ -18,7 +18,7 @@ timeline_rd3 <- function(periods, name = "name", start = "start", end = "end", g
              cex = 1, language = c("en","es","ca"), dir = NULL){
   if(length(setdiff(c(name,start,end),names(periods))))
     stop("name, start and end: must be present in periods data frame as columns.")
-  options <- list(name = name, start = start, end = end, cex = as.numeric(cex))
+  options <- list(name = name, start = start, end = end, cex = check_cex(cex))
   if (!is.null(group)) options[['group']] <- group
   if (!is.null(text)) options[['text']] <- text
   if (!is.null(main)) options[['main']] <- main
