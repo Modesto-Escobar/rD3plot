@@ -40,6 +40,25 @@ function gallery(Graph){
   options.showTopbar = showControls(options,1);
   options.showExport = showControls(options,2);
 
+  var topFilterInst = topFilter()
+    .data(nodes)
+    .datanames(getSelectOptions(sortAsc))
+    .attr(options.nodeName)
+    .displayGraph(displayGraph);
+
+  var frequencyBars = false;
+  if(options.frequencies){
+      options.frequencies = false;
+      frequencyBars = displayFreqBars()
+        .nodenames(getSelectOptions(sortAsc).filter(function(d){ return d!=options.nodeName; }))
+        .updateSelection(displayGraph)
+        .filterHandler(topFilterInst)
+        .applyColor(function(val){
+          colorSelect.property("value",val)
+                     .dispatch("change");
+        })
+  }
+
   d3.selectAll("html, body")
     .style("height","100%")
     .style("width","100%")
@@ -59,7 +78,7 @@ function gallery(Graph){
     if(!body.select("body > div.window-background").empty()){
       return;
     }
-    if(d3.event.ctrlKey){
+    if(d3.event.ctrlKey || d3.event.metaKey){
       var key = getKey(d3.event);
       switch(key){
         case "+":
@@ -112,6 +131,21 @@ function gallery(Graph){
   var topBar = galleryBox.append("div")
         .attr("class","topbar")
 
+  var netCoinIcon = topBar.append("div")
+      .attr("class", "netCoin-icon")
+      .style("float", "right")
+      .style("margin", "5px 10px")
+  netCoinIcon.append("img")
+    .attr("width",30)
+    .attr("height",22.5)
+    .attr("src",b64Icons.netcoin)
+    .style("vertical-align", "middle")
+  netCoinIcon.append("a")
+    .attr("target","_blank")
+    .attr("href","https://sociocav.usal.es/blog/nca/")
+    .style("font-size","15px")
+    .text("netCoin")
+
   if(options.help){
       topBar.call(iconButton()
         .alt("help")
@@ -140,17 +174,7 @@ function gallery(Graph){
         .job(nodes2xlsx));
   }
 
-  var frequencyBars = false;
-  if(options.frequencies){
-      options.frequencies = false;
-      frequencyBars = displayFreqBars()
-        .nodenames(Graph.nodenames.filter(filterNodeNames))
-        .updateSelection(displayGraph)
-        .filterSelection(filterSelection)
-        .applyColor(function(val){
-          colorSelect.property("value",val)
-                     .dispatch("change");
-        })
+  if(frequencyBars){
       topBar.call(iconButton()
         .alt("freq")
         .width(24)
@@ -238,11 +262,6 @@ function gallery(Graph){
   topBar.append("span").attr("class","separator");
 
   // node filter in topBar
-  var topFilterInst = topFilter()
-    .data(nodes)
-    .datanames(getSelectOptions(sortAsc))
-    .attr(options.nodeName)
-    .displayGraph(displayGraph);
   topBar.call(topFilterInst);
 
   var content = galleryBox.append("div")
@@ -294,14 +313,14 @@ function gallery(Graph){
   var getCurrentHeight = function(k){ return gridHeight * k; };
 
   var zoom = d3.zoom()
-      .filter(function(){ return d3.event.ctrlKey; })
+      //.filter(function(){ return d3.event.ctrlKey || d3.event.metaKey; })
       .scaleExtent(zoomRange)
       .on("zoom", function(){
         currentGridHeight = getCurrentHeight(d3.event.transform.k);
         displayGraph();
       })
 
-  gallery.call(zoom);
+  //gallery.call(zoom);
 
   var galleryItems = gallery.append("div")
         .attr("class","gallery-items fade-labels")
@@ -491,7 +510,7 @@ function gallery(Graph){
     itemsUpdate.style("cursor","pointer")
       .on("click",function(n){
           d3.event.stopPropagation();
-          if(d3.event.ctrlKey){
+          if(d3.event.ctrlKey || d3.event.metaKey){
 
             if(n.selected){
               delete n.selected;
@@ -657,13 +676,10 @@ function gallery(Graph){
       return !filter || filter.indexOf(n[options.nodeName])!=-1 ? true : false;
   }
 
-  function filterNodeNames(d){
-    return d.substring(0,1)!="_" && d!=options.nodeText && d!=options.nodeInfo; 
-  }
-
   function getSelectOptions(order){
-    return Graph.nodenames.filter(filterNodeNames)
-        .filter(function(d){ return !options.imageItems || d!=options.imageItems; })
+    return Graph.nodenames.filter(function(d){
+          return d.substring(0,1)!="_" && d!=options.nodeText && d!=options.nodeInfo && (!options.imageItems || d!=options.imageItems); 
+        })
         .sort(order ? order : function(){ return 0; });
   }
 
@@ -726,6 +742,10 @@ function gallery(Graph){
         .visual(type)
         .active(value)
 
+      displayShowPanelButton(parent,function(){
+        parent.classed("hide-legend",false);
+      })
+
       // ordinal scale
       if(scale.name=="i"){
         parent.select("div.scale").remove();
@@ -735,10 +755,6 @@ function gallery(Graph){
         var initialize = false;
         if(legends.empty()){
           initialize = true;
-
-          displayShowPanelButton(parent,function(){
-            parent.classed("hide-legend",false);
-          })
 
           legends = parent.append("div").attr("class","legends");
           legends.style("opacity",0.8)
@@ -907,14 +923,14 @@ function gallery(Graph){
       // linear scale
       if(scale.name=="h"){
         parent.select("div.legends").remove();
-        parent.select(".show-panel-button").remove();
         
         displayLinearScale(parent,
           value,
           scale.range(),
           scale.domain(),
           scalePicker,
-          selectionWindow
+          selectionWindow,
+          function(){ parent.classed("hide-legend",true); }
         );
       }
     }

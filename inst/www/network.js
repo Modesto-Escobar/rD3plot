@@ -122,7 +122,7 @@ function network(Graph){
     if(!body.select("body > div.window-background").empty()){
       return;
     }
-    if(d3.event.ctrlKey){
+    if(d3.event.ctrlKey || d3.event.metaKey){
       var key = getKey(d3.event);
       switch(key){
         case "Enter":
@@ -187,7 +187,7 @@ function network(Graph){
       return;
     }
     var key = getKey(d3.event);
-    if(d3.event.ctrlKey){
+    if(d3.event.ctrlKey || d3.event.metaKey){
       switch(key){
         case "Enter":
           if(frameControls.play){
@@ -727,7 +727,7 @@ function displayMain(){
     if(options.frequencies){
       options.frequencies = false;
       frequencyBars = displayFreqBars()
-        .nodenames(Graph.nodenames.filter(function(d){ return hiddenFields.indexOf(d)==-1; }))
+        .nodenames(Graph.nodenames.filter(function(d){ return hiddenFields.indexOf(d)==-1; }).filter(function(d){ return d!=options.nodeName; }))
         .updateSelection(showTables)
         .applyColor(function(name){ applyAuto("nodeColor",name); })
         .applyShape(function(name){ applyAuto("nodeShape",name); })
@@ -4127,7 +4127,7 @@ function displayLegend(){
       var compare = function(value){
         value = String(value);
         Graph.nodes.forEach(function(d){
-          if(d3.event.ctrlKey && !d3.event.shiftKey){
+          if((d3.event.ctrlKey || d3.event.metaKey) && !d3.event.shiftKey){
             delete d.selected;
           }
           if(checkLegendKeyValue(d,key,value)){

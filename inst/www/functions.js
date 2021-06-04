@@ -714,7 +714,11 @@ function topFilter(){
       function add2filter(){
             selectedValues[val] = [];
             if(typeof tempValues != 'undefined'){
-              selectedValues[val] = tempValues;
+              data.forEach(function(d){
+                if((d[val] >= tempValues[0]) && (d[val] <= tempValues[1] )){
+                  selectedValues[val].push(d[val]);
+                }
+              });
             }else{
               options.selectAll(".legend-check-box.checked").each(function(){
                   selectedValues[val].push(d3.select(this.parentNode).property("value"));
@@ -751,29 +755,24 @@ function topFilter(){
     if(keys.length){
       names = data.filter(function(d){
         for(var i = 0; i<keys.length; i++){
-          var value = false;
-          var k = keys[i];
-          if(typeof selectedValues[k][0] == 'number' && selectedValues[k].length == 2){
-            if((d[k] >= selectedValues[k][0]) && (d[k] <= selectedValues[k][1] )){
+          var value = false,
+              k = keys[i],
+              dtype = dataType(data,k);
+          if(dtype == 'number'){
+            if(selectedValues[k].map(Number).indexOf(Number(d[k]))!=-1){
               value = true;
             }
+          }else if(dtype == 'object'){
+            for(var j = 0; j<selectedValues[k].length; j++){
+              var p = selectedValues[k][j];
+              if(d[k] && d[k].indexOf(String(p))!=-1){
+                value = true;
+                break;
+              }
+            }
           }else{
-            if(dataType(data,k) == 'object'){
-              for(var j = 0; j<selectedValues[k].length; j++){
-                var p = selectedValues[k][j];
-                if(d[k] && d[k].indexOf(String(p))!=-1){
-                  value = true;
-                  break;
-                }
-              }
-            }else{
-              for(var j = 0; j<selectedValues[k].length; j++){
-                var p = selectedValues[k][j];
-                if(String(d[k]) == String(p)){
-                  value = true;
-                  break;
-                }
-              }
+            if(selectedValues[k].map(String).indexOf(String(d[k]))!=-1){
+              value = true;
             }
           }
           if(!value){
@@ -991,7 +990,7 @@ var b64Icons = {
 
   edit: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" ><path d="M0 0H24V24H0V0Z" fill="none"/><path d="M14.06 9.02L14.98 9.94L5.92 19H5V18.08L14.06 9.02V9.02ZM17.66 3C17.41 3 17.15 3.1 16.96 3.29L15.13 5.12L18.88 8.87L20.71 7.04C21.1 6.65 21.1 6.02 20.71 5.63L18.37 3.29C18.17 3.09 17.92 3 17.66 3V3ZM14.06 6.19L3 17.25V21H6.75L17.81 9.94L14.06 6.19V6.19Z" fill="#2F7BEE"/></svg>'),
 
-  chart: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path d="M0 0h24v24H0V0z" fill="none"/><path fill="#777777" d="M5 9.2h3V19H5V9.2zM10.6 5h2.8v14h-2.8V5zm5.6 8H19v6h-2.8v-6z"/></svg>'),
+  chart: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path d="M0 0h24v24H0V0z" fill="none"/><path fill="#2F7BEE" d="M5 9.2h3V19H5V9.2zM10.6 5h2.8v14h-2.8V5zm5.6 8H19v6h-2.8v-6z"/></svg>'),
 
   drop: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" fill="#2F7BEE"><path d="M0 0h24v24H0z" fill="none"/><path d="M12,2c-5.33,4.55-8,8.48-8,11.8c0,4.98,3.8,8.2,8,8.2s8-3.22,8-8.2C20,10.48,17.33,6.55,12,2z M12,20c-3.35,0-6-2.57-6-6.2 c0-2.34,1.95-5.44,6-9.14c4.05,3.7,6,6.79,6,9.14C18,17.43,15.35,20,12,20z M7.83,14c0.37,0,0.67,0.26,0.74,0.62 c0.41,2.22,2.28,2.98,3.64,2.87c0.43-0.02,0.79,0.32,0.79,0.75c0,0.4-0.32,0.73-0.72,0.75c-2.13,0.13-4.62-1.09-5.19-4.12 C7.01,14.42,7.37,14,7.83,14z"/></svg>'),
 
@@ -1318,27 +1317,36 @@ function stripTags(text){
   return text.replace(/(<([^>]+)>)/ig,"");
 }
 
-function displayLinearScale(sel,value,range,domain,selectScale,selectAttribute){
+function displayLinearScale(sel,value,range,domain,selectScale,selectAttribute,closePanel){
     var panel = sel.select(".scale");
     if(panel.empty()){
       panel = sel.append("div")
           .attr("class","scale")
 
-      var paddingRight = 0;
+      if(closePanel){
+        panel.append("div")
+            .attr("class","highlight-header")
+            .text(texts.Scale)
+            .append("div")
+              .attr("class","close-button")
+              .on("click",closePanel)
+      }
+
+      var paddingRight = 12;
 
       if(selectScale){
         panel.append("img")
           .attr("width","24")
           .attr("height","24")
           .attr("src",b64Icons.edit)
-          .style("padding-top",".5em")
           .on("click",selectScale)
-        paddingRight = 30;
+        paddingRight += 30;
       }
 
-      var div = panel.append("div").style("padding-right",paddingRight+"px");
+      var div = panel.append("div")
+        .attr("class","scale-content")
+        .style("padding-right",paddingRight+"px");
 
-      panel.select("img").style("padding-top","2.5em")
       div.append("div")
           .attr("class","title")
           .text(texts["Color"] + " / "+value)
@@ -1347,17 +1355,10 @@ function displayLinearScale(sel,value,range,domain,selectScale,selectAttribute){
 
       var scaleWidth = div.node().offsetWidth - paddingRight;
 
-      var svg = div.append("svg")
-      .attr("width", scaleWidth)
-      .attr("height",10)
-      svg.append("defs")
-      svg.append("rect")
-        .attr("x",0)
-        .attr("y",0)
-        .attr("height",10)
-        .attr("width",scaleWidth)
-        .attr("rx",2)
-        .attr("fill","url(#legend-scale-gradient)")
+      div.append("div")
+        .attr("class","legend-scale-gradient")
+        .style("height","10px")
+        .style("width","100%")
 
       div.append("span")
       .attr("class","domain1")
@@ -1365,7 +1366,7 @@ function displayLinearScale(sel,value,range,domain,selectScale,selectAttribute){
       div.append("span")
       .attr("class","domain2")
     }
-    addGradient(panel.select("svg > defs"),"legend-scale-gradient",range);
+    panel.select("div.legend-scale-gradient").style("background-image","linear-gradient(to right, " + range.join(", ") + ")")
     panel.select(".domain1").text(formatter(domain[0]));
     panel.select(".domain2").text(formatter(domain[domain.length-1]));
 }
@@ -1572,7 +1573,7 @@ function displayFreqBars(){
       nodenames,
       nodes,
       updateSelection,
-      filterSelection,
+      filterHandler,
       colorScale,
       nodeColor,
       applyShape,
@@ -1607,15 +1608,12 @@ function displayFreqBars(){
         .text(String)
 
     var headerButtons = header.append("div")
-    if(filterSelection){
+    if(filterHandler){
       headerButtons.append("img")
           .attr("title",texts.resetfilter)
           .attr("src",b64Icons.removefilter)
           .on("click",function(){
-            nodes.forEach(function(node){
-              delete node.selected;
-            })
-            filterSelection();
+            filterHandler.removeFilter();
           })
     }
   }
@@ -1658,23 +1656,30 @@ function displayFreqBars(){
           });
           selectedlength = nodes.filter(function(n){ return n.selected; }).length;
 
-      if(frequencies=="relative"){
-        for(v in values){
-          values[v] = values[v]/nodes.length*100;
-        }
+        var selectedValues2 = [];
         for(v in selectedValues){
-          selectedValues[v] = selectedValues[v]/selectedlength*100;
+          if(selectedValues[v]==values[v]){
+            selectedValues2.push(v);
+          }
         }
 
-        maxvalue = d3.max([d3.max(d3.values(values)),d3.max(d3.values(selectedValues))]);
-      }
+        if(frequencies=="relative"){
+          for(v in values){
+            values[v] = values[v]/nodes.length*100;
+          }
+          for(v in selectedValues){
+            selectedValues[v] = selectedValues[v]/selectedlength*100;
+          }
 
-      if(keyvalues.length!=nodes.length){
+          maxvalue = d3.max([d3.max(d3.values(values)),d3.max(d3.values(selectedValues))]);
+        }
+
         var barplot = getBarPlot(name,true,true);
 
+        barplot.datum(selectedValues2);
+
         var selectNodes = function(v){
-              nodes.forEach(function(node){
-                delete node.selected;
+              selectOnClick(function(node){
                 if(node[name] && type=="object" && typeof node[name] == "object"){
                   if(node[name].indexOf(v)!=-1){
                     node.selected = true;
@@ -1684,8 +1689,7 @@ function displayFreqBars(){
                     node.selected = true;
                   }
                 }
-              })
-              updateSelection();
+              });
         };
 
         // display wordcloud
@@ -1739,6 +1743,7 @@ function displayFreqBars(){
           });
 
           layout.start();
+
         }else{
 
         keyvalues.forEach(function(v,i){
@@ -1833,7 +1838,6 @@ function displayFreqBars(){
           axis.append("span").style("left",(t/maxvalue*100)+"%").text(t+renderPercentage);
         })
 
-        }
       }
     }else if(type=="number"){
       var values = nodes.filter(function(n){ return n[name]!==null; }).map(function(node){ return +node[name]; }),
@@ -1854,8 +1858,15 @@ function displayFreqBars(){
           .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
       // X axis: scale and draw
+      var domain = d3.extent(values,function(d) { return d; });
+      // prepare domain for the histogram
+      if(domain[0]==domain[1]){
+        domain = [domain[0]-1,domain[1]+1];
+      }else{
+        domain[1] = domain[1] + ((domain[1]-domain[0])/10);
+      }
       var x = d3.scaleLinear()
-        .domain(d3.extent(values,function(d) { return d; }))
+        .domain(domain)
         .range([0, w]);
 
       svg.append("g")
@@ -1875,6 +1886,19 @@ function displayFreqBars(){
       // And apply this function to data to get the bins
       var bins = histogram(values),
           bins2 = selectedValues.length ? histogram(selectedValues) : [];
+
+      var selectedValues2 = [];
+      for(var i = 0; i<bins2.length; i++){
+        if(bins2[i].length==bins[i].length){
+          nodes.forEach(function(d){
+            var val = Number(d[name]);
+            if(selectedValues2.indexOf(val)==-1 && (val >= bins2[i].x0 && val < bins2[i].x1)){
+              selectedValues2.push(val);
+            }
+          })
+        }
+      }
+      barplot.datum(selectedValues2);
 
       for(var i = 0; i<bins.length; i++){
           bins[i].y = frequencies=="relative" ? bins[i].length/nodes.length*100 : bins[i].length;
@@ -1903,20 +1927,27 @@ function displayFreqBars(){
           .attr("transform", function(d) { return "translate(" + x(d.x0) + ",0)"; })
           .style("cursor","pointer")
           .on("click",function(d,i){
-              nodes.forEach(function(node){
-                delete node.selected;
-                if(node[name]>=d.x0 && ((i<bins.length-1 && node[name]<d.x1) || (i==bins.length-1 && node[name]<=d.x1))){
+              selectOnClick(function(node){
+                if(node[name]>=d.x0 && node[name]<d.x1){
                   node.selected = true;
                 }
-              })
-              updateSelection();
+              });
           })
+
+      var getValue = function(v){
+        return formatter(v) + (frequencies=="relative" ? "%" : "");
+      }
+
+      columns.append("title")
+            .text(function(d,i){
+              return "[" + d.x0 + "," + d.x1 + ")" + ": " + getValue(d.y) + (d.y2 ? "\nSelection: " + getValue(d.y2) : "");
+            })
 
       columns.append("rect")
           .attr("class","freq1")
           .attr("x", 1)
           .attr("y", function(d) { return y(d.y); })
-          .attr("width", function(d) { return x(d.x1) - x(d.x0) -1 ; })
+          .attr("width", function(d) { return x(d.x1) - x(d.x0) -1; })
           .attr("height", function(d) { return h - y(d.y); })
           .style("fill", nodeColor==name && colorScale ? function(d){
             return colorScale((d.x0+d.x1)/2);
@@ -1933,6 +1964,16 @@ function displayFreqBars(){
       }
     }
   })
+  }
+
+  function selectOnClick(callback){
+    if(!(d3.event.ctrlKey || d3.event.metaKey)){
+      nodes.forEach(function(node){
+        delete node.selected;
+      })
+    }
+    nodes.forEach(callback);
+    updateSelection();
   }
 
   function getBarPlot(name,shape,wordcloud){
@@ -1972,12 +2013,12 @@ function displayFreqBars(){
             applyColor(name);
           })
         }
-        if(filterSelection){
+        if(filterHandler){
           h2.append("img")
           .attr("title",texts.filter)
           .attr("src",b64Icons.filter)
           .on("click",function(){
-            filterSelection();
+            filterHandler.addFilter(name,barplot.datum());
           })
         }
       }else{
@@ -2004,9 +2045,9 @@ function displayFreqBars(){
     return exports;
   };
 
-  exports.filterSelection = function(x) {
-    if (!arguments.length) return filterSelection;
-    filterSelection = x;
+  exports.filterHandler = function(x) {
+    if (!arguments.length) return filterHandler;
+    filterHandler = x;
     return exports;
   };
 
@@ -2056,10 +2097,12 @@ function showControls(options,n){
 }
 
 function displayShowPanelButton(sel,callback){
+  if(sel.select(".show-panel-button").empty()){
     var showPanelButton = sel.append("div")
       .attr("class","show-panel-button")
       .on("click",callback)
     showPanelButton.append("span");
     showPanelButton.append("span");
     showPanelButton.append("span");
+  }
 }

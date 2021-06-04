@@ -364,24 +364,22 @@ div.poweredby img {
   right: 0;
 }
 .legend-panel > .scale > img {
-  position: absolute;
-  top: 0;
-  right: 0;
-  padding: 0 6px;
+  float: right;
+  padding: 2em 6px;
   cursor: pointer;
 }
-.legend-panel > .scale > div > .title {
+.legend-panel > .scale > .scale-content > .title {
   text-align: center;
   font-size: 1.4em;
   margin-bottom: 6px;
 }
-.legend-panel > .scale > div > .domain1,
-.legend-panel > .scale > div > .domain2 {
+.legend-panel > .scale > .scale-content > .domain1,
+.legend-panel > .scale > .scale-content > .domain2 {
   display: inline-block;
   width: 50%;
   font-size: 1.2em;
 }
-.legend-panel > .scale > div > .domain2 {
+.legend-panel > .scale > .scale-content > .domain2 {
   text-align: right;
 }
 .legend-panel > .legends > div.legends-content {
@@ -434,7 +432,7 @@ div.goback:after {
   height: 16px;
 }
 .sidebar > .subSearch,
-.legend-panel > .scale {
+.legend-panel > .scale > .scale-content {
   padding: 12px;
 }
 .legend-panel > .show-panel-button {
@@ -1416,6 +1414,7 @@ div.gallery-box.hide-topbar > .topbar {
 }
 div.gallery-content {
   margin: 10px;
+  margin-right: 0;
   position: relative;
   flex-grow: 1;
   overflow: hidden;
@@ -1504,7 +1503,8 @@ div.gallery-content > .legend-panel > .show-panel-button {
 div.gallery-content > .legend-panel.hide-legend > .show-panel-button  {
   display: inline-block;
 }
-div.gallery-content > .legend-panel.hide-legend > .legends {
+div.gallery-content > .legend-panel.hide-legend > .legends,
+div.gallery-content > .legend-panel.hide-legend > .scale {
   display: none;
 }
 .legend-bullet {

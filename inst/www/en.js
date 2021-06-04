@@ -110,5 +110,6 @@ var texts = {
     Elements: "Elements",
     Deselect: "Deselect",
     more: "more",
-    less: "less"
+    less: "less",
+    Scale: "Scale"
   };

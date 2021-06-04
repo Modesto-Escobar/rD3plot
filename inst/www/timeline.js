@@ -42,7 +42,7 @@ function timeline(json){
       applyCheckBoxes();
       return;
     }
-    if(d3.event.ctrlKey && key == "x"){
+    if((d3.event.ctrlKey || d3.event.metaKey) && key == "x"){
       body.selectAll(".tooltip.fixed").remove();
       infoPanel.close();
       return;

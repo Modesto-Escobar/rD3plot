@@ -110,5 +110,6 @@ var texts = {
     Elements: "Elements",
     Deselect: "Desmarcar",
     more: "més",
-    less: "menys"
+    less: "menys",
+    Scale: "Escala"
   };
