@@ -703,9 +703,6 @@ ul.visual-selector > li.active {
   font-weight: bold;
 }
 
-.filter-tags {
-  display: inline-block;
-}
 .filter-tags > .tag {
   display: inline-block;
   background-color: #777777;
@@ -825,13 +822,20 @@ div.topbar.fixed-topbar {
 .topbar button {
   margin: 0 2px;
 }
-.topbar > .multi-search {
+.topbar > .topbar-boxes {
+  white-space: nowrap;
+  overflow: hidden;
+}
+.topbar > .topbar-boxes  > .topbar-box > .multi-search {
   display: inline-block;
   width: 180px;
   vertical-align: middle;
 }
-div.topbar span.separator {
+.topbar > .topbar-boxes > .topbar-box {
+  display: inline-block;
+  white-space: nowrap;
   padding: 0 10px;
+  margin-bottom: 5px;
 }
 .header {
   position: relative;
@@ -1181,6 +1185,7 @@ svg .zoombutton.zoomreset rect {
   border: solid 1px #c6c6c6;
   background-color: #ffffff;
   cursor: pointer;
+  font-size: 8px;
 }
 
 .slider-text input {

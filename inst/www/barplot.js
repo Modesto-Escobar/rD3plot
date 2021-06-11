@@ -88,10 +88,10 @@ function barplot(json){
   //subject = subject[0][options.name];
 
   // top bar
-  var topBar = body.append("div")
-    .attr("class","topbar fixed-topbar")
+  var topBar = displayTopBar();
+  body.call(topBar);
 
-  topBar.call(iconButton()
+  topBar.addIcon(iconButton()
         .alt("pdf")
         .width(24)
         .height(24)
@@ -99,7 +99,7 @@ function barplot(json){
         .title(texts.pdfexport)
         .job(svg2pdf));
 
-  topBar.call(iconButton()
+  topBar.addIcon(iconButton()
         .alt("svg")
         .width(24)
         .height(24)
@@ -108,48 +108,47 @@ function barplot(json){
         .job(svgDownload));
 
   // multigraph
-  if(typeof multiGraph != 'undefined'){
-    topBar.append("h3").text(texts.graph + ":")
-    multiGraph.graphSelect(topBar);
-  }
+  topBar.addBox(displayMultiGraphInTopBar);
 
   // events
-  topBar.append("h3").text(texts.subjectselect + ":")
-
-  var eventSelect = topBar.append("div")
+  var eventSelect,
+      nodeslist;
+  topBar.addBox(function(box){
+    box.append("h3").text(texts.subjectselect + ":")
+    eventSelect = box.append("div")
       .attr("class","select-wrapper")
     .append("select")
     .on("change",function(){
       subject = this.value;
       if(subject=="-default-"){
-        topBar.selectAll(".topbar>.slider, .topbar>button.sig").remove();
         subject = null;
-      }else{
-        sigButton();
-        sigSlider();
       }
+      sigButtonAndSlider();
       displayGraph();
     })
-  var nodeslist = nodes.map(function(d){
+    nodeslist = nodes.map(function(d){
           return [d[options.name],d[options.label]];
         }).sort(function(a,b){
           return a[1] < b[1] ? -1 : a[1] > b[1] ? 1 : a[1] >= b[1] ? 0 : NaN;
         });
-  nodeslist.unshift(["-default-","-"+texts.total+"-"]);
-  eventSelect.selectAll("option")
+    nodeslist.unshift(["-default-","-"+texts.total+"-"]);
+    eventSelect.selectAll("option")
         .data(nodeslist)
       .enter().append("option")
         .property("value",function(d){ return d[0]; })
         .text(function(d){ return d[1]; })
         .property("selected",function(d){ return d[0]==subject?true:null; })
+  });
 
   // node order
-  topOrder(topBar,nodes,displayGraph);
+  topBar.addBox(function(box){
+    topOrder(box,nodes,displayGraph);
+  });
 
   // colors
-  topBar.append("h3").text(texts.Color + ":")
-
-  var colorSelect = topBar.append("div")
+  topBar.addBox(function(box){
+    box.append("h3").text(texts.Color + ":")
+    var colorSelect = box.append("div")
       .attr("class","select-wrapper")
     .append("select")
     .on("change",function(){
@@ -158,16 +157,16 @@ function barplot(json){
         options.color = false;
       displayGraph();
     })
-  var opt = getOptions(nodes);
-  opt.unshift("-"+texts.none+"-");
-  colorSelect.selectAll("option")
+    var opt = getOptions(nodes);
+    opt.unshift("-"+texts.none+"-");
+    colorSelect.selectAll("option")
         .data(opt)
       .enter().append("option")
         .property("value",String)
         .text(String)
         .property("selected",function(d){ return d==options.color?true:null; })
 
-  topBar.append("button")
+    box.append("button")
       .text(texts.Color)
       .on("click",function(){
         var panel = displayWindow();
@@ -186,7 +185,7 @@ function barplot(json){
               d3.select("div.window-background").remove();
             })
       })
-  topBar.append("span").attr("class","separator");
+  });
 
   // node filter
   var topFilterInst = topFilter()
@@ -195,23 +194,14 @@ function barplot(json){
     .attr(options.name)
     .displayGraph(displayGraph);
 
-  topBar.call(topFilterInst);
-  topBar.append("span").attr("class","separator");
+  topBar.addBox(topFilterInst);
 
-  if(subject != null)
-    sigButton();
+  sigButtonAndSlider();
 
-  // significance filter
-  if(subject != null)
-    sigSlider();
-
-  var topBarHeight = topBar.node().offsetHeight;
-
-  height = height - topBarHeight;
+  height = height - topBar.height();
 
   body.append("svg")
     .attr("class","plot")
-    .style("margin-top","5em")
 
   if(options.note){
     var pnote = body.append("p")
@@ -222,12 +212,17 @@ function barplot(json){
   // graph
   displayGraph();
 
-  function sigButton(){
+  function sigButtonAndSlider(){
+    if(subject===null){
+      topBar.removeBox("significance");
+      topBar.removeBox("slider");
+      return;
+    }
+
+    // button
     if(options.expected && !options.significance){
-      var button = topBar.select(".topbar>button.sig")
-      if(button.empty()){
-        button = topBar.append("button")
-         .attr("class","sig")
+      topBar.addBox(function(box){
+        box.append("button")
          .text(options.confidence ? "Sig." : ">Exp.")
          .on("click",function(){
             if(subject){
@@ -236,42 +231,32 @@ function barplot(json){
               displayGraph();
             }
          })
-      }
-      button.style("background-color",sigFilter?basicColors.mediumGrey:null);
+        .style("background-color",sigFilter?basicColors.mediumGrey:null);
+      },"significance");
     }
-  }
 
-  function sigSlider(){
+    //slider
     if(options.significance){
-      sigFilter = 1;
-      var slider = topBar.select(".topbar>.slider");
-      if(!slider.empty()){
-        slider.remove();
-      }
-      var sliderWidth = 200;
-      var values = [0,0.0001,0.001,0.01,0.05,0.10,0.20,0.50,1];
+      topBar.addBox(function(box){
+        sigFilter = 1;
+        var sliderWidth = 200;
+        var values = [0,0.0001,0.001,0.01,0.05,0.10,0.20,0.50,1];
 
-      var slider = topBar.append("div")
-        .attr("class","slider")
-        .style("float","right")
-        .style("margin-top","5px")
-        .style("margin-right","10px");
-
-      slider.append("span")
+        box.append("span")
         .style("margin-right","5px")
         .text("p<");
 
-      slider = slider.append("span")
+        var slider = box.append("span")
         .style("position","relative");
 
-      var bubble = slider.append("span")
+        var bubble = slider.append("span")
         .attr("class","slider-text")
         .style("position","absolute")
-        .style("top",(14*options.cex)+"px")
+        .style("top","8px")
         .style("left",bubblePos(8))
         .text("1")
 
-      slider.append("input")
+        slider.append("input")
         .attr("type","range")
         .attr("min","0")
         .attr("max","8")
@@ -283,9 +268,10 @@ function barplot(json){
           displayGraph();
         })
 
-      function bubblePos(value){
-        return (2+((value)*((sliderWidth-12)/8)))+"px";
-      }
+        function bubblePos(value){
+          return (10+((value)*((sliderWidth-12)/8)))+"px";
+        }
+      },"slider")
     }
   }
 
@@ -435,8 +421,7 @@ function barplot(json){
       .attr("height", height + margin.top + margin.bottom)
       .on("dblclick",function(){
         sigFilter = 0;
-        sigButton();
-        sigSlider();
+        sigButtonAndSlider();
         topFilterInst.removeFilter();
       })
 
@@ -554,8 +539,7 @@ function barplot(json){
         .call(yAxis)
       .selectAll(".tick > text").on("dblclick",function(d){
         subject = d;
-        sigButton();
-        sigSlider();
+        sigButtonAndSlider();
         displayGraph();
         eventSelect.node().selectedIndex = nodeslist.map(function(d){ return d[0]; }).indexOf(subject);
       })
@@ -665,11 +649,11 @@ function barplot(json){
     fileDownload(blob, d3.select("head>title").text()+'.svg');
   }
 
-function topOrder(topBar,data,displayGraph){
+function topOrder(div,data,displayGraph){
 
-  topBar.append("h3").text(texts.Order + ":")
+  div.append("h3").text(texts.Order + ":")
 
-  var selOrder = topBar.append("div")
+  var selOrder = div.append("div")
       .attr("class","select-wrapper")
     .append("select")
     .on("change",function(){
@@ -698,9 +682,9 @@ function topOrder(topBar,data,displayGraph){
         .property("value",function(d){ return d[0]; })
         .text(function(d){ return d[1]; })
 
-  topBar.append("h3")
+  div.append("h3")
     .text(texts.Reverse)
-  topBar.append("button")
+  div.append("button")
     .attr("class","switch-button")
     .classed("active",options.rev)
     .on("click",function(){
@@ -708,8 +692,6 @@ function topOrder(topBar,data,displayGraph){
       d3.select(this).classed("active",options.rev);
       displayGraph();
     })
-
-  topBar.append("span").attr("class","separator");
 }
 
 function tooltip(sel,text){

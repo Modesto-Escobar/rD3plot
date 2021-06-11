@@ -85,10 +85,10 @@ function timeline(json){
   });
 
   // top bar
-  var topBar = body.append("div")
-        .attr("class","topbar fixed-topbar")
+  var topBar = displayTopBar().fixed(true);
+  body.call(topBar);
 
-  topBar.call(iconButton()
+  topBar.addIcon(iconButton()
         .alt("pdf")
         .width(24)
         .height(24)
@@ -96,7 +96,7 @@ function timeline(json){
         .title(texts.pdfexport)
         .job(svg2pdf));
 
-  topBar.call(iconButton()
+  topBar.addIcon(iconButton()
         .alt("svg")
         .width(24)
         .height(24)
@@ -105,19 +105,22 @@ function timeline(json){
         .job(svgDownload));
 
   // multigraph
-  if(typeof multiGraph != 'undefined'){
-      topBar.append("h3").text(texts.graph + ":")
-      multiGraph.graphSelect(topBar);
-  }
+  topBar.addBox(displayMultiGraphInTopBar);
 
   // groups selection in topBar
-  topBarVisual(topBar,"Group","group",getOptions(periods));
+  topBar.addBox(function(box){
+    topBarVisual(box,"Group","group",getOptions(periods));
+  })
 
   if(json.events){
     // event colors in topBar
-    topBarVisual(topBar,"Color","eventColor",getOptions(json.events),displayPicker);
+    topBar.addBox(function(box){
+      topBarVisual(box,"Color","eventColor",getOptions(json.events),displayPicker);
+    });
     // event shapes in topBar
-    topBarVisual(topBar,"Shape","eventShape",getOptions(json.events));
+    topBar.addBox(function(box){
+      topBarVisual(box,"Shape","eventShape",getOptions(json.events));
+    });
   }
 
   // node filter in topBar
@@ -126,14 +129,14 @@ function timeline(json){
     .datanames(getOptions(periods))
     .attr(options.name)
     .displayGraph(displayGraph);
-  topBar.call(topFilterInst);
 
-  topBar.append("span").attr("class","separator");
+  topBar.addBox(topFilterInst);
 
   // expand/collpse bars displaying
-  topBar.append("h3")
+  topBar.addBox(function(box){
+    box.append("h3")
     .text(texts.expand)
-  topBar.append("button")
+    box.append("button")
     .attr("class","switch-button")
     .classed("active",!options.collapse)
     .on("click",function(){
@@ -141,11 +144,11 @@ function timeline(json){
       d3.select(this).classed("active",!options.collapse);
       displayGraph();
     })
-
-  topBar.append("span").attr("class","separator");
+  });
 
   // reset button
-  topBar.append("button")
+  topBar.addBox(function(box){
+      box.append("button")
         .attr("class","primary reset")
         .text(texts.reset)
         .on("click",function(){
@@ -153,6 +156,7 @@ function timeline(json){
         })
         .append("title")
           .text("F5")
+  });
 
   var header = body.append("div")
         .attr("class","header")
@@ -657,12 +661,12 @@ function timeline(json){
     })
 
     window.onscroll = function(){
-      if(window.pageYOffset > (timeGuideTop - topBar.node().offsetHeight)){
+      if(window.pageYOffset > (timeGuideTop - topBar.height())){
         timeHeader.style("position","fixed")
-          .style("top",(topBar.node().offsetHeight)+"px")
+          .style("top",(topBar.height())+"px")
           .style("left",0)
         pTime.style("position","fixed")
-          .style("top",(topBar.node().offsetHeight + margin[2]+10)+"px")
+          .style("top",(topBar.height() + margin[2]+10)+"px")
       }else{
         timeHeader.style("position",null)
           .style("top",null)
@@ -949,10 +953,11 @@ function timeline(json){
     }
   }
 
-  function topBarVisual(sel, visual, option, opt, picker){
-    sel.append("h3").text(texts[visual] + ":")
+  function topBarVisual(div, visual, option, opt, picker){
 
-    var visualSelect = sel.append("div")
+    div.append("h3").text(texts[visual] + ":")
+
+    var visualSelect = div.append("div")
       .attr("class","select-wrapper")
     .append("select")
     .on("change",function(){

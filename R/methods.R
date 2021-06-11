@@ -54,19 +54,19 @@ printTimeline <- function(x){
   printNote(x)
 }
 
-plot.network_rd3 <- function(x, dir = tempDir(), ...){
+plot.network_rd3 <- function(x, dir = tempdir(), ...){
   plotObj(x, dir, netCreate)
 }
 
-plot.barplot_rd3 <- function(x, dir = tempDir(), ...){
+plot.barplot_rd3 <- function(x, dir = tempdir(), ...){
   plotObj(x, dir, barCreate)
 }
 
-plot.timeline_rd3 <- function(x, dir = tempDir(), ...){
+plot.timeline_rd3 <- function(x, dir = tempdir(), ...){
   plotObj(x, dir, timeCreate)
 }
 
-plot.gallery_rd3 <- function(x, dir = tempDir(), ...){
+plot.gallery_rd3 <- function(x, dir = tempdir(), ...){
   plotObj(x, dir, galleryCreate)
 }
 

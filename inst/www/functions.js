@@ -648,9 +648,9 @@ function topFilter(){
       selFilter,
       filterTags;
 
-  function exports(topBar){
+  function exports(div){
 
-    topBar.append("h3").text(texts.filter + ":")
+    div.append("h3").text(texts.filter + ":")
 
     var changeAttrSel = function(val){
       if(d3.select("body>div>div.window").empty()){
@@ -731,7 +731,7 @@ function topFilter(){
       }
     }
 
-    selFilter = topBar.append("div")
+    selFilter = div.append("div")
       .attr("class","select-wrapper")
       .append("select")
         .on("change",function(){ changeAttrSel(this.value); })
@@ -745,8 +745,10 @@ function topFilter(){
         .property("value",String)
         .text(String)
 
-    filterTags = topBar.append("div")
-      .attr("class","filter-tags")
+    var topbar = d3.select(div.node().parentNode.parentNode);
+    if(topbar.classed("topbar")){
+      filterTags = topbar.append("div").attr("class","filter-tags");
+    }
   }
 
   function getNames(){
@@ -757,21 +759,25 @@ function topFilter(){
         for(var i = 0; i<keys.length; i++){
           var value = false,
               k = keys[i],
-              dtype = dataType(data,k);
+              dk = d[k];
+          if(dk===null){
+            dk = String(dk);
+          }
+          var dtype = typeof dk;
           if(dtype == 'number'){
-            if(selectedValues[k].map(Number).indexOf(Number(d[k]))!=-1){
+            if(selectedValues[k].map(Number).indexOf(dk)!=-1){
               value = true;
             }
           }else if(dtype == 'object'){
             for(var j = 0; j<selectedValues[k].length; j++){
               var p = selectedValues[k][j];
-              if(d[k] && d[k].indexOf(String(p))!=-1){
+              if(dk.indexOf(String(p))!=-1){
                 value = true;
                 break;
               }
             }
           }else{
-            if(selectedValues[k].map(String).indexOf(String(d[k]))!=-1){
+            if(selectedValues[k].map(String).indexOf(dk)!=-1){
               value = true;
             }
           }
@@ -1713,13 +1719,14 @@ function displayFreqBars(){
         var font = "Roboto",
             xScale = d3.scaleLinear()
            .domain([0, d3.max(d3.values(values))])
-           .range([4,50]);
+           .range([8,50]);
 
         var layout = d3.layout.cloud()
     .size([w, h])
     .words(data)
     .padding(2)
-    .rotate(function(){ return ~~(Math.random() * 2) * 90; })
+    .random(function(){ return 0.5; })
+    .rotate(function(d,i){ return (i%2) * 90; })
     .font(font)
     .fontSize(function(d){ return xScale(d.count); })
     .on("end", function (words) {
@@ -2105,4 +2112,113 @@ function displayShowPanelButton(sel,callback){
     showPanelButton.append("span");
     showPanelButton.append("span");
   }
+}
+
+function displayMultiGraphInTopBar(box){
+  if(typeof multiGraph != 'undefined'){
+    box.append("h3").text(texts.graph + ":")
+    multiGraph.graphSelect(box);
+  }else{
+    box.remove();
+  }
+}
+
+function displayTopBar(){
+  var topbar,
+      topIcons,
+      topBoxes,
+      netCoinIcon,
+      fixed = false;
+
+  function exports(sel){
+    topbar = sel.append("div")
+      .attr("class","topbar")
+    topbar.classed("fixed-topbar",fixed)
+    topIcons = topbar.append("div")
+      .attr("class","topbar-icons")
+    topBoxes = topbar.append("div")
+        .attr("class","topbar-boxes")
+
+    display_netCoinIcon();
+    d3.select(window).on("resize.topbar-collapse", collapseTopbar);
+  }
+
+  function display_netCoinIcon(){
+    netCoinIcon = topIcons.append("div")
+      .attr("class", "netCoin-icon")
+      .style("float", "right")
+      .style("margin", "5px 10px")
+    netCoinIcon.append("img")
+    .attr("width",30)
+    .attr("height",22.5)
+    .attr("src",b64Icons.netcoin)
+    .style("vertical-align", "middle")
+    netCoinIcon.append("a")
+    .attr("target","_blank")
+    .attr("href","https://sociocav.usal.es/blog/nca/")
+    .style("font-size","15px")
+    .text("netCoin")
+  }
+
+  function collapseTopbar(){
+    netCoinIcon.style("display", null);
+    var boxes = topBoxes.selectAll(".topbar-box").style("display",null);
+    if(isOverflowing()){
+      netCoinIcon.style("display","none");
+    }
+    for(var j=boxes.size()-1; j>=0; j--){
+      if(!isOverflowing()){
+        break;
+      }
+      boxes.filter(function(d,i){
+        return i==j;
+      }).style("display","none");
+    }
+
+    function isOverflowing(){
+      return topBoxes.node().scrollWidth > topBoxes.node().clientWidth;
+    }
+  }
+
+  exports.addIcon = function(x) {
+    topIcons.call(x);
+    collapseTopbar();
+    return exports;
+  };
+
+  exports.addBox = function(x,name) {
+    var box = false;
+    if(name){
+      box = topBoxes.select(".topbar-box."+name);
+      if(box.empty()){
+        box = false;
+      }else{
+        box.selectAll("*").remove();
+      }
+    }
+    if(!box){
+      box = topBoxes.append("div")
+        .attr("class","topbar-box"+(name ? " "+name : ""))
+    }
+    box.call(x);
+    collapseTopbar();
+    return exports;
+  }
+
+  exports.removeBox = function(name){
+    topBoxes.select(".topbar-box."+name).remove();
+    return exports;
+  }
+
+  exports.fixed = function(x){
+    if (!arguments.length) return fixed;
+    fixed = x ? true : false;
+    return exports;
+  }
+
+  exports.height = function(){
+    return topbar.node().offsetHeight;
+  }
+
+  return exports;
 }
