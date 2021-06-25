@@ -2176,7 +2176,17 @@ function displayTopBar(){
     }
 
     function isOverflowing(){
-      return topBoxes.node().scrollWidth > topBoxes.node().clientWidth;
+      var iconsWidth = netCoinIcon.node().offsetWidth;
+      topIcons.selectAll(".icon").each(function(){
+        iconsWidth += (this.offsetWidth+10);
+      });
+
+      var boxesWidth = 0;
+      boxes.each(function(){
+        boxesWidth += this.offsetWidth;
+      })
+
+      return boxesWidth > (topBoxes.node().offsetWidth - iconsWidth);
     }
   }
 

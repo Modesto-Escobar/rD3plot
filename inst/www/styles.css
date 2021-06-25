@@ -237,11 +237,13 @@ th.sorting_desc:after {
   font-size: 1.2em;
   margin: 10px;
 }
-.select-wrapper {
+.select-wrapper,
+.topbar-box > .multi-select {
     display: inline-block;
     position: relative;
 }
-.select-wrapper:after {
+.select-wrapper:after,
+.topbar-box > .multi-select:after {
     content: "";
     position: absolute;
     top: 0;
@@ -253,11 +255,15 @@ th.sorting_desc:after {
     background-repeat: no-repeat;
     pointer-events: none;
 }
-.select-wrapper > select {
+.select-wrapper > select,
+.topbar-box > .multi-select > select {
     width: 100%;
     position: relative;
     padding-right: 20px;
     cursor: pointer;
+}
+.topbar-box > .multi-select > select {
+    border-color: #2f7bee;
 }
 img.icon {
   cursor: pointer;
@@ -545,23 +551,23 @@ div.goback:after {
 .subSidebar .filter-controls button {
   margin: 0 4px 2px 0;
 }
-.multi-select {
+.main > span > .multi-select {
   position: relative;
   display: inline-block;
   margin-right: 20px;
 }
-.multi-select > select {
+.main > span > .multi-select > select {
   cursor: pointer;
   opacity: 0;
   position: absolute;
 }
-.multi-select > span {
+.main > span > .multi-select > span {
   padding: 6px 12px 6px 3px;
   pointer-events: none;
   font-weight: bold;
   color: #777777;
 }
-.multi-select > span:after {
+.main > span > .multi-select > span:after {
   content: "";
   pointer-events: none;
   position: absolute;
@@ -810,7 +816,11 @@ div.topbar.fixed-topbar {
   font-size: 1.2em;
   font-weight: bold;
 }
-.topbar .select-wrapper {
+.topbar-box > .multi-select > span {
+  display: none;
+}
+.topbar .select-wrapper,
+.topbar-box > .multi-select {
   margin-right: 10px;
   width: 120px;
 }
@@ -824,12 +834,17 @@ div.topbar.fixed-topbar {
 }
 .topbar > .topbar-boxes {
   white-space: nowrap;
-  overflow: hidden;
 }
 .topbar > .topbar-boxes  > .topbar-box > .multi-search {
-  display: inline-block;
   width: 180px;
-  vertical-align: middle;
+  height: unset;
+  margin-top: -1em;
+}
+.topbar > .topbar-boxes  > .topbar-box > .multi-search > .search-box > div.text-wrapper {
+  padding: 4px 30px 4px 20px;
+}
+.topbar > .topbar-boxes  > .topbar-box > .multi-search > button {
+  padding: 4px 0.8em;
 }
 .topbar > .topbar-boxes > .topbar-box {
   display: inline-block;

@@ -4795,10 +4795,10 @@ function adaptLayout(){
       if(backupNodes){
         backupNodes.forEach(function(d){
           if(d.hasOwnProperty("fx")){
-            d.fx = d.fx.map(function(e){ return(scaleCoorX.invert(e)); });
+            d.fx = d.fx.map(function(e){ return e===null ? null : scaleCoorX.invert(e); });
           }
           if(d.hasOwnProperty("fy")){
-            d.fy = d.fy.map(function(e){ return(scaleCoorY.invert(e)); });
+            d.fy = d.fy.map(function(e){ return e===null ? null : scaleCoorY.invert(e); });
           }
         });
       }else{
@@ -4829,12 +4829,24 @@ function adaptLayout(){
     if(backupNodes){
       backupNodes.forEach(function(d){
         if(d.hasOwnProperty("fx")){
-          d.fx = d.fx.map(function(e){ return(scaleCoorX(e)); });
+          d.fx = d.fx.map(function(e){
+            if(e===null){
+              options.dynamicNodes = true;
+              return null;
+            }
+            return scaleCoorX(e);
+          });
         }else{
           options.dynamicNodes = true;
         }
         if(d.hasOwnProperty("fy")){
-          d.fy = d.fy.map(function(e){ return(scaleCoorY(e)); });
+          d.fy = d.fy.map(function(e){
+            if(e===null){
+              options.dynamicNodes = true;
+              return null;
+            }
+            return scaleCoorY(e);
+          });
         }else{
           options.dynamicNodes = true;
         }
