@@ -2290,7 +2290,11 @@ function frameStep(value){
         GraphNodesLength = Graph.nodes.filter(function(node){ return !node._hideFrame; }).length;
         GraphLinksLength = Graph.links.filter(function(link){ return !link._hideFrame; }).length;
 
-        drawNet();
+        if(egoNet){
+          switchEgoNet();
+        }else{
+          drawNet();
+        }
 
         if(frameControls.hasOwnProperty("zoom")){
           options.zoom = frameControls.zoom[frameControls.frame];
