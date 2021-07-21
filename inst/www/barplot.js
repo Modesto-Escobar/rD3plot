@@ -129,7 +129,7 @@ function barplot(json){
     nodeslist = nodes.map(function(d){
           return [d[options.name],d[options.label]];
         }).sort(function(a,b){
-          return a[1] < b[1] ? -1 : a[1] > b[1] ? 1 : a[1] >= b[1] ? 0 : NaN;
+          return sortAsc(a[1],b[1]);
         });
     nodeslist.unshift(["-default-","-"+texts.total+"-"]);
     eventSelect.selectAll("option")
@@ -339,26 +339,25 @@ function barplot(json){
             aa = a.a,
             ab = a.b?a.b:a.c?a.c:a.a,
             bb = b.b?b.b:b.c?b.c:b.a;
-        if(options.rev){
-          var aux = aa;
-          aa = ba;
-          ba = aux;
-          aux = ab;
-          ab = bb;
-          bb = aux;
+
+        var s1 = compareFunction(ba,aa,options.rev);
+        if(s1){
+          return s1;
+        }else{
+          return compareFunction(bb,ab,options.rev);
         }
-        return ba < aa ? -1 : ba > aa ? 1 : bb < ab ? -1 : bb > ab ? 1 : 0;
       });
     }else{
       data.sort(function(a,b){
         var aa = nodes.filter(function(node){ return a.object==node[options.name]; })[0][options.order],
             bb = nodes.filter(function(node){ return b.object==node[options.name]; })[0][options.order];
+
+        var rev = false;
         if((typeof aa == "number" && typeof bb == "number") ^ options.rev){
-          var aux = bb;
-          bb = aa;
-          aa = aux;
+          rev = true;
         }
-        return aa < bb ? -1 : aa > bb ? 1 : aa >= bb ? 0 : NaN;
+
+        return compareFunction(aa,bb,rev);
       });
     }
 
@@ -668,7 +667,7 @@ function topOrder(div,data,displayGraph){
       return -1;
     if(b=="incidences")
       return 1;
-    return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;
+    return sortAsc(a,b);
   }).map(function(d){ return [d,d]; });
   if(opt[0][0]=="incidences")
     opt[0][1] = texts.incidences;

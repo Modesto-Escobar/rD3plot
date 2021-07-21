@@ -54,9 +54,7 @@ function timeline(json){
 
   // sort periods by start
   periods.sort(function(nodea, nodeb){
-    var a = nodea[options.start],
-        b = nodeb[options.start];
-    return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;
+    return sortAsc(nodea[options.start],nodeb[options.start]);
   });
 
   // prepare events
@@ -132,7 +130,7 @@ function timeline(json){
 
   topBar.addBox(topFilterInst);
 
-  // expand/collpse bars displaying
+  // expand/collapse bars displaying
   topBar.addBox(function(box){
     box.append("h3")
     .text(texts.expand)
@@ -213,7 +211,7 @@ function timeline(json){
 
     var items = (filter ? periods.filter(function(d){ return filter.indexOf(d[options.name])!=-1; }) : periods).filter(function(d){ return d[options.group]!==null; });
 
-    var lanes = options.group?d3.set(items.map(function(d){ return String(d[options.group]); })).values().sort():[""],
+    var lanes = options.group?d3.set(items.map(function(d){ return String(d[options.group]); })).values().sort(sortAsc):[""],
         laneLength = lanes.length,
         timeBegin = d3.min(items,function(d){ return d[options.start]; }),
         timeEnd = d3.max(items,function(d){ return getEnd(d[options.end]); });
@@ -238,7 +236,7 @@ function timeline(json){
       }else{
         var eventColorScale = d3.scaleOrdinal()
           .range(categoryColors)
-          .domain(d3.map(json.events,function(d){ return d[options.eventColor]; }).keys().sort())
+          .domain(d3.map(json.events,function(d){ return d[options.eventColor]; }).keys().sort(sortAsc))
       }
     }
 
@@ -296,7 +294,7 @@ function timeline(json){
             })
           }
         });
-        d3.set(values).values().sort().reverse().forEach(function(d){
+        d3.set(values).values().sort(sortAsc).reverse().forEach(function(d){
           var g = lcolor.append("g")
           g.append("rect")
             .attr("x",0)
@@ -327,7 +325,7 @@ function timeline(json){
             })
           }
         });
-        d3.set(values).values().sort().reverse().forEach(function(d){
+        d3.set(values).values().sort(sortAsc).reverse().forEach(function(d){
           var g = lshape.append("g")
           g.append("path")
             .attr("transform","translate(0,-5)")
@@ -351,7 +349,7 @@ function timeline(json){
     if(options.group){
       color = d3.scaleOrdinal()
         .range(categoryColors)
-        .domain(periods.map(function(n){ return n[options.group]; }).sort());
+        .domain(periods.map(function(n){ return n[options.group]; }).sort(sortAsc));
 
       getMiniY = function(d){ return y2((lanes.indexOf(String(d[options.group]))) + 0.5) - 5; }
     }else{

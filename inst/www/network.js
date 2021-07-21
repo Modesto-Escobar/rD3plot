@@ -1661,7 +1661,7 @@ function addFilterController(){
             showTables();
           })
           .selectAll("option")
-        .data(d3.set(dat).values().sort())
+        .data(d3.set(dat).values().sort(sortAsc))
           .enter().append("option")
           .property("value",function(d){ return d.replace(/\'/g, "\\'"); })
           .text(stripTags)
@@ -1813,10 +1813,6 @@ function drawSVG(){
   rect.call(zoom)
     .on("dblclick.zoom",dblClickNet)
 
-  if(typeof options.zoomScale != "undefined"){
-    rect.call(zoom.transform,transform);
-  }
-
   if(!options.heatmap && options.showCoordinates){
       var range = getLayoutRange();
 
@@ -1928,7 +1924,11 @@ function drawSVG(){
           }
       });
 
-  resetZoom();
+  if(typeof options.zoomScale != "undefined"){
+    rect.call(zoom.transform,transform);
+  }else{
+    resetZoom();
+  }
 
   if(frameControls){
       Sliders.frame = displaySlider()
@@ -2475,12 +2475,7 @@ function drawNet(){
     x.domain(d3.range(n).sort(function(a, b) {
           a = nodes[a][options.nodeOrder];
           b = nodes[b][options.nodeOrder];
-          if(options.decreasing){
-            var aux = a;
-            a = b;
-            b = aux;          
-          }
-          return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;
+          return compareFunction(a,b,options.decreasing);
         }));
   }else{
     x.domain(d3.range(n));
@@ -2517,13 +2512,8 @@ function drawNet(){
   appendText(column,false);
 
   if(options.nodeOrder){
-    var clusters = nodes.map(function(d){ return d[options.nodeOrder]; }).sort(function(a, b) { 
-          if(options.decreasing){
-            var aux = a;
-            a = b;
-            b = aux;
-          }
-          return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;
+    var clusters = nodes.map(function(d){ return d[options.nodeOrder]; }).sort(function(a, b) {
+          return compareFunction(a,b,options.decreasing);
         }),
         step = NaN,
         lines = {};
@@ -2763,11 +2753,7 @@ function drawNet(){
     var data;
 
     if(legendLegend){
-      data = nodes.map(function(d){ return d[options.nodeLegend]; });
-      if(dataType(nodes,options.nodeLegend) == 'object'){
-        data = data.reduce(function(a,b) { return a.concat(b); }, []);
-      }
-      data = d3.set(data).values();
+      data = getColumnValues(nodes,options.nodeLegend);
       Legends.legend = displayLegend()
       .type("Legend")
       .key(options.nodeLegend)
@@ -2776,7 +2762,7 @@ function drawNet(){
     }
 
     if(legendColor){
-      data = d3.map(nodes.filter(function(d){ return d[options.nodeColor]!==null; }), function(d){ return d[options.nodeColor]; }).keys();
+      data = getColumnValues(nodes,options.nodeColor);
       Legends.color = displayLegend()
         .type("Color")
         .key(options.nodeColor)
@@ -2787,7 +2773,7 @@ function drawNet(){
     }
 
     if(legendShape){
-      data = d3.map(nodes, function(d){ return d[options.nodeShape]; }).keys();
+      data = getColumnValues(nodes,options.nodeShape);
       Legends.shape = displayLegend()
         .type("Shape")
         .key(options.nodeShape)
@@ -4399,21 +4385,11 @@ function showTables() {
             desc = desc0.slice();
         columns.forEach(function(d,i){
           var sort1 = function(a,b){
-                var rv = [1,-1];
-                if(a[d]==null) return rv[0];
-                if(b[d]==null) return rv[1];
+                if(a[d]==null) return 1;
+                if(b[d]==null) return -1;
                 a = a[d][options.nodeName]?a[d][options.nodeName]:a[d];
                 b = b[d][options.nodeName]?b[d][options.nodeName]:b[d];
-                if(desc[i]){
-                  rv = rv.reverse();
-                }
-                if (a > b) {
-                  return rv[0];
-                }
-                if (a < b) {
-                  return rv[1];
-                }
-                return 0;
+                return compareFunction(a,b,desc[i]);
               };
           thead.append("th")
             .attr("class","sorting")
@@ -4565,13 +4541,15 @@ function showTables() {
     d3.selectAll("button.primary.selectneighbors, button.primary.isolate, button.primary.filter").classed("disabled",!(nodesData.length<totalItems["nodes"]));
     if(Graph.tree){
       d3.selectAll("button.primary.expand, button.primary.collapse").classed("disabled",true);
-      Graph.nodes.filter(checkSelectable).forEach(function(node){
+      Graph.nodes.forEach(function(node){
+        if(checkSelectable(node) && node.selected){
           if(node.childNodes.length){
             d3.selectAll("button.primary.expand").classed("disabled",false);
           }
           if(node.parentNode){
             d3.selectAll("button.primary.collapse").classed("disabled",false);
           }
+        }
       });
     }
   }else{

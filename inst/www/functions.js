@@ -862,11 +862,24 @@ function topFilter(){
 }
 
 function sortAsc(a,b){
+  return compareFunction(a,b);
+}
+
+function compareFunction(a,b,rev){
+  if(rev){
+    var aux = b;
+    b = a;
+    a = aux;
+  }
   if(!isNaN(+a) && !isNaN(+b)){
     a = +a;
     b = +b;
   }
-  return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;
+  if(typeof a == "number" && typeof b == "number"){
+    return a-b;
+  }else{
+    return String(a).localeCompare(String(b));
+  }
 }
 
 function getTranslation(transform) {
@@ -1006,7 +1019,9 @@ var b64Icons = {
 
   filter: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px"><g fill="#2F7BEE"><path d="M7,6h10l-5.01,6.3L7,6z M4.25,5.61C6.27,8.2,10,13,10,13v6c0,0.55,0.45,1,1,1h2c0.55,0,1-0.45,1-1v-6 c0,0,3.72-4.8,5.74-7.39C20.25,4.95,19.78,4,18.95,4H5.04C4.21,4,3.74,4.95,4.25,5.61z"/><path d="M0,0h24v24H0V0z" fill="none"/></g></svg>'),
 
-  removefilter: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px"><g fill="#2F7BEE"><path d="M7,6h10l-5.01,6.3L7,6z M4.25,5.61C6.27,8.2,10,13,10,13v6c0,0.55,0.45,1,1,1h2c0.55,0,1-0.45,1-1v-6 c0,0,3.72-4.8,5.74-7.39C20.25,4.95,19.78,4,18.95,4H5.04C4.21,4,3.74,4.95,4.25,5.61z"/><path d="m16.397 15.738-0.70703 0.70703 1.4238 1.4238-1.4238 1.4238 0.70703 0.70703 1.4238-1.4238 1.4238 1.4238 0.70703-0.70703-1.4238-1.4238 1.4238-1.4238-0.70703-0.70703-1.4238 1.4238z"/></g></svg>')
+  removefilter: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px"><g fill="#2F7BEE"><path d="M7,6h10l-5.01,6.3L7,6z M4.25,5.61C6.27,8.2,10,13,10,13v6c0,0.55,0.45,1,1,1h2c0.55,0,1-0.45,1-1v-6 c0,0,3.72-4.8,5.74-7.39C20.25,4.95,19.78,4,18.95,4H5.04C4.21,4,3.74,4.95,4.25,5.61z"/><path d="m16.397 15.738-0.70703 0.70703 1.4238 1.4238-1.4238 1.4238 0.70703 0.70703 1.4238-1.4238 1.4238 1.4238 0.70703-0.70703-1.4238-1.4238 1.4238-1.4238-0.70703-0.70703-1.4238 1.4238z"/></g></svg>'),
+
+  menu: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path d="M0 0h24v24H0V0z" fill="none"/><path fill="#2F7BEE" d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>')
 }
 
 function iconButton(){
@@ -2116,8 +2131,9 @@ function displayShowPanelButton(sel,callback){
 
 function displayMultiGraphInTopBar(box){
   if(typeof multiGraph != 'undefined'){
-    box.append("h3").text(texts.graph + ":")
     multiGraph.graphSelect(box);
+    box.select(".multi-select").insert("img","span")
+      .attr("src",b64Icons.menu)
   }else{
     box.remove();
   }
@@ -2231,4 +2247,20 @@ function displayTopBar(){
   }
 
   return exports;
+}
+
+function getColumnValues(data,col){
+  var itemsData = [];
+  data.forEach(function(d){
+    if(d[col]!==null){
+      if(typeof d[col] == "object"){
+        d[col].forEach(function(dd){
+          itemsData.push(dd);
+        });
+      }else{
+        itemsData.push(d[col]);
+      }
+    }
+  });
+  return d3.set(itemsData).values().sort(sortAsc);
 }

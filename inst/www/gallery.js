@@ -164,7 +164,6 @@ function gallery(Graph){
         .alt("freq")
         .width(24)
         .height(24)
-        .float("left")
         .src(b64Icons.chart)
         .title("frequencies")
         .job(function(){
@@ -413,12 +412,7 @@ function gallery(Graph){
       data.sort(function(a,b){
         var aa = a[options.order],
             bb = b[options.order];
-        if(options.rev){
-          var aux = bb;
-          bb = aa;
-          aa = aux;
-        }
-        return aa < bb ? -1 : aa > bb ? 1 : aa >= bb ? 0 : NaN;
+        return compareFunction(aa,bb,options.rev);
       })
     }
 
@@ -784,19 +778,7 @@ function gallery(Graph){
         }
         legend.select(".title").text(texts[type] + " / " + value);
 
-        var itemsData = [];
-        data.forEach(function(d){
-          if(d[value]!==null){
-            if(typeof d[value] == "object"){
-              d[value].forEach(function(dd){
-                itemsData.push(dd);
-              });
-            }else{
-              itemsData.push(d[value]);
-            }
-          }
-        });
-        itemsData = d3.set(itemsData).values().sort(sortAsc);
+        var itemsData = getColumnValues(data,value);
 
         var items = legend.selectAll(".legend-item")
               .data(itemsData,String)

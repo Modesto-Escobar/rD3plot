@@ -237,13 +237,11 @@ th.sorting_desc:after {
   font-size: 1.2em;
   margin: 10px;
 }
-.select-wrapper,
-.topbar-box > .multi-select {
+.select-wrapper {
     display: inline-block;
     position: relative;
 }
-.select-wrapper:after,
-.topbar-box > .multi-select:after {
+.select-wrapper:after {
     content: "";
     position: absolute;
     top: 0;
@@ -255,15 +253,11 @@ th.sorting_desc:after {
     background-repeat: no-repeat;
     pointer-events: none;
 }
-.select-wrapper > select,
-.topbar-box > .multi-select > select {
+.select-wrapper > select {
     width: 100%;
     position: relative;
     padding-right: 20px;
     cursor: pointer;
-}
-.topbar-box > .multi-select > select {
-    border-color: #2f7bee;
 }
 img.icon {
   cursor: pointer;
@@ -816,11 +810,26 @@ div.topbar.fixed-topbar {
   font-size: 1.2em;
   font-weight: bold;
 }
-.topbar-box > .multi-select > span {
-  display: none;
-}
-.topbar .select-wrapper,
 .topbar-box > .multi-select {
+  display: inline-block;
+  position: relative;
+}
+.topbar-box > .multi-select > img {
+  vertical-align: text-bottom;
+  margin-bottom: -2px;
+}
+.topbar-box > .multi-select > span {
+  font-weight: bold;
+  font-size: 1.6em;
+  margin-left: 10px;
+}
+.topbar-box > .multi-select > select {
+  position: absolute;
+  width: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.topbar .select-wrapper {
   margin-right: 10px;
   width: 120px;
 }
