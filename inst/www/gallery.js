@@ -128,7 +128,8 @@ function gallery(Graph){
         .attr("class","gallery-box"+(options.showTopbar ? "" : " hide-topbar"))
 
   // top bar
-  var topBar = displayTopBar();
+  var topBar = displayTopBar()
+    .title(options.main);
   galleryBox.call(topBar);
 
   if(options.help){
@@ -171,15 +172,6 @@ function gallery(Graph){
           displayGraph();
         }));
   }
-
-  if(options.main){
-    topBar.addBox(function(box){
-      box.append("h2").text(options.main)
-    })
-  }
-
-  // multigraph
-  topBar.addBox(displayMultiGraphInTopBar);
 
   // node multi search
   topBar.addBox(displayMultiSearch()
@@ -352,6 +344,10 @@ function gallery(Graph){
     var note = galleryBox.append("div")
       .attr("class","gallery-note")
       .html(options.note)
+  }else{
+    galleryBox.append("div")
+      .attr("class","footer")
+      .html("&copy; "+new Date().getFullYear()+" NETCOIN PROJECT")
   }
 
   if(options.help && options.helpOn){

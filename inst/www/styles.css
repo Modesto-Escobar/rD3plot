@@ -295,14 +295,19 @@ div.main {
   padding: 6px 12px;
   border-bottom: solid 1px #c6c6c6;
   background-color: #ffffff;
-  font-size: 1.6em;
   min-height: 24px;
 }
-div.main span.title {
-  font-weight: bold;
+div.main > span {
+  display: inline-block;
+  padding: 0 3px;
 }
-div.main span.separator {
-  padding: 0 6px;
+div.main > span.title {
+  font-weight: bold;
+  font-size: 1.6em;
+}
+div.main > span.separator {
+  color: #777777;
+  font-size: 1.6em;
 }
 div.main-title {
   font-size: 1.8em;
@@ -545,32 +550,6 @@ div.goback:after {
 .subSidebar .filter-controls button {
   margin: 0 4px 2px 0;
 }
-.main > span > .multi-select {
-  position: relative;
-  display: inline-block;
-  margin-right: 20px;
-}
-.main > span > .multi-select > select {
-  cursor: pointer;
-  opacity: 0;
-  position: absolute;
-}
-.main > span > .multi-select > span {
-  padding: 6px 12px 6px 3px;
-  pointer-events: none;
-  font-weight: bold;
-  color: #777777;
-}
-.main > span > .multi-select > span:after {
-  content: "";
-  pointer-events: none;
-  position: absolute;
-  width: 20px;
-  height: 100%;
-  background-image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTE4IDlMMTIgMTVMNiA5IiBzdHJva2U9IiM4ODg4ODgiIHN0cm9rZS13aWR0aD0iMiIgZmlsbD0ibm9uZSIvPgo8L3N2Zz4=);
-  background-position: center;
-  
-}
 .multi-search {
   background-color: #ffffff;
   border-radius: 5px;
@@ -786,7 +765,7 @@ p.window-message {
 }
 div.topbar {
   background-color: #ffffff;
-  padding: 10px 20px;
+  padding: 6px 12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.07);
 }
 div.topbar.fixed-topbar {
@@ -810,20 +789,20 @@ div.topbar.fixed-topbar {
   font-size: 1.2em;
   font-weight: bold;
 }
-.topbar-box > .multi-select {
+.multi-select {
   display: inline-block;
   position: relative;
 }
-.topbar-box > .multi-select > img {
+.multi-select > img {
   vertical-align: text-bottom;
   margin-bottom: -2px;
 }
-.topbar-box > .multi-select > span {
+.multi-select > span {
   font-weight: bold;
   font-size: 1.6em;
   margin-left: 10px;
 }
-.topbar-box > .multi-select > select {
+.multi-select > select {
   position: absolute;
   width: 100%;
   opacity: 0;
@@ -863,7 +842,7 @@ div.topbar.fixed-topbar {
 }
 .header {
   position: relative;
-  margin-top: 5em;
+  margin-top: 7em;
 }
 .header > .header-buttons {
   position: absolute;
@@ -1450,6 +1429,14 @@ div.gallery-content {
 }
 div.gallery-note {
   background-color: #ffffff;
+  padding: 1em;
+}
+div.footer {
+  background-color: #777777;
+  color: #c6c6c6;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.4em;
   padding: 1em;
 }
 div.description-panel {

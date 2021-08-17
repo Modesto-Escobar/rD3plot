@@ -131,8 +131,6 @@ imgWrapper <- function(net,callback,dir){
       dir.create(imgDir, showWarnings = FALSE)
       file.copy(filepath, paste(imgDir,rawname,sep="/"))
       net$options[["background"]] <- paste0('url("',paste("images",rawname,sep="/"),'")')
-    }else{
-      warning("missing background image file")
     }
   }
   return(callback(net))

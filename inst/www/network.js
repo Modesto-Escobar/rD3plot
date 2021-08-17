@@ -675,20 +675,19 @@ function network(Graph){
 
 function displayMain(){
   main.selectAll("*").remove();
-  if(options.main || typeof multiGraph != 'undefined' || options.showExport){
-    main.style("display",null);
-    if(options.main){
-      main.append("span").attr("class", "title").html(typeof options.main == "string" ? options.main : options.main[0]);
-    }else{
-      main.append("span").attr("class", "title").html("&nbsp;")
-    }
-    if(options.main && typeof multiGraph != 'undefined'){
-      main.append("span").attr("class","separator").text("/");
-    }
-    if(typeof multiGraph != 'undefined'){
+  if(typeof multiGraph != 'undefined'){
       multiGraph.graphSelect(main.append("span"));
-    }
-    if(options.help){
+  }
+  if(options.main && typeof multiGraph != 'undefined'){
+      main.append("span").attr("class","separator").text("/");
+  }
+  if(options.main){
+      main.append("span")
+        .attr("class", "title")
+        .html(typeof options.main == "string" ? options.main : options.main[0])
+        .style("color",typeof multiGraph != 'undefined' ? "#777777" : null);
+  }
+  if(options.help){
         main.call(iconButton()
         .alt("help")
         .width(24)
@@ -696,8 +695,8 @@ function displayMain(){
         .src(b64Icons.help)
         .title(texts.showHelp+" (ctrl + h)")
         .job(function(){ infoPanel.changeInfo(options.help); }));
-    }
-    if(options.showExport){
+  }
+  if(options.showExport){
       main.call(iconButton()
         .alt("pdf")
         .width(24)
@@ -723,8 +722,8 @@ function displayMain(){
             fileDownload(blob, d3.select("head>title").text()+'.png');
           }
         }));
-    }
-    if(options.frequencies){
+  }
+  if(options.frequencies){
       options.frequencies = false;
       frequencyBars = displayFreqBars()
         .nodenames(Graph.nodenames.filter(function(d){ return hiddenFields.indexOf(d)==-1; }).filter(function(d){ return d!=options.nodeName; }))
@@ -744,7 +743,9 @@ function displayMain(){
           options.frequencies = true;
           showTables();
         }));
-    }
+  }
+  if(main.node().childNodes.length){
+    main.style("display",null);
   }else{
     main.style("display","none")
   }

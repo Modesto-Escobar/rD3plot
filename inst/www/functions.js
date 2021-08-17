@@ -2129,22 +2129,13 @@ function displayShowPanelButton(sel,callback){
   }
 }
 
-function displayMultiGraphInTopBar(box){
-  if(typeof multiGraph != 'undefined'){
-    multiGraph.graphSelect(box);
-    box.select(".multi-select").insert("img","span")
-      .attr("src",b64Icons.menu)
-  }else{
-    box.remove();
-  }
-}
-
 function displayTopBar(){
   var topbar,
       topIcons,
       topBoxes,
       netCoinIcon,
-      fixed = false;
+      fixed = false,
+      title = false;
 
   function exports(sel){
     topbar = sel.append("div")
@@ -2153,9 +2144,21 @@ function displayTopBar(){
     topIcons = topbar.append("div")
       .attr("class","topbar-icons")
     topBoxes = topbar.append("div")
-        .attr("class","topbar-boxes")
+      .attr("class","topbar-boxes")
 
     display_netCoinIcon();
+    if(typeof multiGraph != 'undefined'){
+      exports.addBox(function(box){
+        multiGraph.graphSelect(box);
+      });
+    }else{
+      if(title){
+        exports.addBox(function(box){
+          box.append("h2").text(title);
+        })
+      }
+    }
+
     d3.select(window).on("resize.topbar-collapse", collapseTopbar);
   }
 
@@ -2244,6 +2247,12 @@ function displayTopBar(){
 
   exports.height = function(){
     return topbar.node().offsetHeight;
+  }
+
+  exports.title = function(x){
+    if (!arguments.length) return title;
+    title = x;
+    return exports;
   }
 
   return exports;

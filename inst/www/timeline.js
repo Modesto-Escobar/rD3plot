@@ -102,9 +102,6 @@ function timeline(json){
         .title(texts.svgexport)
         .job(svgDownload));
 
-  // multigraph
-  topBar.addBox(displayMultiGraphInTopBar);
-
   // groups selection in topBar
   topBar.addBox(function(box){
     topBarVisual(box,"Group","group",getOptions(periods));

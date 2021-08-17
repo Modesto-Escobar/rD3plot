@@ -107,9 +107,6 @@ function barplot(json){
         .title(texts.svgexport)
         .job(svgDownload));
 
-  // multigraph
-  topBar.addBox(displayMultiGraphInTopBar);
-
   // events
   var eventSelect,
       nodeslist;
