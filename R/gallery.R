@@ -88,7 +88,7 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
   gallery <- structure(list(nodes=nodes,options=options),class="gallery_rd3")
 
   # more options
-  gallery <- checkNodeVariable(gallery,"nodeColor",color,"color",isColor,categoryColors,col2hex)
+  gallery <- checkItemValue(gallery,"nodes","nodeColor",color,"color",isColor,categoryColors,col2hex)
 
   if (!is.null(dir)) galleryCreate(gallery,dir)
   return(gallery)

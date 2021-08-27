@@ -324,7 +324,7 @@ checkColumn <- function(opt,item,variable){
     return(opt)
 }
 
-checkNodeVariable <- function(net,item,variable,varName,isItem,autoItems,sanitize){
+checkItemValue <- function(net,items,itemprop,value,propName,isItem,autoItems,sanitize){
     prepareVar <- function(var){
           if(is.numeric(var) || is.factor(var)){
             var <- autoItems(var)
@@ -332,51 +332,51 @@ checkNodeVariable <- function(net,item,variable,varName,isItem,autoItems,sanitiz
             var <- sanitize(var)
           }else{
             var <- NULL
-            warning(paste0(varName,": this variable cannot be a ",varName))
+            warning(paste0(propName,": this value cannot be a ",propName))
           }
           return(var)
     }
-    if(is.null(variable)){
-      net$options[[item]] <- NULL
-    }else if(is.matrix(variable) || is.data.frame(variable)){
-      if(nrow(variable)==nrow(net$nodes)){
-        for(k in colnames(variable)){
-          var <- prepareVar(variable[[k]])
+    if(is.null(value)){
+      net$options[[itemprop]] <- NULL
+    }else if(is.matrix(value) || is.data.frame(value)){
+      if(nrow(value)==nrow(net[[items]])){
+        for(k in colnames(value)){
+          var <- prepareVar(value[[k]])
           if(!is.null(var)){
-            if(k %in% colnames(net$nodes)){
-              itemlegend <- as.character(net$nodes[[k]])
+            if(k %in% colnames(net[[items]])){
+              itemlegend <- as.character(net[[items]][[k]])
             }else{
-              itemlegend <- as.character(variable[[k]])
+              itemlegend <- as.character(value[[k]])
             }
-            net$nodes[[k]] <- itemlegend
-            net$nodes[[paste0("_",varName,"_",k)]] <- var
+            net[[items]][[k]] <- itemlegend
+            net[[items]][[paste0("_",itemprop,"_",k)]] <- var
           }
         }
-        net$options[[item]] <- colnames(variable)[1]
+        net$options[[itemprop]] <- colnames(value)[1]
       }else{
-        warning(paste0(varName,": variable number of rows doesn't match with nodes"))
+        warning(paste0(propName,": number of rows doesn't match with ",items))
       }
-    }else if(length(variable)>1 || (isItem(variable) && !(variable %in% colnames(net$nodes)))){
-        if(length(variable)==1){
-          variable <- rep(variable,nrow(net$nodes))
+    }else if(length(value)>1 || (isItem(value) && !(value %in% colnames(net[[items]])))){
+        if(length(value)==1){
+          value <- rep(value,nrow(net[[items]]))
         }
-        if(length(variable)==nrow(net$nodes)){
-          if(!is.null(names(variable))){
-            itemlegend <- names(variable)
+        if(length(value)==nrow(net[[items]])){
+          if(!is.null(names(value))){
+            itemlegend <- names(value)
           }else{
-            itemlegend <- as.character(variable)
+            itemlegend <- as.character(value)
           }
-          variable <- prepareVar(variable)
-          if(!is.null(variable)){
-            net$nodes[[paste0("-",varName,"-")]] <- itemlegend
-            net$nodes[[paste0("_",varName,"_-",varName,"-")]] <- variable
-            net$options[[item]] <- paste0("-",varName,"-")
+          value <- prepareVar(value)
+          if(!is.null(value)){
+            net[[items]][[paste0("-",itemprop,"-")]] <- itemlegend
+            net[[items]][[paste0("_",itemprop,"_-",itemprop,"-")]] <- value
+            net$options[[itemprop]] <- paste0("-",itemprop,"-")
           }
         }else{
-          warning(paste0(varName,": variable length doesn't match with nodes' number of rows"))
+          warning(paste0(propName,": value length doesn't match with ",items,"' number of rows"))
         }
     }else{
-      net$options <- checkColumn(net$options,item,variable)
+      net$options <- checkColumn(net$options,itemprop,value)
     }
     return(net)
 }

@@ -917,6 +917,11 @@ div.loading > p {
   margin: 20px;
 }
 
+.flipH {
+  display: inline-block;
+  transform: scale(-1,1);
+}
+
 div.infopanel {
   margin: 0;
   padding: 0;
@@ -1432,8 +1437,8 @@ div.gallery-note {
   padding: 1em;
 }
 div.footer {
-  background-color: #777777;
-  color: #c6c6c6;
+  background-color: #c6c6c6;
+  color: #ffffff;
   text-align: center;
   font-weight: 700;
   font-size: 1.4em;

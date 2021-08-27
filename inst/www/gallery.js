@@ -347,7 +347,7 @@ function gallery(Graph){
   }else{
     galleryBox.append("div")
       .attr("class","footer")
-      .html("&copy; "+new Date().getFullYear()+" NETCOIN PROJECT")
+      .html("<span class=\"flipH\">&copy;</span> "+new Date().getFullYear()+" NETCOIN PROJECT")
   }
 
   if(options.help && options.helpOn){

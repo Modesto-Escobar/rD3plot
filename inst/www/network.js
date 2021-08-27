@@ -3733,8 +3733,8 @@ function setShapeScale(){
   config.exports.computeScale = function(){
     if(options[config.itemAttr]){
       var domain, range;
-      if(Graph.nodenames.indexOf("_shape_"+options[config.itemAttr])!=-1){
-        var aux = uniqueRangeDomain(config.data, options[config.itemAttr], "_shape_"+options[config.itemAttr]);
+      if(Graph[config.item+"names"].indexOf("_"+config.itemAttr+"_"+options[config.itemAttr])!=-1){
+        var aux = uniqueRangeDomain(config.data, options[config.itemAttr], "_"+config.itemAttr+"_"+options[config.itemAttr]);
         domain = aux.domain;
         range = aux.range;
       }else{
@@ -3767,8 +3767,8 @@ function setColorScale(){
 
   config.exports.computeScale = function(){
     if(options[config.itemAttr]){
-      if(Graph.nodenames.indexOf("_color_"+options[config.itemAttr])!=-1){
-        var aux = uniqueRangeDomain(config.data, options[config.itemAttr], "_color_"+options[config.itemAttr]);
+      if(Graph[config.item+"names"].indexOf("_"+config.itemAttr+"_"+options[config.itemAttr])!=-1){
+        var aux = uniqueRangeDomain(config.data, options[config.itemAttr], "_"+config.itemAttr+"_"+options[config.itemAttr]);
         config.scale = d3.scaleOrdinal()
           .range(aux.range)
           .domain(aux.domain);
@@ -3808,7 +3808,7 @@ function setColorScale(){
       var selectionWindow = attrSelectionWindow()
             .visual("Color")
             .active(options.nodeColor)
-            .list(Graph.nodenames.filter(function(d){ return hiddenFields.indexOf(d)==-1; }))
+            .list(Graph[config.item+"names"].filter(function(d){ return hiddenFields.indexOf(d)==-1; }))
             .clickAction(function(val){
               applyAuto("nodeColor",val);
             });
