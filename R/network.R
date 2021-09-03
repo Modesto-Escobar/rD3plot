@@ -301,7 +301,11 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
   }
   options <- checkColumn(options,"nodeLabelSize",labelSize)
   options <- checkColumn(options,"nodeGroup",group)
-  options <- checkColumn(options,"nodeSize",size)
+  if(is.numeric(size)){
+    options[["defaultNodeSize"]] <- size
+  }else{
+    options <- checkColumn(options,"nodeSize",size)
+  }
   options <- checkColumn(options,"nodeLegend",legend)
   options <- checkColumn(options,"nodeText",ntext)
   options <- checkColumn(options,"nodeInfo",info)

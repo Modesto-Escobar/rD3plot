@@ -2413,7 +2413,8 @@ function drawNet(){
         getLinkWidth = getNumAttr(links,'linkWidth',linkWidthRange,1);
 
     // compute node size
-    var getNodeSize = getNumAttr(nodes,'nodeSize',nodeSizeRange,options.imageItem?3:1),
+    var defaultNodeSize = options.defaultNodeSize ? options.defaultNodeSize : (options.imageItem?3:1);
+    var getNodeSize = getNumAttr(nodes,'nodeSize',nodeSizeRange,defaultNodeSize),
         getNodeLabelSize = getNumAttr(nodes,'nodeLabelSize',nodeLabelSizeRange,10*options.cex);
     nodes.forEach(function(node){
       node.nodeSize = getNodeSize(node) * nodeRadius;

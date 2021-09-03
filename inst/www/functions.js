@@ -1374,8 +1374,6 @@ function displayLinearScale(sel,value,range,domain,selectScale,selectAttribute,c
           .style("cursor", selectAttribute ? "pointer" : null)
           .on("click", selectAttribute ? selectAttribute : null);
 
-      var scaleWidth = div.node().offsetWidth - paddingRight;
-
       div.append("div")
         .attr("class","legend-scale-gradient")
         .style("height","10px")
