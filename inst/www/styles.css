@@ -543,7 +543,7 @@ div.goback:after {
   color: #ffffff;
   pointer-events: none;
 }
-.subSidebar .valSel > select {
+.subSidebar .value-selector > select {
   width: 100%;
   margin: 4px 0;
 }
