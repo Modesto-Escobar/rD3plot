@@ -2914,9 +2914,11 @@ function drawNet(){
     // draw areas
     ctx.lineJoin = "round";
     if(options.nodeGroup){
-      ctx.globalAlpha = 0.2;
       ctx.lineWidth = 3;
+      ctx.font = 20*options.cex+"px "+fontFamily;
+      ctx.textAlign = "center";
       groups.forEach(function(group){
+        ctx.globalAlpha = 0.2;
         ctx.strokeStyle = VisualHandlers.nodeGroup(group);
         ctx.fillStyle = d3.rgb(ctx.strokeStyle).brighter(0.6);
         var points = getArea(group,nodes);
@@ -2925,6 +2927,14 @@ function drawNet(){
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
+
+        if(options.groupText){
+          ctx.globalAlpha = 1;
+          ctx.strokeStyle = "#777777";
+          ctx.fillStyle = "#ffffff";
+          ctx.strokeText(group[options.nodeGroup],points[0]+points[2]/2,points[1]+points[3]/2);
+          ctx.fillText(group[options.nodeGroup],points[0]+points[2]/2,points[1]+points[3]/2);
+        }
       })
     }
 

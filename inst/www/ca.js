@@ -89,7 +89,7 @@ var texts = {
     selectacolorscale: "Selecciona una escala de color per ",
     selectacolor: "Selecciona un color per ",
     selectashape: "Selecciona una forma per ",
-    selectattribute: "Selecciona un atribut per mostrar com a color ",
+    selectattribute: "Selecciona un atribut per mostrar com a ",
     outof: "de",
     scenarios: "nombre d'escenaris",
     resetzoom: "Restaurar zoom",

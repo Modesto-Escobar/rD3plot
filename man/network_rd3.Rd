@@ -12,10 +12,10 @@ If the 'dir' attribute is specified, the function creates a folder in the comput
 \usage{
 network_rd3(nodes = NULL, links = NULL, tree = NULL,
         community = NULL, layout = NULL,
-        name = NULL, label = NULL, group = NULL, labelSize = NULL,
-        size = NULL, color = NULL, shape = NULL, legend = NULL,
-        sort = NULL, decreasing = FALSE, ntext = NULL, info = NULL,
-        image = NULL, imageNames = NULL,
+        name = NULL, label = NULL, group = NULL, groupText = FALSE,
+        labelSize = NULL, size = NULL, color = NULL, shape = NULL,
+        legend = NULL, sort = NULL, decreasing = FALSE, ntext = NULL,
+        info = NULL, image = NULL, imageNames = NULL,
         nodeBipolar = FALSE, nodeFilter = NULL, degreeFilter = NULL,
         source = NULL, target = NULL,
         lwidth = NULL, lweight = NULL, lcolor = NULL, ltext = NULL,
@@ -38,6 +38,7 @@ network_rd3(nodes = NULL, links = NULL, tree = NULL,
 \item{target}{name of the column with target names in the links data frame.}
 \item{label}{name of the column with labels in the nodes data frame.}
 \item{group}{name of the column with groups in the nodes data frame.}
+\item{groupText}{show names of the groups.}
 \item{community}{algorithm to make communities: edge_betweenness("ed"), fast_greedy("fa"), label_prop("la"), leiden_eigen("le"), louvain("lo"), optimal("op"), spinglass("sp"), walktrap("wa")}
 \item{labelSize}{name of the column with label size in the nodes data frame.}
 \item{size}{name of the column with size in the nodes data frame.}

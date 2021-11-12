@@ -1665,7 +1665,6 @@ function displayFreqBars(){
             b = values[b];
             return a > b ? -1 : a < b ? 1 : a <= b ? 0 : NaN;
           });
-          selectedlength = nodes.filter(function(n){ return n.selected; }).length;
 
         var selectedValues2 = [];
         for(v in selectedValues){
@@ -1675,6 +1674,8 @@ function displayFreqBars(){
         }
 
         if(frequencies=="relative"){
+          var selectedlength = nodes.filter(function(n){ return n.selected; }).length;
+
           for(v in values){
             values[v] = values[v]/nodes.length*100;
           }

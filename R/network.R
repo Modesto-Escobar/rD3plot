@@ -147,7 +147,7 @@ netCreate <- function(net, dir){
 # network graph function 
 network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
         community = NULL, layout = NULL,
-        name = NULL, label = NULL, group = NULL, labelSize = NULL,
+        name = NULL, label = NULL, group = NULL, groupText = FALSE, labelSize = NULL,
         size = NULL, color = NULL, shape = NULL, legend = NULL,
         sort = NULL, decreasing = FALSE, ntext = NULL, info = NULL,
         image = NULL, imageNames = NULL,
@@ -164,7 +164,7 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
         background = NULL, defaultColor = "#1f77b4",
         language = c("en","es","ca"), dir = NULL)
 {
-  if(is.null(links) &&  is.null(nodes)){
+  if(is.null(links) && is.null(nodes)){
     stop("You must explicit a nodes or links data frame.")
   }
 
@@ -301,6 +301,7 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
   }
   options <- checkColumn(options,"nodeLabelSize",labelSize)
   options <- checkColumn(options,"nodeGroup",group)
+  options <- showSomething(options,"groupText",groupText)
   if(is.numeric(size)){
     options[["defaultNodeSize"]] <- size
   }else{
