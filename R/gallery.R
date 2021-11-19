@@ -17,7 +17,7 @@ galleryCreate <- function(gallery, dir){
 }
 
 gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
-    ntext = NULL, info = NULL, image = NULL, zoom = 1,
+    border = NULL, ntext = NULL, info = NULL, image = NULL, zoom = 1,
     itemsPerRow = NULL, main = NULL, note = NULL,
     showLegend = TRUE, frequencies = FALSE,
     help = NULL, helpOn = FALSE, description = NULL,
@@ -35,6 +35,7 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
   }else{
     options <- checkColumn(options,"nodeLabel",label)
   }
+  options <- checkColumn(options,"nodeBorder",border)
   options <- checkColumn(options,"nodeText",ntext)
   options <- checkColumn(options,"nodeInfo",info)
 

@@ -147,10 +147,10 @@ netCreate <- function(net, dir){
 # network graph function 
 network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
         community = NULL, layout = NULL,
-        name = NULL, label = NULL, group = NULL, groupText = FALSE, labelSize = NULL,
-        size = NULL, color = NULL, shape = NULL, legend = NULL,
-        sort = NULL, decreasing = FALSE, ntext = NULL, info = NULL,
-        image = NULL, imageNames = NULL,
+        name = NULL, label = NULL, group = NULL, groupText = FALSE,
+        labelSize = NULL, size = NULL, color = NULL, shape = NULL,
+        border = NULL, legend = NULL, sort = NULL, decreasing = FALSE,
+        ntext = NULL, info = NULL, image = NULL, imageNames = NULL,
         nodeBipolar = FALSE, nodeFilter = NULL, degreeFilter = NULL,
         source = NULL, target = NULL,
         lwidth = NULL, lweight = NULL, lcolor = NULL, ltext = NULL,
@@ -312,6 +312,7 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
   options <- checkColumn(options,"nodeInfo",info)
   options <- checkColumn(options,"nodeOrder",sort)
   options <- showSomething(options,"decreasing",decreasing)
+  options <- checkColumn(options,"nodeBorder",border)
 
   if (!is.null(image)){
     if(length(setdiff(image,colnames(nodes)))){

@@ -14,8 +14,8 @@ network_rd3(nodes = NULL, links = NULL, tree = NULL,
         community = NULL, layout = NULL,
         name = NULL, label = NULL, group = NULL, groupText = FALSE,
         labelSize = NULL, size = NULL, color = NULL, shape = NULL,
-        legend = NULL, sort = NULL, decreasing = FALSE, ntext = NULL,
-        info = NULL, image = NULL, imageNames = NULL,
+        border = NULL, legend = NULL, sort = NULL, decreasing = FALSE,
+        ntext = NULL, info = NULL, image = NULL, imageNames = NULL,
         nodeBipolar = FALSE, nodeFilter = NULL, degreeFilter = NULL,
         source = NULL, target = NULL,
         lwidth = NULL, lweight = NULL, lcolor = NULL, ltext = NULL,
@@ -47,6 +47,7 @@ network_rd3(nodes = NULL, links = NULL, tree = NULL,
 \item{legend}{name of the column with the variable to represent as a legend in the nodes data frame.}
 \item{ntext}{name of the column with html text in the nodes data frame.}
 \item{info}{name of the column with information to display in a panel in the nodes data frame.}
+\item{border}{name of the column with border width in the nodes data frame.}
 \item{sort}{name of the column with node order in the nodes data frame (only for heatmap).}
 \item{decreasing}{decreasing or increasing sort of the nodes (only for heatmap).}
 \item{intensity}{name of the column with intensity variable in the links data frame (only for heatmap).}

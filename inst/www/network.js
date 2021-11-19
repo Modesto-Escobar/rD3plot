@@ -28,6 +28,7 @@ function network(Graph){
       symbolTypes = ["Circle","Square","Diamond","Triangle","Cross","Star","Wye"], // list of available shapes
       nodeSizeRange = [0.5,4], // node size range
       nodeLabelSizeRange = [8,20], // node label size range
+      nodeBorderRange = [1,3], // node border range
       linkWeightRange = [200,40], // link weight range (link distance)
       linkWidthRange = [1,5], // link width range
       zoomRange = [0.1, 10], // zoom range
@@ -189,16 +190,6 @@ function network(Graph){
     var key = getKey(d3.event);
     if(d3.event.ctrlKey || d3.event.metaKey){
       switch(key){
-        case "Enter":
-          if(frameControls.play){
-            frameControls.play = false;
-            clearInterval(frameControls.frameInterval);
-          }else{
-            frameControls.play = true;
-            handleFrames(frameControls.frame+1);
-          }
-          clickFrameCtrlBtn();
-          return;
         case "0":
           plot.select(".zoombutton.zoomreset").dispatch("click");
           return;
@@ -343,6 +334,19 @@ function network(Graph){
     }else{
       if(key == "Enter"){
         if(selectedNodesLength()) switchEgoNet();
+        return;
+      }
+      if(key == " "){
+        if(frameControls){
+          if(frameControls.play){
+            frameControls.play = false;
+            clearInterval(frameControls.frameInterval);
+          }else{
+            frameControls.play = true;
+            handleFrames(frameControls.frame+1);
+          }
+          clickFrameCtrlBtn();
+        }
         return;
       }
     }
@@ -999,7 +1003,7 @@ function displaySidebar(){
     if(options.heatmap){
       visData = ["Label","Color","Shape","Legend","Order"];
     }else{
-      visData = ["Label","Size","LabelSize","Color","Shape","Image","Legend","Group"];
+      visData = ["Label","Size","LabelSize","Color","Shape","Image","Legend","Group","Border"];
     }
     divControl = sideNodes.append("div")
       .attr("class", "nodeAuto")
@@ -1387,7 +1391,7 @@ function addVisualController(){
       item,
       data,
       visData,
-      onlyNumeric = ["Size","LabelSize","Width","Weight"];
+      onlyNumeric = ["Size","Border","LabelSize","Width","Weight"];
 
   function exports(sel){
     var sels = sel.selectAll("visSel")
@@ -2426,10 +2430,12 @@ function drawNet(){
     // compute node size
     var defaultNodeSize = options.defaultNodeSize ? options.defaultNodeSize : (options.imageItem?3:1);
     var getNodeSize = getNumAttr(nodes,'nodeSize',nodeSizeRange,defaultNodeSize),
-        getNodeLabelSize = getNumAttr(nodes,'nodeLabelSize',nodeLabelSizeRange,10*options.cex);
+        getNodeLabelSize = getNumAttr(nodes,'nodeLabelSize',nodeLabelSizeRange,10*options.cex),
+        getNodeBorder = getNumAttr(nodes,'nodeBorder',nodeBorderRange,1);
     nodes.forEach(function(node){
       node.nodeSize = getNodeSize(node) * nodeRadius;
       node.nodeLabelSize = getNodeLabelSize(node);
+      node.nodeBorder = getNodeBorder(node);
     });
   }
 
@@ -2988,7 +2994,7 @@ function drawNet(){
     nodes.forEach(function(node) {
       var nodeSize = checkNodeBigger(node);
       ctx.globalAlpha = node._back? 0.2 : 1;
-      ctx.lineWidth = node.selected || node._selected ? 2 : 1;
+      ctx.lineWidth = (node.selected || node._selected ? 2 : 1) * node.nodeBorder;
       var strokeStyle = node._selected ? "#F00" : (node.selected ? nodeSelectedColor : false);
       ctx.strokeStyle = strokeStyle;
       ctx.translate(node.x, node.y);
@@ -3016,7 +3022,7 @@ function drawNet(){
             strokeStyle = basicColors.darkGrey;
           }
           ctx.strokeStyle = strokeStyle;
-          ctx.lineWidth = 2;
+          ctx.lineWidth = ctx.lineWidth * 2;
         }
         if(strokeStyle){
           ctx.beginPath();

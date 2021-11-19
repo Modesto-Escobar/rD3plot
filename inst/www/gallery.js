@@ -360,7 +360,7 @@ function gallery(Graph){
     var currentItemsPerRow = options.itemsPerRow,
         prevk = options.zoom,
         sizeByItemsPerRow = function(itemsPerRow){
-          var w = Math.floor((gallery.node().offsetWidth-12) / itemsPerRow)-18;
+          var w = Math.floor((gallery.node().offsetWidth-24) / itemsPerRow)-18;
           return w/options.aspectRatio;
         }
     
@@ -424,7 +424,7 @@ function gallery(Graph){
           .on("load", options.aspectRatio ? function(){
             imgMarginLeft(this,getImgRatio(this));
           } : function(){
-            itemWidth(d3.select(this.parentNode.parentNode),getImgRatio(this));
+            d3.select(this.parentNode.parentNode).style("width",(currentGridHeight*getImgRatio(this))+"px");
           })
           .attr("src",function(n){ return n[options.imageItems]; });
     }
@@ -469,6 +469,8 @@ function gallery(Graph){
     itemsUpdate
       .select(".img-wrapper")
         .style("height",currentGridHeight+"px")
+        .style("border-width", typeof options.nodeBorder == "number" ? options.nodeBorder+"px" : null)
+
     itemsUpdate.each(function(){
       var item = d3.select(this),
           ratio = 1;
@@ -478,7 +480,7 @@ function gallery(Graph){
         var img = item.select(".img-wrapper > img").node();
         ratio = getImgRatio(img);
       }
-      itemWidth(item,ratio);
+      item.style("width",(currentGridHeight*ratio)+"px");
     })
 
     itemsUpdate.selectAll(".item > span").style("font-size",(currentGridHeight/72)+"em")
@@ -512,6 +514,15 @@ function gallery(Graph){
             }
           }
       })
+
+    if(options.nodeBorder && Graph.nodenames.indexOf(options.nodeBorder)!=-1 && dataType(nodes,options.nodeBorder)=="number"){
+      var borderScale = d3.scaleLinear()
+            .range([1,5])
+            .domain(d3.extent(nodes,function(d){ return d[options.nodeBorder]; }));
+      itemsUpdate.select(".img-wrapper").style("border-width",function(d){
+        return borderScale(d[options.nodeBorder]) + "px";
+      })
+    }
 
     var colorScale;
     if(options.nodeColor){
@@ -574,7 +585,7 @@ function gallery(Graph){
         return null;
       })
     }else{
-      itemsUpdate.select("div:first-child").style("background-color",function(d){
+      itemsUpdate.select(".img-wrapper").style("background-color",function(d){
         if(options.nodeColor){
             return applyColorScale(colorScale,d[options.nodeColor]);
         }
@@ -603,11 +614,7 @@ function gallery(Graph){
     }
 
     function itemWidth(item,ratio){
-      var wrapperBorderWidth = 0;
-      ["left","right"].forEach(function(d){
-        wrapperBorderWidth += parseInt(item.select(".img-wrapper").style("border-"+d+"-width"));
-      })
-      item.style("width",((currentGridHeight*ratio) + wrapperBorderWidth)+"px");
+      item.style("width",(currentGridHeight*ratio)+"px");
     }
 
     function imgMarginLeft(img,ratio){
