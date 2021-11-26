@@ -941,10 +941,23 @@ function timeline(json){
     }
 
     function tooltipCoords(tip){
-        var coor = [0, 0];
-        coor = d3.mouse(body.node());
-        tip.style("top",(coor[1]+20)+"px")
-           .style("left",(coor[0]+20)+"px")
+        var coor = d3.mouse(document.body),
+            bodyrect = document.body.getBoundingClientRect(),
+            width = bodyrect.width,
+            top = window.scrollY + bodyrect.top + coor[1],
+            left = coor[0];
+        if(left > width/2){
+          left = left - tip.node().offsetWidth - 20;
+        }else{
+          left = left + 20;
+        }
+        top = top + 20;
+        var offsetY = (top + tip.node().offsetHeight) - (window.scrollY + bodyrect.bottom);
+        if(offsetY > 0){
+          top = top - offsetY;
+        }
+        tip.style("top",top+"px")
+           .style("left",left+"px")
     }
   }
 

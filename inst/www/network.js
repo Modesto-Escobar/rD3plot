@@ -748,6 +748,27 @@ function displayMain(){
           showTables();
         }));
   }
+  if(frameControls){
+      options.lineplots = false;
+      infoPanel.selection().select(".infopanel > .close-button").on("click.hidelineplots",function(){
+        options.lineplots = false;
+      });
+      main.call(iconButton()
+        .alt("lineplots")
+        .width(24)
+        .height(24)
+        .src(b64Icons.lineplots)
+        .title("lineplots")
+        .job(function(){
+          if(frameControls.play){
+            frameControls.play = false;
+            clearInterval(frameControls.frameInterval);
+          }
+          clickFrameCtrlBtn();
+          options.lineplots = true;
+          showTables();
+        }));
+  }
   if(main.node().childNodes.length){
     main.style("display",null);
   }else{
@@ -4525,6 +4546,35 @@ function showTables() {
       .colorScale(VisualHandlers.nodeColor.getScale());
     infoPanel.open(function(div){
       frequencyBars(div);
+    });
+  }else if(nodesData.length==0){
+    infoPanel.close();
+  }
+
+  // update line plots
+  if(options.lineplots && backupNodes){
+    infoPanel.open(function(div){
+      div.selectAll("*").remove();
+      var container = div.append("div").attr("class","lineplots-container");
+      if(nodesData.length){
+        var names = nodesData.map(function(node){ return node[options.nodeName]; });
+        displayNodeLinePlots(container,backupNodes.filter(function(node){
+          return names.indexOf(node[options.nodeName])!=-1;
+        }),frameControls.frames,options.nodeName);
+      }else{
+        var select = div.insert("div",":first-child")
+          .attr("class","select-wrapper")
+          .append("select");
+        backupNodes.forEach(function(node,i){
+          var option = select.append("option");
+          option.text(node[options.nodeName]);
+          option.property("value",i);
+        });
+        select.on("change",function(){
+          displayNodeLinePlots(container,backupNodes[this.value],frameControls.frames,options.nodeName);
+        });
+        displayNodeLinePlots(container,backupNodes[0],frameControls.frames,options.nodeName);
+      }
     });
   }else if(nodesData.length==0){
     infoPanel.close();
