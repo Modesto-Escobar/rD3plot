@@ -14,6 +14,7 @@ function network(Graph){
       VisualHandlers = {},
       Controllers = {},
       frequencyBars = false,
+      linePlots = false,
       GraphNodesLength = 0,
       GraphLinksLength = 0,
       options = Graph.options;
@@ -750,6 +751,10 @@ function displayMain(){
   }
   if(frameControls){
       options.lineplots = false;
+      linePlots = displayNodeLinePlots()
+        .frames(frameControls.frames)
+        .variables(options.lineplotsKeys)
+        .nodeName(options.nodeName)
       infoPanel.selection().select(".infopanel > .close-button").on("click.hidelineplots",function(){
         options.lineplots = false;
       });
@@ -3296,11 +3301,11 @@ function drawNet(){
     if(!legendPanel.empty()){
       // scale
       if(!legendPanel.select(".scale").empty()) {
-          var svrRect = legendPanel.select(".scale svg > rect");
-          var colors = colorScales[svrRect.attr("fill").replace(/(url\()|(\))/g, "").replace("#","")];
+          var gradient = legendPanel.select(".legend-scale-gradient");
+          var colors = gradient.datum();
           var canvas = document.createElement("canvas");
-          canvas.width = parseInt(svrRect.attr("width"));
-          canvas.height = parseInt(svrRect.attr("height"));
+          canvas.width = parseInt(gradient.node().clientWidth);
+          canvas.height = parseInt(gradient.node().clientHeight);
           var ctx = canvas.getContext("2d");
           var grd = ctx.createLinearGradient(0,0,canvas.width,0);
           colors.forEach(function(c,i){
@@ -3371,7 +3376,7 @@ function drawNet(){
     doc.setLineWidth(scale);
     doc.setDrawColor(170, 170, 170);
     doc.setTextColor(170, 170, 170);
-    d3.selectAll(".net .axis").each(function(){
+    d3.selectAll(".plot > svg > .net > .axis").each(function(){
       var self = d3.select(this);
       if(self.style("opacity")=="1"){
         var x1 = (+self.attr("x1")*scale)+translate[0],
@@ -3382,7 +3387,7 @@ function drawNet(){
         doc.line(x1, y1, x2, y2);
       }
     })
-    d3.selectAll(".net .axisLabel").each(function(){
+    d3.selectAll(".plot > svg > .net > .axisLabel").each(function(){
       var self = d3.select(this);
       if(self.style("opacity")=="1"){
         var x = (+self.attr("x")*scale)+translate[0],
@@ -3393,6 +3398,33 @@ function drawNet(){
         doc.text(x, y, self.text(), { align: tAlign });
       }
     })
+    var axis = d3.select(".plot > svg > .axis");
+    if(!axis.empty() && axis.style("opacity")=="1"){
+        d3.selectAll(".plot > svg > .axis").each(function(){
+          var rect = this.getBoundingClientRect(),
+              offsetY = this.ownerSVGElement.getBoundingClientRect().y,
+              x1,y1,x2,y2;
+          if(d3.select(this).classed("x")){
+            x1 = rect.x,
+            y1 = rect.y-offsetY,
+            x2 = rect.x+rect.width,
+            y2 = y1;
+          }else{
+            x1 = rect.x+rect.width,
+            y1 = rect.y-offsetY,
+            x2 = x1,
+            y2 = rect.y+rect.height-offsetY;
+          }
+          doc.line(x1, y1, x2, y2);
+        });
+        d3.selectAll(".plot > svg > .axis > .tick > text").each(function(){
+          var rect = this.getBoundingClientRect(),
+              offsetY = this.ownerSVGElement.getBoundingClientRect().y,
+              x = rect.x,
+              y = rect.y+(rect.height/2)-offsetY;
+          doc.text(x, y, d3.select(this).text());
+        });
+    }
 
     doc.save(d3.select("head>title").text()+".pdf");
   } // end pdf function
@@ -4557,10 +4589,16 @@ function showTables() {
       div.selectAll("*").remove();
       var container = div.append("div").attr("class","lineplots-container");
       if(nodesData.length){
-        var names = nodesData.map(function(node){ return node[options.nodeName]; });
-        displayNodeLinePlots(container,backupNodes.filter(function(node){
-          return names.indexOf(node[options.nodeName])!=-1;
-        }),frameControls.frames,options.nodeName);
+        var colors = nodesData.map(function(node){ return VisualHandlers.nodeColor(node); }),
+            nodes = nodesData.map(function(node){
+              var name = node[options.nodeName];
+              return backupNodes.filter(function(n){
+                return n[options.nodeName]==name;
+              })[0];
+            });
+        linePlots.nodes(nodes)
+          .colors(colors);
+        linePlots(container);
       }else{
         var select = div.insert("div",":first-child")
           .attr("class","select-wrapper")
@@ -4571,9 +4609,14 @@ function showTables() {
           option.property("value",i);
         });
         select.on("change",function(){
-          displayNodeLinePlots(container,backupNodes[this.value],frameControls.frames,options.nodeName);
+          selectChange(this.value);
         });
-        displayNodeLinePlots(container,backupNodes[0],frameControls.frames,options.nodeName);
+        selectChange(0);
+        function selectChange(value){
+          linePlots.nodes(backupNodes[value])
+            .colors(false);
+          linePlots(container);
+        }
       }
     });
   }else if(nodesData.length==0){

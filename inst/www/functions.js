@@ -1379,7 +1379,9 @@ function displayLinearScale(sel,value,range,domain,selectScale,selectAttribute,c
       div.append("span")
       .attr("class","domain2")
     }
-    panel.select("div.legend-scale-gradient").style("background-image","linear-gradient(to right, " + range.join(", ") + ")")
+    panel.select("div.legend-scale-gradient")
+      .datum(range)
+      .style("background-image",function(d){ return "linear-gradient(to right, " + d.join(", ") + ")"; })
     panel.select(".domain1").text(formatter(domain[0]));
     panel.select(".domain2").text(formatter(domain[domain.length-1]));
 }
@@ -2267,15 +2269,25 @@ function getColumnValues(data,col){
   return d3.set(itemsData).values().sort(sortAsc);
 }
 
-function displayNodeLinePlots(sel,nodes,frames,nodeName){
-  if(!Array.isArray(nodes)){
-    nodes = [nodes];
-  }
-  sel.selectAll("*").remove();
-  var keys = d3.keys(nodes[0]);
+function displayNodeLinePlots(){
+  var nodes = [],
+      frames = [],
+      colors = [],
+      variables = false,
+      nodeName = "name";
+
+  function exports(sel){
+    sel.selectAll("*").remove();
+
+    var keys = [];
+    if(variables){
+      keys = variables;
+    }else{
+      keys = d3.keys(nodes[0]);
+    }
 
   // set the dimensions and margins of the graphs
-  var margin = {top: 10, right: 10, bottom: 30, left: 40},
+  var margin = {top: 10, right: 10, bottom: 40, left: 40},
       w = (sel.node().offsetWidth - 72) - margin.left - margin.right,
       h = 200 - margin.top - margin.bottom;
 
@@ -2295,93 +2307,194 @@ function displayNodeLinePlots(sel,nodes,frames,nodeName){
     });
     var mergedData = d3.merge(data),
         dataExtent = d3.extent(mergedData,function(d) { return d; });
-    if(dataExtent[0]!=dataExtent[1]){
+    if(variables || dataExtent[0]!=dataExtent[1]){
       sel.append("h2").text(key);
       if(type=="number"){
         // append the svg object
-        var svg = sel.append("svg")
-          .attr("width", w + margin.left + margin.right)
-          .attr("height", h + margin.top + margin.bottom)
-        .append("g")
-          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        var svg = sel.append("div")
+          .attr("class","lineplot")
+          .style("height", (h + margin.top + margin.bottom) + "px")
+          .append("div")
+            .append("svg")
+            .attr("width", w + margin.left + margin.right)
+            .attr("height", h + margin.top + margin.bottom)
+
+        svg.append("defs")
+          .append("clipPath")
+            .attr("id","linePlotClip")
+            .append("rect")
+              .attr("width",w)
+              .attr("height",h)
+
+        var g = svg.append("g")
+              .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
         // draw X axis
-        svg.append("g")
+        g.append("g")
         .attr("transform", "translate(0," + h + ")")
-        .call(d3.axisBottom(x).tickFormat(function(d){ return frames[d]; }));
+        .attr("class","x axis")
+        .call(d3.axisBottom(x).tickFormat(function(d){ return frames[d]; }))
+          .selectAll("text")
+            .attr("transform", "rotate(45)")
+            .style("text-anchor", "start")
+            .append("title")
+              .text(function(d){
+                return frames[d];
+              });
 
-        // Y axis: scale and draw
+        // Y axis: scale and axis container
         var y = d3.scaleLinear()
-          .range([h, 0])
-          .domain(dataExtent);
+            .range([h, 0])
+            .domain(dataExtent);
 
-        svg.append("g")
-        .call(d3.axisLeft(y)
-          .tickFormat(function(d){
-            return formatter(d);
-          }));
+        g.append("g")
+          .attr("class","y axis")
 
-        data.forEach(function(dd,i){
-          var points = dd.map(function(d,i){
-            if(d!==null){
-              return x(i)+","+y(d);
+        var polylines = g.append("g")
+          .attr("class","polylines")
+          .attr("clip-path", "url(#linePlotClip)");
+
+        // draw Y scale brush
+        var brush = d3.brushY()
+        .extent([[0,0], [10,h]])
+        .on("brush", brushed)
+        .on("end", brushend)
+
+        var brushg = svg.append("g")
+        .attr("transform", "translate(0," + margin.top + ")")
+        .attr("class", "brush")
+        .call(brush);
+
+        var handle = brushg.selectAll(".handle--custom")
+        .data([{type: "n"}, {type: "s"}])
+      .enter().append("circle")
+        .attr("class", "handle--custom")
+        .attr("fill", "#2f7bee")
+        .attr("cursor", "ns-resize")
+        .attr("r",5)
+
+        brush.move(brushg, [0,h]);
+
+        function brushed() {
+
+            var s = d3.event.selection;
+
+            // Y axis: scale and draw
+            var newExtent = s.map(y.invert).reverse();
+
+            var y2 = d3.scaleLinear()
+              .range([h, 0])
+              .domain(newExtent);
+
+            g.select(".y.axis")
+            .call(d3.axisLeft(y2)
+              .tickFormat(function(d){
+                return formatter(d);
+              }));
+
+          // draw lines
+          polylines.selectAll("polyline").remove();
+          data.forEach(function(dd,i){
+            var points = dd.map(function(d,i){
+              if(d!==null){
+                return x(i)+","+y2(d);
+              }
+              return false;
+            }).filter(function(d){ return d; });
+            if(points){
+              var line = polylines.append("polyline")
+                .attr("points",points.join(" "))
+                .style("stroke",colors.length ? colors[i] : "#000000")
+                .style("stroke-width","2px")
+                .style("fill","none")
+              line.append("title").text(nodes[i][nodeName]);
             }
-            return false;
-          }).filter(function(d){ return d; });
-          if(points){
-            var line = svg.append("polyline")
-              .attr("points",points.join(" "))
-              .style("stroke","#000000")
-              .style("stroke-width","2px")
-              .style("fill","none")
-            line.append("title").text(nodes[i][nodeName]);
+          });
+
+            handle.attr("display", null).attr("transform",function(d,i){
+              return "translate(5,"+s[i]+")";
+            })
+        }
+
+        function brushend() {
+          var s = d3.event.selection;
+          if(s == null){
+            brush.move(brushg, [0,h]);
           }
-        });
+        }
       }else{
         var color = d3.scaleOrdinal()
             .domain(d3.set(mergedData.filter(function(d){ return d; }).map(String)).values())
             .range(categoryColors)
         data.forEach(function(dd,i){
           var div = sel.append("div")
-            .style("margin","1px 20px")
-            .style("position","relative");
+            .attr("class","line-bars");
 
           dd.forEach(function(d){
             div.append("div")
+              .attr("class","line-bar")
               .style("width",(100/frames.length)+"%")
-              .style("display","inline-block")
-              .style("height","16px")
               .style("background-color",d ? color(String(d)) : "#ffffff")
               .attr("title",d ? String(d) : null)
           });
 
           div.append("div")
-            .style("position","absolute")
-            .style("top","0")
-            .style("left","0")
-            .style("z-index","1")
-            .style("margin","2px")
+            .attr("class","line-bar-text")
             .text(nodes[i][nodeName])
         });
 
         var axis = sel.append("div")
-            .style("margin","1px 20px")
-            .style("position","relative")
-            .style("border-top","solid 1px #777777")
-            .style("padding-bottom","20px")
+            .attr("class","axis-ordinal")
 
         x.ticks().forEach(function(i){
           axis.append("span")
-            .style("position","absolute")
             .style("left",((i+0.5)/frames.length*100)+"%")
-            .style("display","block")
-            .style("width","30px")
-            .style("text-align","center")
-            .style("margin-left","-15px")
-            .style("margin-top","4px")
-            .text(frames[i])
+            .attr("title",frames[i])
+            .text(frames[i]);
         })
       }
     }
   });
+  }
+
+  exports.frames = function(x){
+    if (!arguments.length) return frames;
+    frames = x;
+    if(!Array.isArray(frames)){
+      frames = [frames];
+    }
+    return exports;
+  }
+
+  exports.variables = function(x){
+    if (!arguments.length) return variables;
+    variables = x;
+    if(!Array.isArray(variables)){
+      variables = [variables];
+    }
+    return exports;
+  }
+
+  exports.nodes = function(x){
+    if (!arguments.length) return nodes;
+    nodes = x;
+    if(!Array.isArray(nodes)){
+      nodes = [nodes];
+    }
+    return exports;
+  }
+
+  exports.nodeName = function(x){
+    if (!arguments.length) return nodeName;
+    nodeName = x;
+    return exports;
+  }
+
+  exports.colors = function(x){
+    if (!arguments.length) return colors;
+    colors = x ? x : [];
+    return exports;
+  }
+
+  return exports;
 }

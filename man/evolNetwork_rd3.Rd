@@ -9,12 +9,13 @@ This function returns a \code{network_rd3} object.
 }
 
 \usage{
-evolNetwork_rd3(..., frame = 0, speed = 50, dir = NULL)
+evolNetwork_rd3(..., frame = 0, speed = 50, lineplots = NULL, dir = NULL)
 }
 \arguments{
 \item{...}{\code{network_rd3} objects that will be integrated as temporal frames in the evolving network.}
 \item{frame}{a frame ordinal position where the playback will start.}
 \item{speed}{a percentage value for the playback speed of network frames.}
+\item{lineplots}{a character vector giving the node attributes to show as lineplots.}
 \item{dir}{a "character" string representing the directory where the graph will be saved.}
 }
 \description{

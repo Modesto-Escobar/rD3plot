@@ -1543,3 +1543,61 @@ div.gallery-content > div.zoom-svg {
   bottom: 0;
   right: 10px;
 }
+
+/* line plots */
+.lineplots-container > .line-bars {
+  margin: 1px 20px;
+  position: relative;
+}
+.lineplots-container > .line-bars > .line-bar {
+  display: inline-block;
+  height: 16px;
+}
+.lineplots-container > .line-bars > .line-bar-text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  margin: 2px;
+}
+.lineplots-container > .axis-ordinal {
+  margin: 1px 20px;
+  position: relative;
+  border-top: solid 1px #777777;
+  padding-bottom: 40px;
+  overflow: hidden;
+}
+.lineplots-container > .axis-ordinal:before {
+  content:'';
+  width:100%;
+  height:100%;    
+  position:absolute;
+  left:0;
+  top:0;
+  background:linear-gradient(transparent 85%, #ffffff);
+  z-index: 1;
+  pointer-events: none;
+}
+.lineplots-container > .axis-ordinal > span {
+  position: absolute;
+  display: block;
+  width: 30px;
+  text-align: left;
+  margin-left: -15px;
+  margin-top: 15px;
+  transform: rotate(45deg);
+}
+.lineplots-container > .lineplot {
+  position: relative;
+}
+.lineplots-container > .lineplot > div:before {
+  content:'';
+  width:100%;
+  height:100%;    
+  position:absolute;
+  left:0;
+  top:0;
+  background:linear-gradient(transparent 95%, #ffffff);
+  z-index: 1;
+  pointer-events: none;
+}

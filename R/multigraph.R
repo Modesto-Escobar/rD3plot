@@ -51,7 +51,7 @@ polyGraph <- function(multi,dir){
   multiGraph(multi,paste0(dir,"/multiGraph"))
 }
 
-evolvingWrapper <- function(multi,frame,speed){
+evolvingWrapper <- function(multi,frame,speed,lineplots){
   if(length(multi)<2){
     stop("Cannot make an evolving network with only one graph")
   }
@@ -130,6 +130,10 @@ evolvingWrapper <- function(multi,frame,speed){
   options$frames <- frames
   options$frame <- frame
   options$speed <- speed
+  lineplots <- intersect(as.character(lineplots),names(nodes))
+  if(length(lineplots)){
+    options$lineplotsKeys <- lineplots
+  }
   net <- structure(list(links=links,nodes=nodes,options=options),class="network_rd3")
 
   tree <- list()
@@ -161,14 +165,14 @@ getGraphList <- function(...){
 }
 
 #create html wrapper for multigraph
-rd3_multigraph <- function(...,  mode = c("default","parallel","frame"), frame = 0, speed = 50, dir = "MultiGraph", show = TRUE){
+rd3_multigraph <- function(...,  mode = c("default","parallel","frame"), frame = 0, speed = 50, lineplots = NULL, dir = "MultiGraph", show = TRUE){
   graphs <- getGraphList(...)
 
   mode <- substr(mode[1],1,1)
   if(mode=="p"){
     polyGraph(graphs,dir)
   }else if(mode=="f"){
-    net <- evolvingWrapper(graphs,frame,speed)
+    net <- evolvingWrapper(graphs,frame,speed,lineplots)
     netCreate(net,dir)
   }else{
     multiGraph(graphs,dir)
@@ -179,9 +183,9 @@ rd3_multigraph <- function(...,  mode = c("default","parallel","frame"), frame =
 }
 
 # Evolving network
-evolNetwork_rd3 <- function(..., frame = 0, speed = 50, dir = NULL){
+evolNetwork_rd3 <- function(..., frame = 0, speed = 50, lineplots = NULL, dir = NULL){
   graphs <- getGraphList(...)
-  net <- evolvingWrapper(graphs,frame,speed)
+  net <- evolvingWrapper(graphs,frame,speed,lineplots)
   if (!is.null(dir)) netCreate(net,dir)
   return(net)
 }
