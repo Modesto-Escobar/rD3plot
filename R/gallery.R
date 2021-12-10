@@ -9,7 +9,7 @@ galleryJSON <- function(gallery){
 
 galleryCreate <- function(gallery, dir){
   language <- getLanguageScript(gallery)
-  scripts <- c("d3.min.js","jspdf.min.js","jszip.min.js","html2canvas.min.js","functions.js",language,"colorScales.js","gallery.js")
+  scripts <- c("d3.min.js","jspdf.min.js","jszip.min.js","html2canvas.min.js","images.js","functions.js",language,"colorScales.js","gallery.js")
   if(!is.null(gallery$options$frequencies)){
     scripts <- c(scripts,"d3.layout.cloud.js")
   }

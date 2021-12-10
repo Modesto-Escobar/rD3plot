@@ -43,7 +43,7 @@ multiGraph <- function(multi,dir){
   language <- unique(unlist(lapply(multi,getLanguageScript)))
   if(length(language)!=1)
     language <- "en.js"
-  createHTML(dir, c("reset.css","styles.css"), c("d3.min.js","jspdf.min.js","jszip.min.js","iro.min.js","functions.js",language,"colorScales.js","multigraph.js","network.js","barplot.js","timeline.js","gallery.js"), function(){ return(multigraphJSON(multi,dir)) })
+  createHTML(dir, c("reset.css","styles.css"), c("d3.min.js","jspdf.min.js","jszip.min.js","iro.min.js","images.js","functions.js",language,"colorScales.js","multigraph.js","network.js","barplot.js","timeline.js","gallery.js"), function(){ return(multigraphJSON(multi,dir)) })
 }
 
 polyGraph <- function(multi,dir){

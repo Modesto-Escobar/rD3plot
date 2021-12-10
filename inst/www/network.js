@@ -288,7 +288,7 @@ function network(Graph){
         case "n": // warning: new window
           return;
         case "o":
-          if(selectedNodesLength()) selectNodesFromTable();
+          if(selectedNodesLength()) selectFromTable();
           return;
         case "p":
           treeAction();
@@ -749,7 +749,7 @@ function displayMain(){
           showTables();
         }));
   }
-  if(frameControls){
+  if(frameControls && options.lineplotsKeys){
       options.lineplots = false;
       linePlots = displayNodeLinePlots()
         .frames(frameControls.frames)
@@ -921,7 +921,7 @@ function displayBottomPanel(){
         }
       })
 
-    displayButton(tableHeader,"tableselection",selectNodesFromTable,"ctrl + o",false,"primary");
+    displayButton(tableHeader,"tableselection",selectFromTable,"ctrl + o",false,"primary");
 
     tables.append("div").attr("class",options.showNodes ? "nodes" : "links");
     showTables();
@@ -4767,43 +4767,48 @@ function tables2xlsx(){
       }
 }
 
-function selectNodesFromTable(){
-        var names = [],
-            index = 0,
-            trSelected;
-        if(d3.select("div.tables > div.nodes").style("display")=="block"){
-          trSelected = d3.selectAll("div.tables > div.nodes table tr.selected");
+function selectFromTable(){
+      var names = [],
+          index = 0,
+          trSelected = d3.selectAll("div.tables table tr.selected");
+      if(!trSelected.empty()){
+        if(!d3.select("div.tables > div.nodes").empty()){
           if(!trSelected.empty()){
             d3.selectAll("div.tables > div.nodes table th").each(function(d,i){
               if(this.textContent == options.nodeName)
                 index = i+1;
             })
+
             trSelected
               .each(function(){
                 names.push(d3.select(this).select("td:nth-child("+index+")").text());
               })
               .classed("selected",false);
+
+            Graph.nodes.forEach(function(d){
+              d.selected = names.indexOf(d[options.nodeName]) != -1;
+            });
           }
         }else{
-          trSelected = d3.selectAll("div.tables > div.links table tr.selected");
           if(!trSelected.empty()){
             trSelected
               .each(function(){
-                for(var i=1; i<=2; i++){
-                  index = d3.select(this).select("td:nth-child("+i+")").text();
-                  if(names.indexOf(index)==-1)
-                    names.push(index);
-                }
+                var source = d3.select(this).select("td:nth-child(1)").text(),
+                    target = d3.select(this).select("td:nth-child(2)").text();
+                names.push(source+"_"+target);
               })
               .classed("selected",false);
+
+            Graph.links.forEach(function(d){
+              delete d.selected;
+              if(names.indexOf(d.Source+"_"+d.Target)!=-1){
+                d.selected = true;
+              }
+            });
           }
         }
-        if(!trSelected.empty()){
-          Graph.nodes.forEach(function(d){
-            d.selected = names.indexOf(d[options.nodeName]) != -1;
-          });
-          showTables();
-        }
+        showTables();
+      }
 }
 
 function getLayoutRange(){

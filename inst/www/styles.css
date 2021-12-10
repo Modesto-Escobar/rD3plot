@@ -917,11 +917,6 @@ div.loading > p {
   margin: 20px;
 }
 
-.flipH {
-  display: inline-block;
-  transform: scale(-1,1);
-}
-
 div.infopanel {
   margin: 0;
   padding: 0;
@@ -1438,7 +1433,7 @@ div.gallery-note {
 }
 div.footer {
   background-color: #c6c6c6;
-  color: #ffffff;
+  color: #000000;
   text-align: center;
   font-weight: 700;
   font-size: 1.4em;
@@ -1492,6 +1487,8 @@ div.grid-gallery > .gallery-items > .item.selected > .img-wrapper {
 div.grid-gallery > .gallery-items > .item > .img-wrapper > img {
   display: block;
   height: 100%;
+  width: 100%;
+  object-fit: cover;
 }
 div.grid-gallery > .gallery-items > .item > span {
   display: block;

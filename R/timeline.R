@@ -8,7 +8,7 @@ timelineJSON <- function(time){
 
 timeCreate <- function(time, dir){
   language <- getLanguageScript(time)
-  createHTML(dir, c("reset.css","styles.css"), c("d3.min.js","jspdf.min.js","functions.js",language,"colorScales.js","timeline.js"), timelineJSON(time))
+  createHTML(dir, c("reset.css","styles.css"), c("d3.min.js","jspdf.min.js","images.js","functions.js",language,"colorScales.js","timeline.js"), timelineJSON(time))
 }
 
 timeline_rd3 <- function(periods, name = "name", start = "start", end = "end", group = NULL,

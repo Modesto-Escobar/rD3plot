@@ -835,7 +835,7 @@ function timeline(json){
           rectsUpdate.attr("transform",function(d){
             var BBox = this.getBBox(),
                 i = 0,
-                nlines = Math.ceil(BBox.height/lineheight)+(d['_events_']?1:0);
+                nlines = Math.ceil(BBox.height/lineheight);
                 j = 0,
                 collision = true;
             while(collision){

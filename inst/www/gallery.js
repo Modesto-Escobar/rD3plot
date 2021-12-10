@@ -345,9 +345,14 @@ function gallery(Graph){
       .attr("class","gallery-note")
       .html(options.note)
   }else{
-    galleryBox.append("div")
+    var footer = galleryBox.append("div")
       .attr("class","footer")
-      .html("<span class=\"flipH\">&copy;</span> "+new Date().getFullYear()+" NETCOIN PROJECT")
+    footer.append("img")
+      .attr("height",20)
+      .style("vertical-align","middle")
+      .attr("src",b64Icons.netcoinblack)
+    footer.append("span")
+      .text("netCoin")
   }
 
   if(options.help && options.helpOn){
@@ -358,11 +363,7 @@ function gallery(Graph){
     options.zoom = 1;
 
     var currentItemsPerRow = options.itemsPerRow,
-        prevk = options.zoom,
-        sizeByItemsPerRow = function(itemsPerRow){
-          var w = Math.floor((gallery.node().offsetWidth-24) / itemsPerRow)-18;
-          return w/options.aspectRatio;
-        }
+        prevk = options.zoom;
     
     getCurrentHeight = function(k){
           if(k == 1){
@@ -375,18 +376,12 @@ function gallery(Graph){
             }
           }
           prevk = k;
-          return sizeByItemsPerRow(currentItemsPerRow);
+          return Math.floor((gallery.node().offsetWidth-24) / currentItemsPerRow)-18;
     }
 
-    // check aspect ratio
-    var img = new Image();
-    img.onload = function() {
-      options.aspectRatio = getImgRatio(this);
-      currentGridHeight = sizeByItemsPerRow(currentItemsPerRow);
-      gridHeight = currentGridHeight;
-      resetZoom();
-    }
-    img.src = nodes[0][options.imageItems];
+    currentGridHeight = getCurrentHeight(1);
+    gridHeight = currentGridHeight;
+    resetZoom();
   }else{
     resetZoom();
   }
@@ -421,11 +416,13 @@ function gallery(Graph){
           .attr("class","img-wrapper")
     if(options.imageItems){
       imgWrapper.append("img")
-          .on("load", options.aspectRatio ? function(){
-            imgMarginLeft(this,getImgRatio(this));
-          } : function(){
-            d3.select(this.parentNode.parentNode).style("width",(currentGridHeight*getImgRatio(this))+"px");
-          })
+          .on("load", !options.roundedItems && !options.itemsPerRow ? function(){
+            this.ratio = 1;
+            if(this.complete && this.naturalHeight!==0){
+              this.ratio = this.naturalWidth / this.naturalHeight;
+            }
+            d3.select(this.parentNode.parentNode).style("width",(currentGridHeight*this.ratio)+"px");
+          } : null)
           .attr("src",function(n){ return n[options.imageItems]; });
     }
 
@@ -469,19 +466,13 @@ function gallery(Graph){
     itemsUpdate
       .select(".img-wrapper")
         .style("height",currentGridHeight+"px")
-        .style("border-width", typeof options.nodeBorder == "number" ? options.nodeBorder+"px" : null)
+        .style("border-width", typeof options.nodeBorder == "number" ? options.nodeBorder+"px" : null);
 
-    itemsUpdate.each(function(){
-      var item = d3.select(this),
-          ratio = 1;
-      if(options.aspectRatio){
-        ratio = options.aspectRatio;
-      }else if(options.imageItems){
-        var img = item.select(".img-wrapper > img").node();
-        ratio = getImgRatio(img);
-      }
-      item.style("width",(currentGridHeight*ratio)+"px");
-    })
+    itemsUpdate.style("width",function(){
+      var img = this.querySelector("img"),
+          ratio = img && img.ratio ? img.ratio : 1;
+      return (currentGridHeight*ratio)+"px";
+    });
 
     itemsUpdate.selectAll(".item > span").style("font-size",(currentGridHeight/72)+"em")
 
@@ -612,23 +603,6 @@ function gallery(Graph){
       }
       return scale(value);
     }
-
-    function itemWidth(item,ratio){
-      item.style("width",(currentGridHeight*ratio)+"px");
-    }
-
-    function imgMarginLeft(img,ratio){
-        var ml = (100 - (100/options.aspectRatio*ratio)) / 2;
-        d3.select(img).style("margin-left",ml+"%");
-    }
-  }
-
-  function getImgRatio(img){
-      var ratio = 1;
-      if(img.complete && img.naturalHeight!==0){
-        ratio = img.naturalWidth / img.naturalHeight;
-      }
-      return ratio;
   }
 
   function deselectAllItems(){
