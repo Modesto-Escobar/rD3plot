@@ -51,7 +51,7 @@ polyGraph <- function(multi,dir){
   multiGraph(multi,paste0(dir,"/multiGraph"))
 }
 
-evolvingWrapper <- function(multi,frame,speed,lineplots){
+evolvingWrapper <- function(multi,frame,speed,lineplots=NULL){
   if(length(multi)<2){
     stop("Cannot make an evolving network with only one graph")
   }
@@ -130,7 +130,7 @@ evolvingWrapper <- function(multi,frame,speed,lineplots){
   options$frames <- frames
   options$frame <- frame
   options$speed <- speed
-  lineplots <- intersect(as.character(lineplots),names(nodes))
+  lineplots <- intersect(as.character(lineplots),union(names(nodes),names(links)))
   if(length(lineplots)){
     options$lineplotsKeys <- lineplots
   }

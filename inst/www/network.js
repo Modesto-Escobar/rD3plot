@@ -74,7 +74,7 @@ function network(Graph){
   body.call(infoPanel);
   infoPanel.selection()
     .style("position","absolute")
-    .style("height", (computeHeight() - 20) + "px")
+    .style("height", (computeHeight() - 10) + "px")
 
   // main bar
   var main = body.append("div")
@@ -751,10 +751,10 @@ function displayMain(){
   }
   if(frameControls && options.lineplotsKeys){
       options.lineplots = false;
-      linePlots = displayNodeLinePlots()
+      options.lineplotsItems = "nodes";
+      linePlots = displayLinePlots()
         .frames(frameControls.frames)
         .variables(options.lineplotsKeys)
-        .nodeName(options.nodeName)
       infoPanel.selection().select(".infopanel > .close-button").on("click.hidelineplots",function(){
         options.lineplots = false;
       });
@@ -4501,7 +4501,7 @@ function showTables() {
     if(dat.length==0){
       table.style("cursor",null);
       table.on('mousedown.drag', null);
-      table.text(texts.noitemsselected);
+      table.text(texts["no"+name+"selected"]);
     }else{
       table = table.append("table");
       table.on("mousedown", function(){ d3.event.stopPropagation(); })
@@ -4586,37 +4586,129 @@ function showTables() {
   // update line plots
   if(options.lineplots && backupNodes){
     infoPanel.open(function(div){
-      div.selectAll("*").remove();
-      var container = div.append("div").attr("class","lineplots-container");
-      if(nodesData.length){
-        var colors = nodesData.map(function(node){ return VisualHandlers.nodeColor(node); }),
-            nodes = nodesData.map(function(node){
-              var name = node[options.nodeName];
-              return backupNodes.filter(function(n){
-                return n[options.nodeName]==name;
-              })[0];
-            });
-        linePlots.nodes(nodes)
-          .colors(colors);
-        linePlots(container);
-      }else{
-        var select = div.insert("div",":first-child")
-          .attr("class","select-wrapper")
-          .append("select");
-        backupNodes.forEach(function(node,i){
-          var option = select.append("option");
-          option.text(node[options.nodeName]);
-          option.property("value",i);
-        });
-        select.on("change",function(){
-          selectChange(this.value);
-        });
-        selectChange(0);
-        function selectChange(value){
-          linePlots.nodes(backupNodes[value])
-            .colors(false);
-          linePlots(container);
+
+      changeItems();
+
+      function changeItems(){
+        div.selectAll("*").remove();
+        var header = div.append("div")
+          .attr("class","lineplots-header");
+        ["nodes","links"].forEach(function(items){
+          header.append("span")
+          .classed("active",options.lineplotsItems==items)
+          .text(texts[items])
+          .on("click",function(){
+            options.lineplotsItems = items;
+            changeItems();
+          })
+        })
+
+        if(options.lineplotsItems=="nodes" && !nodesData.length){
+          var selectItem = function(value){
+            linePlots.items(backupNodes[value])
+              .colors(options.nodeColor ? VisualHandlers.nodeColor(Graph.nodes[value]) : false);
+            linePlots(container);
+          }
+          var select2 = header.append("div")
+            .style("float","right")
+            .attr("class","select-wrapper")
+            .append("select");
+          backupNodes.forEach(function(node,i){
+            var option = select2.append("option");
+            option.text(node[options.nodeName]);
+            option.property("value",i);
+          });
+          select2.on("change",function(){
+            selectItem(this.value);
+          });
         }
+
+        if(options.lineplotsItems=="links" && !linksData.length){
+          var selectItem = function(value){
+            var nodenames = value.split(" -> "),
+                source = nodenames[0],
+                target = nodenames[1],
+                currentlink = Graph.links.filter(function(l){
+                  return l[options.linkSource]==source && l[options.linkTarget]==target && l["_frame_"]==frameControls.frame;
+                })[0];
+            linePlots.items(getLinkData(source,target))
+              .colors(options.linkColor ? VisualHandlers.linkColor(currentlink) : false);
+            linePlots(container);
+          }
+          var select2 = header.append("div")
+            .style("float","right")
+            .attr("class","select-wrapper")
+            .append("select");
+          var linkslist = [];
+          Graph.links.forEach(function(link,i){
+            var text = link[options.linkSource] + " -> " + link[options.linkTarget];
+            if(linkslist.indexOf(text)==-1){
+              linkslist.push(text);
+              var option = select2.append("option");
+              option.text(text);
+              option.property("value",text);
+            }
+          });
+          select2.on("change",function(){
+            selectItem(this.value);
+          });
+        }
+
+        var container = div.append("div").attr("class","lineplots-container");
+
+        if(options.lineplotsItems=="nodes"){
+          linePlots
+            .getName(function(item){ return item[options.nodeName]; })
+            .bipolar(options.nodeBipolar);
+          if(nodesData.length){
+            var colors = options.nodeColor ? nodesData.map(function(node){ return VisualHandlers.nodeColor(node); }) : false,
+                nodes = nodesData.map(function(node){
+                  var name = node[options.nodeName];
+                  return backupNodes.filter(function(n){
+                    return n[options.nodeName]==name;
+                  })[0];
+                });
+            linePlots.items(nodes)
+              .colors(colors);
+            linePlots(container);
+          }else{
+            selectItem(select2.property("value"));
+          }
+        }else if(options.lineplotsItems=="links"){
+          linePlots
+            .getName(function(item){ return item[options.linkSource] + " -> " + item[options.linkTarget]; })
+            .bipolar(options.linkBipolar);
+          if(linksData.length){
+            var links = linksData.map(function(link){
+                  return getLinkData(link[options.linkSource],link[options.linkTarget]);
+                });
+            linePlots.items(links)
+              .colors(options.linkColor ? linksData.map(function(link){ return VisualHandlers.linkColor(link); }) : false);
+            linePlots(container);
+          }else{
+            selectItem(select2.property("value"));
+          }
+        }
+      }
+
+      function getLinkData(source,target){
+                  var dd = Graph.links.filter(function(l){
+                        return l[options.linkSource]==source && l[options.linkTarget]==target;
+                      }),
+                      newlink = {};
+                  newlink[options.linkSource] = source;
+                  newlink[options.linkTarget] = target;
+                  linePlots.variables().forEach(function(v){
+                    if(Graph.linknames.indexOf(v)!=-1){
+                      newlink[v] = [];
+                      frameControls.frames.forEach(function(f,i){
+                        var val = dd.filter(function(l){ return l["_frame_"]==i; });
+                        val = val.length ? val[0][v] : null;
+                        newlink[v].push(val);
+                      });
+                    }
+                  })
+                  return newlink;
       }
     });
   }else if(nodesData.length==0){

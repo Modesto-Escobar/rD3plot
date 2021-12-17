@@ -2238,45 +2238,40 @@ function getColumnValues(data,col){
   return d3.set(itemsData).values().sort(sortAsc);
 }
 
-function displayNodeLinePlots(){
-  var nodes = [],
+function displayLinePlots(){
+  var items = [],
       frames = [],
       colors = [],
-      variables = false,
-      nodeName = "name";
+      variables = [],
+      getName = function(item){ return ""; },
+      bipolar = false;
 
   function exports(sel){
     sel.selectAll("*").remove();
 
-    var keys = [];
-    if(variables){
-      keys = variables;
-    }else{
-      keys = d3.keys(nodes[0]);
-    }
+    // set the dimensions and margins of the graphs
+    var margin = {top: 10, right: 10, bottom: 40, left: 70},
+        w = sel.node().offsetWidth - 10 - margin.left - margin.right,
+        h = 200 - margin.top - margin.bottom;
 
-  // set the dimensions and margins of the graphs
-  var margin = {top: 10, right: 10, bottom: 40, left: 40},
-      w = (sel.node().offsetWidth - 72) - margin.left - margin.right,
-      h = 200 - margin.top - margin.bottom;
-
-  // X axis: scale
-  var x = d3.scaleLinear()
+    // X axis: scale
+    var x = d3.scaleLinear()
           .domain([0,frames.length-1])
           .range([0, w]);
 
-  keys.forEach(function(key){
-    var type = dataType(nodes,key,true);
-    var data = nodes.map(function(d){
-      var dkey = d[key];
-      if(!(Array.isArray(dkey) && dkey.length==frames.length)){
-        return frames.map(function(){ return dkey; });
+    variables.forEach(function(key){
+      var type = dataType(items,key,true);
+      if(type=="undefined"){
+        return;
       }
-      return dkey;
-    });
-    var mergedData = d3.merge(data),
-        dataExtent = d3.extent(mergedData,function(d) { return d; });
-    if(variables || dataExtent[0]!=dataExtent[1]){
+      var data = items.map(function(d){
+        var dkey = d[key];
+        if(!(Array.isArray(dkey) && dkey.length==frames.length)){
+          return frames.map(function(){ return dkey; });
+        }
+        return dkey;
+      });
+      var mergedData = d3.merge(data);
       sel.append("h2").text(key);
       if(type=="number"){
         // append the svg object
@@ -2312,6 +2307,15 @@ function displayNodeLinePlots(){
               });
 
         // Y axis: scale and axis container
+        var dataExtent = d3.extent(mergedData,function(d) { return d; });
+        if(bipolar){
+          if(dataExtent[0]>0){
+            dataExtent[0] = 0;
+          }
+          if(dataExtent[1]<0){
+            dataExtent[1] = 0;
+          }
+        }
         var y = d3.scaleLinear()
             .range([h, 0])
             .domain(dataExtent);
@@ -2376,7 +2380,7 @@ function displayNodeLinePlots(){
                 .style("stroke",colors.length ? colors[i] : "#000000")
                 .style("stroke-width","2px")
                 .style("fill","none")
-              line.append("title").text(nodes[i][nodeName]);
+              line.append("title").text(getName(items[i]));
             }
           });
 
@@ -2409,7 +2413,11 @@ function displayNodeLinePlots(){
 
           div.append("div")
             .attr("class","line-bar-text")
-            .text(nodes[i][nodeName])
+            .text(getName(items[i]))
+
+          div.append("div")
+            .attr("class","line-bar-bullet")
+            .style("background-color",colors.length ? colors[i] : "#ffffff")
         });
 
         var axis = sel.append("div")
@@ -2422,8 +2430,7 @@ function displayNodeLinePlots(){
             .text(frames[i]);
         })
       }
-    }
-  });
+    });
   }
 
   exports.frames = function(x){
@@ -2444,24 +2451,33 @@ function displayNodeLinePlots(){
     return exports;
   }
 
-  exports.nodes = function(x){
-    if (!arguments.length) return nodes;
-    nodes = x;
-    if(!Array.isArray(nodes)){
-      nodes = [nodes];
+  exports.items = function(x){
+    if (!arguments.length) return items;
+    items = x;
+    if(!Array.isArray(items)){
+      items = [items];
     }
     return exports;
   }
 
-  exports.nodeName = function(x){
-    if (!arguments.length) return nodeName;
-    nodeName = x;
+  exports.getName = function(x){
+    if (!arguments.length) return getName;
+    getName = x;
+    return exports;
+  }
+
+  exports.bipolar = function(x){
+    if (!arguments.length) return bipolar;
+    bipolar = x;
     return exports;
   }
 
   exports.colors = function(x){
     if (!arguments.length) return colors;
     colors = x ? x : [];
+    if(!Array.isArray(colors)){
+      colors = [colors];
+    }
     return exports;
   }
 
