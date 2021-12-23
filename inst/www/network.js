@@ -74,7 +74,7 @@ function network(Graph){
   body.call(infoPanel);
   infoPanel.selection()
     .style("position","absolute")
-    .style("height", (computeHeight() - 10) + "px")
+    .style("height", (computeHeight() - 45) + "px")
 
   // main bar
   var main = body.append("div")
@@ -735,9 +735,7 @@ function displayMain(){
         .updateSelection(showTables)
         .applyColor(function(name){ applyAuto("nodeColor",name); })
         .applyShape(function(name){ applyAuto("nodeShape",name); })
-      infoPanel.selection().select(".infopanel > .close-button").on("click.hidefreq",function(){
-        options.frequencies = false;
-      });
+      infoPanel.closeAction(function(){ options.frequencies = false; });
       main.call(iconButton()
         .alt("freq")
         .width(24)
@@ -755,9 +753,7 @@ function displayMain(){
       linePlots = displayLinePlots()
         .frames(frameControls.frames)
         .variables(options.lineplotsKeys)
-      infoPanel.selection().select(".infopanel > .close-button").on("click.hidelineplots",function(){
-        options.lineplots = false;
-      });
+      infoPanel.closeAction(function(){ options.lineplots = false; });
       main.call(iconButton()
         .alt("lineplots")
         .width(24)
@@ -2416,7 +2412,7 @@ function drawNet(){
   // compute colors
   if(!VisualHandlers.hasOwnProperty("nodeColor")){
     VisualHandlers.nodeColor = setColorScale()
-        .data(GraphLinksLength && options.nodeColor=="degree" ? nodes : Graph.nodes)
+        .data(GraphLinksLength && options.nodeColor=="degree" ? nodes : (backupNodes ? backupNodes : Graph.nodes))
         .item('node')
         .itemAttr("nodeColor")
         .computeScale()
@@ -3870,7 +3866,16 @@ function setColorScale(){
           .range(range)
           .domain(domain);
         }else{
-          domain = d3.map(config.data.filter(function(d){ return d[options[config.itemAttr]] !== null; }), function(d){ return d[options[config.itemAttr]]; }).keys();
+          var data = config.data.map(function(d){ return d[options[config.itemAttr]]; });
+          if(config.datatype == "object" && frameControls && config.item=="node"){
+            data = d3.merge(data.map(function(d){
+              if(typeof d != "object"){
+                return [d];
+              }
+              return d;
+            }));
+          }
+          domain = d3.set(data.filter(function(d){ return d !== null; })).values();
           range = [];
           domain.forEach(function(d,i){
             range[i] = categoryColors[i%categoryColors.length];
@@ -4584,7 +4589,7 @@ function showTables() {
   }
 
   // update line plots
-  if(options.lineplots && backupNodes){
+  if(options.lineplots){
     infoPanel.open(function(div){
 
       changeItems();
@@ -4605,7 +4610,9 @@ function showTables() {
 
         if(options.lineplotsItems=="nodes" && !nodesData.length){
           var selectItem = function(value){
-            linePlots.items(backupNodes[value])
+            var nodes = [backupNodes[value]];
+            computeDegrees(nodes);
+            linePlots.items(nodes)
               .colors(options.nodeColor ? VisualHandlers.nodeColor(Graph.nodes[value]) : false);
             linePlots(container);
           }
@@ -4663,11 +4670,13 @@ function showTables() {
           if(nodesData.length){
             var colors = options.nodeColor ? nodesData.map(function(node){ return VisualHandlers.nodeColor(node); }) : false,
                 nodes = nodesData.map(function(node){
-                  var name = node[options.nodeName];
-                  return backupNodes.filter(function(n){
-                    return n[options.nodeName]==name;
-                  })[0];
+                  var name = node[options.nodeName],
+                      newnode = backupNodes.filter(function(n){
+                        return n[options.nodeName]==name;
+                      })[0];
+                  return newnode;
                 });
+            computeDegrees(nodes);
             linePlots.items(nodes)
               .colors(colors);
             linePlots(container);
@@ -4709,6 +4718,28 @@ function showTables() {
                     }
                   })
                   return newlink;
+      }
+
+      function computeDegrees(nodes){
+            if(linePlots.variables().indexOf("degree")!=-1){
+              var degrees = {};
+              nodes.forEach(function(node){
+                degrees[node[options.nodeName]] = frameControls.frames.map(function(){ return 0; });
+              });
+              Graph.links.forEach(function(link){
+                if(!link._hidden && !link.target._hidden && !link.source._hidden && (!egoNet || ((link.source.selected || link.source._neighbor) && (link.target.selected || link.target._neighbor)))){
+                  ["Source","Target"].forEach(function(d){
+                    if(degrees.hasOwnProperty(link[d])){
+                      degrees[link[d]][link["_frame_"]]++;
+                    }
+                  })
+                }
+              });
+              nodes.forEach(function(node){
+                var name = node[options.nodeName];
+                node.degree = degrees.hasOwnProperty(name) ? degrees[name] : 0;
+              });
+            }
       }
     });
   }else if(nodesData.length==0){

@@ -1391,7 +1391,8 @@ function displayInfoPanel(){
       infopanel,
       contentDiv,
       paddingOffset = 0,
-      transitionDuration = 500;
+      transitionDuration = 500,
+      closeAction = false;
 
   function exports(sel){
     infopanel = sel.append("div")
@@ -1452,6 +1453,9 @@ function displayInfoPanel(){
         .style("left",viewport().width+"px")
         .on("end",function(){
           infopanel.style("display","none");
+          if(closeAction){
+            closeAction();
+          }
         })
     }
   }
@@ -1482,6 +1486,12 @@ function displayInfoPanel(){
   exports.close = function(){
     closePanel();
   }
+
+  exports.closeAction = function(x) {
+    if (!arguments.length) closeAction ? closeAction() : false;
+    closeAction = typeof x == "function" ? x : false;
+    return exports;
+  };
 
   exports.getWidth = function() {
     return infoWidth;
@@ -2380,6 +2390,7 @@ function displayLinePlots(){
                 .style("stroke",colors.length ? colors[i] : "#000000")
                 .style("stroke-width","2px")
                 .style("fill","none")
+                .style("cursor","pointer")
               line.append("title").text(getName(items[i]));
             }
           });
@@ -2408,11 +2419,13 @@ function displayLinePlots(){
               .attr("class","line-bar")
               .style("width",(100/frames.length)+"%")
               .style("background-color",d ? color(String(d)) : "#ffffff")
+              .style("cursor","pointer")
               .attr("title",d ? String(d) : null)
           });
 
           div.append("div")
             .attr("class","line-bar-text")
+            .style("color",dd[0] && d3.hsl(color(String(dd[0]))).l<0.5? "#ffffff" : "#000000")
             .text(getName(items[i]))
 
           div.append("div")

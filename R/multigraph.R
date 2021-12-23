@@ -130,7 +130,7 @@ evolvingWrapper <- function(multi,frame,speed,lineplots=NULL){
   options$frames <- frames
   options$frame <- frame
   options$speed <- speed
-  lineplots <- intersect(as.character(lineplots),union(names(nodes),names(links)))
+  lineplots <- intersect(as.character(lineplots),union(union(names(nodes),names(links)),"degree"))
   if(length(lineplots)){
     options$lineplotsKeys <- lineplots
   }
