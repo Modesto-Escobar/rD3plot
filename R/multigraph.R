@@ -101,7 +101,7 @@ evolvingWrapper <- function(multi,frame,speed,lineplots=NULL){
         values <- sapply(frames,function(f){
           return(multi[[f]]$nodes[x,n])
         })
-        aux <- unique(values[!is.na(values)])
+        aux <- unique(values)
         if(length(aux)==1)
           return(aux)
         if(length(aux)<1)

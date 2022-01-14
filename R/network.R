@@ -109,18 +109,24 @@ imgWrapper <- function(net,callback,dir){
       net$options[["imageItems"]] <- paste0(net$options[["imageItems"]],"_url")
       for(i in seq_along(net$options[["imageItems"]])){
         net$nodes[[net$options[["imageItems"]][i]]] <- net$nodes[[net$options[["imageNames"]][i]]]
-        net$nodes[[net$options[["imageNames"]][i]]] <- sub("\\.[a-zA-Z0-9]+$","",basename(as.character(net$nodes[[net$options[["imageNames"]][i]]])))
+        net$nodes[[net$options[["imageNames"]][i]]] <- vapply(strsplit(as.character(net$nodes[[net$options[["imageNames"]][i]]]),"|",TRUE), function(x){
+          paste0(sapply(x, function(y){
+            sub("\\.[a-zA-Z0-9]+$","",basename(y))
+          }),collapse="|")
+        },character(1))
       }
     }
     for(img in net$options[["imageItems"]]){
-      net$nodes[[img]] <- vapply(as.character(net$nodes[[img]]),function(filepath){
-        rawname <- getRawName(filepath)
-        if(file.exists(filepath)){
-          file.copy(filepath, paste(imgDir,rawname,sep="/"), overwrite = FALSE)
-        }else{
-          warning("missing image file (",filepath,")")
-        }
-        paste("images",rawname,sep="/")
+      net$nodes[[img]] <- vapply(strsplit(as.character(net$nodes[[img]]),"|",TRUE),function(x){
+        paste0(sapply(x, function(filepath){
+          rawname <- getRawName(filepath)
+          if(file.exists(filepath)){
+            file.copy(filepath, paste(imgDir,rawname,sep="/"), overwrite = FALSE)
+          }else{
+            warning("missing image file (",filepath,")")
+          }
+          paste("images",rawname,sep="/")
+        }),collapse="|")
       },character(1))
     }
   }

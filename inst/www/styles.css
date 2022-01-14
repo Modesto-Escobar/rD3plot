@@ -1564,6 +1564,9 @@ background-color: #2f7bee;
 color: #ffffff;
 pointer-events: none;
 }
+.lineplots-container {
+  position: relative;
+}
 .lineplots-container > .line-bars {
   margin: 1px 20px;
   position: relative;
@@ -1578,6 +1581,8 @@ pointer-events: none;
   left: 0;
   z-index: 1;
   margin: 2px;
+  font-size: 10px;
+  pointer-events: none;
 }
 .lineplots-container > .line-bars > .line-bar-bullet {
   position: absolute;
@@ -1615,6 +1620,7 @@ pointer-events: none;
   margin-left: -15px;
   margin-top: 15px;
   transform: rotate(45deg);
+  font-size: 10px;
 }
 .lineplots-container > .lineplot {
   position: relative;

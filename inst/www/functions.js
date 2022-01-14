@@ -2259,6 +2259,10 @@ function displayLinePlots(){
   function exports(sel){
     sel.selectAll("*").remove();
 
+    var tooltip = sel.append("div")
+      .attr("class","tooltip")
+      .style("display","none")
+
     // set the dimensions and margins of the graphs
     var margin = {top: 10, right: 10, bottom: 40, left: 70},
         w = sel.node().offsetWidth - 10 - margin.left - margin.right,
@@ -2391,7 +2395,15 @@ function displayLinePlots(){
                 .style("stroke-width","2px")
                 .style("fill","none")
                 .style("cursor","pointer")
-              line.append("title").text(getName(items[i]));
+              line.on("mouseenter",function(){
+                tooltip.style("display",null)
+                  .style("left",(d3.mouse(sel.node())[0]+10)+"px")
+                  .style("top",(d3.mouse(sel.node())[1]+10)+"px")
+                  .text(getName(items[i]))
+              })
+              line.on("mouseleave",function(){
+                tooltip.style("display","none")
+              })
             }
           });
 
@@ -2415,12 +2427,22 @@ function displayLinePlots(){
             .attr("class","line-bars");
 
           dd.forEach(function(d){
-            div.append("div")
+            var bar = div.append("div")
               .attr("class","line-bar")
               .style("width",(100/frames.length)+"%")
               .style("background-color",d ? color(String(d)) : "#ffffff")
               .style("cursor","pointer")
-              .attr("title",d ? String(d) : null)
+            if(d){
+              bar.on("mouseenter",function(){
+                tooltip.style("display",null)
+                  .style("left",(d3.mouse(sel.node())[0]+10)+"px")
+                  .style("top",(d3.mouse(sel.node())[1]+10)+"px")
+                  .text(String(d))
+              })
+              bar.on("mouseleave",function(){
+                tooltip.style("display","none")
+              })
+            }
           });
 
           div.append("div")
