@@ -426,7 +426,7 @@ function network(Graph){
           "frames": options.frames,
           "frameInterval": null,
           "time": speed,
-          "loop": false
+          "loop": options.loop ? true : false
         };
       }
       ["zoom","repulsion","distance"].forEach(function(d){
@@ -554,6 +554,10 @@ function network(Graph){
           colorScales['custom2'] = [basicColors.white,defaultColor];
           options.colorScalenodeColor = "custom2";
       }
+    }
+
+    if(!options.linkBipolar){
+      options.colorScalelinkColor = "WhGn";
     }
 
     if(options.cex){
@@ -1335,13 +1339,17 @@ function displaySidebar(){
         handleFrames(val);
         clickFrameCtrlBtn();
       })
-      frameButons.append("button") // loop
+      var loopButton = frameButons.append("button") // loop
       .call(getSVG().d(d4paths.loop))
       .on("click",function(){
         frameControls.loop = !frameControls.loop;
-        d3.select(this).style("background-color",frameControls.loop?basicColors.darkGrey:null)
-          .selectAll("path").style("fill",frameControls.loop?basicColors.lightGrey:null);
+        loopButtonStyle(loopButton);
       })
+      var loopButtonStyle = function(button){
+        button.style("background-color",frameControls.loop?basicColors.darkGrey:null)
+          .selectAll("path").style("fill",frameControls.loop?basicColors.lightGrey:null);
+      }
+      loopButtonStyle(loopButton);
       var stopRecord = function(){
           frameControls.recorder.stop();
           frameControls.recorder.save(Math.round((new Date()).getTime() / 1000)+'record.webm');
@@ -1986,8 +1994,13 @@ function drawSVG(){
       .prop('time')
       .callback(function(value){
         frameControls.time = value;
-        if(frameControls.play)
+        frameControls.play = value!=timeRange[0] ? true : false;
+        if(frameControls.play){
           handleFrames(frameControls.frame);
+          clickFrameCtrlBtn();
+        }else{
+          pauseFrames();
+        }
       });
   }
 
@@ -2073,6 +2086,7 @@ function drawSVG(){
         domain2 = false,
         scale2 = false,
         text = "",
+        header,
         prop = "",
         callback = null,
         rounded = false,
@@ -2101,7 +2115,7 @@ function drawSVG(){
 
       var x = 5, y = 10 + 10*options.cex;
 
-      sliders.append("text")
+      header = sliders.append("text")
         .attr("x", x)
         .attr("y", y - 10)
         .text(text);
@@ -2164,6 +2178,9 @@ function drawSVG(){
       var renderedValue = scale2.invert(brValue);
       renderedValue = rounded ? Math.round(renderedValue) : formatter(renderedValue);
       bubble.select("text").text(renderedValue);
+      if(header){
+        header.text(text+": "+renderedValue);
+      }
       var bubbleWidth = bubble.select("text").node().getBoundingClientRect().width+6;
       bubble.select("rect").attr("width",bubbleWidth);
       var tomove = brValue;
@@ -2304,6 +2321,10 @@ function pauseFrames(){
 function frameStep(value){
         frameControls.frame = value;
 
+        var sliderFramesText = d3.select(".slider.frames > g > text");
+        if(!sliderFramesText.empty()){
+          sliderFramesText.text("Frame: "+(frameControls.frame+1)+"/"+frameControls.frames.length)
+        }
         var selectFrame = d3.select(".divFrameCtrl .selectFrame");
         if(!selectFrame.empty())
           selectFrame.node().selectedIndex = frameControls.frame;
@@ -4604,8 +4625,6 @@ function showTables() {
     infoPanel.open(function(div){
       frequencyBars(div);
     });
-  }else if(nodesData.length==0){
-    infoPanel.close();
   }
 
   // update line plots
@@ -4762,7 +4781,9 @@ function showTables() {
             }
       }
     });
-  }else if(nodesData.length==0){
+  }
+
+  if(!options.frequencies && !options.lineplots && nodesData.length==0){
     infoPanel.close();
   }
 

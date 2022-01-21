@@ -1567,15 +1567,19 @@ pointer-events: none;
 .lineplots-container {
   position: relative;
 }
-.lineplots-container > .line-bars {
+.lineplots-container > h2 > img {
+  cursor: pointer;
+  float: right;
+}
+.lineplots-container > .line-bars-container > .line-bars {
   margin: 1px 20px;
   position: relative;
 }
-.lineplots-container > .line-bars > .line-bar {
+.lineplots-container > .line-bars-container > .line-bars > .line-bar {
   display: inline-block;
   height: 16px;
 }
-.lineplots-container > .line-bars > .line-bar-text {
+.lineplots-container > .line-bars-container > .line-bars > .line-bar-text {
   position: absolute;
   top: 0;
   left: 0;
@@ -1584,7 +1588,7 @@ pointer-events: none;
   font-size: 10px;
   pointer-events: none;
 }
-.lineplots-container > .line-bars > .line-bar-bullet {
+.lineplots-container > .line-bars-container > .line-bars > .line-bar-bullet {
   position: absolute;
   top: 0;
   left: -16px;

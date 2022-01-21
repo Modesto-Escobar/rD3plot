@@ -170,6 +170,14 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
         background = NULL, defaultColor = "#1f77b4",
         language = c("en","es","ca"), dir = NULL)
 {
+  if(length(nodes) && !nrow(nodes)){
+    nodes <- NULL
+    warning("The nodes data frame is empty")
+  }
+  if(length(links) && !nrow(links)){
+    links <- NULL
+    warning("The links data frame is empty")
+  }
   if(is.null(links) && is.null(nodes)){
     stop("You must explicit a nodes or links data frame.")
   }

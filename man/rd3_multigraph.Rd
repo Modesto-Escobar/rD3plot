@@ -10,7 +10,7 @@ The function creates a folder in your computer with an HTML document named index
 
 \usage{
 rd3_multigraph(..., mode = c("default","parallel","frame"),
-  frame = 0, speed = 50, lineplots = NULL,
+  frame = 0, speed = 50, loop = FALSE, lineplots = NULL,
   dir = "MultiGraph", show = TRUE)
 }
 \arguments{
@@ -31,6 +31,7 @@ rd3_multigraph(..., mode = c("default","parallel","frame"),
 }
 \item{frame}{number of frame to start a dynamic network.}
 \item{speed}{a percentage for frame speed in dynamic networks.}
+\item{loop}{allowing continuous repetition.}
 \item{lineplots}{a character vector giving the node attributes to show as lineplots.}
 \item{dir}{a "character" string representing the directory where the graph will be saved.}
 \item{show}{a logical value true if the graph is to be shown. Default = TRUE.}

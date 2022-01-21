@@ -2286,7 +2286,7 @@ function displayLinePlots(){
         return dkey;
       });
       var mergedData = d3.merge(data);
-      sel.append("h2").text(key);
+      var h2 = sel.append("h2").text(key);
       if(type=="number"){
         // append the svg object
         var svg = sel.append("div")
@@ -2419,41 +2419,42 @@ function displayLinePlots(){
           }
         }
       }else{
-        var color = d3.scaleOrdinal()
-            .domain(d3.set(mergedData.filter(function(d){ return d; }).map(String)).values())
+
+        var order = false;
+
+        h2.append("img")
+          .attr("title",texts.Order)
+          .attr("src",b64Icons.sort)
+          .on("click",function(){
+            order = !order;
+            drawBars();
+          })
+
+        var uniqueData = d3.set(mergedData.filter(function(d){ return d; }).map(String)).values(),
+            color = d3.scaleOrdinal()
+            .domain(uniqueData)
             .range(categoryColors)
-        data.forEach(function(dd,i){
-          var div = sel.append("div")
-            .attr("class","line-bars");
-
-          dd.forEach(function(d){
-            var bar = div.append("div")
-              .attr("class","line-bar")
-              .style("width",(100/frames.length)+"%")
-              .style("background-color",d ? color(String(d)) : "#ffffff")
-              .style("cursor","pointer")
-            if(d){
-              bar.on("mouseenter",function(){
-                tooltip.style("display",null)
-                  .style("left",(d3.mouse(sel.node())[0]+10)+"px")
-                  .style("top",(d3.mouse(sel.node())[1]+10)+"px")
-                  .text(String(d))
-              })
-              bar.on("mouseleave",function(){
-                tooltip.style("display","none")
-              })
-            }
-          });
-
-          div.append("div")
-            .attr("class","line-bar-text")
-            .style("color",dd[0] && d3.hsl(color(String(dd[0]))).l<0.5? "#ffffff" : "#000000")
-            .text(getName(items[i]))
-
-          div.append("div")
-            .attr("class","line-bar-bullet")
-            .style("background-color",colors.length ? colors[i] : "#ffffff")
+        var frequencies = {};
+        mergedData.forEach(function(d){
+          if(frequencies.hasOwnProperty(d)){
+            frequencies[d]++;
+          }else{
+            frequencies[d] = 1;
+          }
         });
+        uniqueData.sort(function(a,b){
+          a = frequencies[a];
+          b = frequencies[b]
+          return a > b ? -1 : a < b ? 1 : a <= b ? 0 : NaN;
+        });
+
+        data = data.map(function(d,i){
+          return { name: getName(items[i]), data: d };
+        });
+
+        var lineBars = sel.append("div")
+          .attr("class", "line-bars-container")
+        drawBars();
 
         var axis = sel.append("div")
             .attr("class","axis-ordinal")
@@ -2464,6 +2465,62 @@ function displayLinePlots(){
             .attr("title",frames[i])
             .text(frames[i]);
         })
+
+        function drawBars(){
+          if(order){
+            data.sort(function(a,b){
+              var aa, bb;
+              for(var i=0; i<uniqueData.length; i++){
+                aa = a.data.filter(function(d){ return d==uniqueData[i]; }).length;
+                bb = b.data.filter(function(d){ return d==uniqueData[i]; }).length;
+                if(aa < bb){
+                  return 1;
+                }
+                if(aa > bb){
+                  return -1;
+                }
+              }
+              return 0;
+            })
+          }else{
+            data.sort(function(a,b){
+              return compareFunction(a.name,b.name);
+            })
+          }
+          lineBars.selectAll(".line-bars").remove()
+          data.forEach(function(dd,i){
+            var div = lineBars.append("div")
+              .attr("class","line-bars");
+
+            dd.data.forEach(function(d){
+              var bar = div.append("div")
+                .attr("class","line-bar")
+                .style("width",(100/frames.length)+"%")
+                .style("background-color",d ? color(String(d)) : "#ffffff")
+                .style("cursor","pointer")
+              if(d){
+                bar.on("mouseenter",function(){
+                  tooltip.style("display",null)
+                    .style("left",(d3.mouse(sel.node())[0]+10)+"px")
+                    .style("top",(d3.mouse(sel.node())[1]+10)+"px")
+                    .text(String(d))
+                })
+                bar.on("mouseleave",function(){
+                  tooltip.style("display","none")
+                })
+              }
+            });
+
+            div.append("div")
+              .attr("class","line-bar-text")
+              .style("color",dd.data[0] && d3.hsl(color(String(dd.data[0]))).l<0.5? "#ffffff" : "#000000")
+              .text(dd.name)
+
+            div.append("div")
+              .attr("class","line-bar-bullet")
+              .style("background-color",colors.length ? colors[i] : "#ffffff")
+          });
+        }
       }
     });
   }
