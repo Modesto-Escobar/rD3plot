@@ -4,7 +4,7 @@ barplotJSON <- function(bar){
 
 barCreate <- function(bar, dir){
   language <- getLanguageScript(bar)
-  createHTML(dir, c("reset.css","styles.css"), c("d3.min.js","jspdf.min.js","images.js","functions.js",language,"colorScales.js","barplot.js"), barplotJSON(bar))
+  createHTML(dir, c("reset.css","styles.css"), c("d3.min.js","jspdf.min.js","images.js","colorScales.js","functions.js",language,"barplot.js"), barplotJSON(bar))
 }
 
 barplot_rd3 <- function(events, links, name = NULL, select = NULL,

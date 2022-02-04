@@ -3,7 +3,10 @@ var basicColors = {
   "white": "#ffffff", // white
   "darkGrey": "#777777", // dark grey
   "mediumGrey": "#c6c6c6", // medium grey
-  "lightGrey": "#f5f5f5" // light grey
+  "lightGrey": "#f5f5f5", // light grey
+  "darkBlue": "#135dcd", // dark blue
+  "mediumBlue": "#2f7bee", // medium blue
+  "lightBlue": "#cbdefb" // light blue
 }
 
 var categoryColors = [

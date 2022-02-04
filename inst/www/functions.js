@@ -610,7 +610,7 @@ function displayPickerShape(value,active,options,callback){
       var ctx = canvas.getContext("2d");
 
       ctx.translate(r, r);
-      ctx.fillStyle = "#000000";
+      ctx.fillStyle = basicColors.black;
       ctx.beginPath();
       d3.symbol().type(d3["symbol"+d]).size(r*10).context(ctx)();
       ctx.closePath();
@@ -872,7 +872,15 @@ function compareFunction(a,b,rev){
   if(typeof a == "number" && typeof b == "number"){
     return a-b;
   }else{
-    return String(a).localeCompare(String(b));
+    var aa = a.substring(0,1)==".",
+        bb = b.substring(0,1)==".";
+    if(aa && !bb){
+      return 1;
+    }else if(bb && !aa){
+      return -1;
+    }else{
+      return String(a).localeCompare(String(b));
+    }
   }
 }
 
@@ -1271,7 +1279,7 @@ function makeZoomReset(svg,y){
   var zoomreset = makeZoomButton(svg,y,"zoomreset");
   zoomreset.append("path")
       .attr("transform","translate(7,6)")
-      .style("fill","#fff")
+      .style("fill",basicColors.white)
       .attr("d",d4paths.resetzoom)
   return zoomreset;
 }
@@ -1947,7 +1955,7 @@ function displayFreqBars(){
           .attr("height", function(d) { return h - y(d.y); })
           .style("fill", nodeColor==name && colorScale ? function(d){
             return colorScale((d.x0+d.x1)/2);
-          } : "#cbdefb")
+          } : basicColors.lightBlue)
 
       if(selectedValues.length){
         columns.append("rect")
@@ -2254,6 +2262,7 @@ function displayLinePlots(){
       colors = [],
       variables = [],
       getName = function(item){ return ""; },
+      colorHandler = false,
       bipolar = false;
 
   function exports(sel){
@@ -2272,6 +2281,10 @@ function displayLinePlots(){
     var x = d3.scaleLinear()
           .domain([0,frames.length-1])
           .range([0, w]);
+
+    if(colorHandler){
+      var oldKey = colorHandler.key();
+    }
 
     variables.forEach(function(key){
       var type = dataType(items,key,true);
@@ -2356,7 +2369,7 @@ function displayLinePlots(){
         .data([{type: "n"}, {type: "s"}])
       .enter().append("circle")
         .attr("class", "handle--custom")
-        .attr("fill", "#2f7bee")
+        .attr("fill", basicColors.mediumBlue)
         .attr("cursor", "ns-resize")
         .attr("r",5)
 
@@ -2391,7 +2404,7 @@ function displayLinePlots(){
             if(points){
               var line = polylines.append("polyline")
                 .attr("points",points.join(" "))
-                .style("stroke",colors.length ? colors[i] : "#000000")
+                .style("stroke",colors.length ? colors[i] : basicColors.black)
                 .style("stroke-width","2px")
                 .style("fill","none")
                 .style("cursor","pointer")
@@ -2420,13 +2433,18 @@ function displayLinePlots(){
         }
       }else{
 
-        var order = false;
+        var order = 0,
+            orders = ["alphabetic","numeric","end","start"];
 
         h2.append("img")
-          .attr("title",texts.Order)
           .attr("src",b64Icons.sort)
+          .attr("title",orders[order])
           .on("click",function(){
-            order = !order;
+            order++;
+            if(order>3){
+              order = 0;
+            }
+            d3.select(this).attr("title",orders[order])
             drawBars();
           })
 
@@ -2449,7 +2467,7 @@ function displayLinePlots(){
         });
 
         data = data.map(function(d,i){
-          return { name: getName(items[i]), data: d };
+          return { name: getName(items[i]), color: (colors.length ? colors[i] : basicColors.white), data: d };
         });
 
         var lineBars = sel.append("div")
@@ -2467,7 +2485,7 @@ function displayLinePlots(){
         })
 
         function drawBars(){
-          if(order){
+          if(order==1){
             data.sort(function(a,b){
               var aa, bb;
               for(var i=0; i<uniqueData.length; i++){
@@ -2482,21 +2500,79 @@ function displayLinePlots(){
               }
               return 0;
             })
+          }else if(order==2){
+            data.sort(function(a,b){
+              var aa, bb;
+              for(var i=a.data.length-1; i>=0; i--){
+                aa = uniqueData.indexOf(a.data[i]);
+                bb = uniqueData.indexOf(b.data[i]);
+                if(aa==-1){
+                  aa = Infinity;
+                }
+                if(bb==-1){
+                  bb = Infinity;
+                }
+                if(aa > bb){
+                  return 1;
+                }
+                if(aa < bb){
+                  return -1;
+                }
+              }
+              return 0;
+            })
+          }else if(order==3){
+            data.sort(function(a,b){
+              var aa, bb;
+              for(var i=0; i<a.data.length; i++){
+                aa = uniqueData.indexOf(a.data[i]);
+                bb = uniqueData.indexOf(b.data[i]);
+                if(aa==-1){
+                  aa = Infinity;
+                }
+                if(bb==-1){
+                  bb = Infinity;
+                }
+                if(aa > bb){
+                  return 1;
+                }
+                if(aa < bb){
+                  return -1;
+                }
+              }
+              return 0;
+            })
           }else{
             data.sort(function(a,b){
               return compareFunction(a.name,b.name);
             })
           }
-          lineBars.selectAll(".line-bars").remove()
+
+          if(colorHandler){
+            colorHandler.key(key)
+              .computeScale()
+          }
+
+          lineBars.selectAll(".line-bars").remove();
           data.forEach(function(dd,i){
             var div = lineBars.append("div")
               .attr("class","line-bars");
 
             dd.data.forEach(function(d){
+              var bcolor = basicColors.white;
+              if(d){
+                if(colorHandler){
+                  var obj = {};
+                  obj[key] = d;
+                  bcolor = colorHandler(obj);
+                }else{
+                  bcolor = color(d);
+                }
+              }
               var bar = div.append("div")
                 .attr("class","line-bar")
                 .style("width",(100/frames.length)+"%")
-                .style("background-color",d ? color(String(d)) : "#ffffff")
+                .style("background-color",bcolor)
                 .style("cursor","pointer")
               if(d){
                 bar.on("mouseenter",function(){
@@ -2513,16 +2589,20 @@ function displayLinePlots(){
 
             div.append("div")
               .attr("class","line-bar-text")
-              .style("color",dd.data[0] && d3.hsl(color(String(dd.data[0]))).l<0.5? "#ffffff" : "#000000")
+              .style("color",dd.data[0] && d3.hsl(div.select(".line-bar:first-child").style("background-color")).l<0.5? basicColors.white : basicColors.black)
               .text(dd.name)
 
             div.append("div")
               .attr("class","line-bar-bullet")
-              .style("background-color",colors.length ? colors[i] : "#ffffff")
+              .style("background-color",dd.color)
           });
         }
       }
     });
+    if(colorHandler){
+      colorHandler.key(oldKey)
+        .computeScale();
+    }
   }
 
   exports.frames = function(x){
@@ -2561,6 +2641,12 @@ function displayLinePlots(){
   exports.bipolar = function(x){
     if (!arguments.length) return bipolar;
     bipolar = x;
+    return exports;
+  }
+
+  exports.colorHandler = function(x){
+    if (!arguments.length) return colorHandler;
+    colorHandler = x;
     return exports;
   }
 

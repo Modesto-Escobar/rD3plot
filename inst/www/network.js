@@ -2437,7 +2437,8 @@ function drawNet(){
     VisualHandlers.nodeColor = setColorScale()
         .data(GraphLinksLength && options.nodeColor=="degree" ? nodes : (backupNodes ? backupNodes : Graph.nodes))
         .item('node')
-        .itemAttr("nodeColor")
+        .attr("Color")
+        .key(options.nodeColor)
         .computeScale()
   }
 
@@ -2446,7 +2447,8 @@ function drawNet(){
       VisualHandlers.linkIntensity = setColorScale()
         .data(Graph.links)
         .item('link')
-        .itemAttr("linkIntensity")
+        .attr("Intensity")
+        .key(options.linkIntensity)
         .computeScale()
     }
   }else{
@@ -2454,7 +2456,8 @@ function drawNet(){
       VisualHandlers.nodeGroup = setColorScale()
         .data(GraphLinksLength && options.nodeGroup=="degree" ? nodes : Graph.nodes)
         .item('node')
-        .itemAttr("nodeGroup")
+        .attr("Group")
+        .key(options.nodeGroup)
         .computeScale()
     }
 
@@ -2462,7 +2465,8 @@ function drawNet(){
       VisualHandlers.linkColor = setColorScale()
         .data(Graph.links)
         .item('link')
-        .itemAttr("linkColor")
+        .attr("Color")
+        .key(options.linkColor)
         .computeScale()
     }
   }
@@ -2489,7 +2493,8 @@ function drawNet(){
     VisualHandlers.nodeShape = setShapeScale()
         .data(Graph.nodes)
         .item('node')
-        .itemAttr("nodeShape")
+        .attr("Shape")
+        .key(options.nodeShape)
         .computeScale()
   }
 
@@ -2705,7 +2710,7 @@ function drawNet(){
         .style("font-size", x.bandwidth()*2/5 + "px")
         .on("mouseover", mouseover)
         .text(function(d){
-            if(!isNaN(+d.txt))
+            if(d.txt && !isNaN(+d.txt))
               return d.txt.toFixed(1);
             return d.txt;
         })
@@ -3784,12 +3789,13 @@ function updateAxes(){
       })
 }
 
-function setSomeSale(callback){
+function setSomeScale(callback){
   var config = {
     scale: false,
     data: [],
     item: "",
-    itemAttr: "",
+    attr: "",
+    key: null,
     exports: callback
   }
 
@@ -3809,9 +3815,15 @@ function setSomeSale(callback){
       return config.exports;
   };
 
-  config.exports.itemAttr = function(x) {
-      if (!arguments.length) return config.itemAttr;
-      config.itemAttr = x;
+  config.exports.attr = function(x) {
+      if (!arguments.length) return config.attr;
+      config.attr = x;
+      return config.exports;
+  };
+
+  config.exports.key = function(x) {
+      if (!arguments.length) return config.key;
+      config.key = x;
       return config.exports;
   };
 
@@ -3839,23 +3851,23 @@ function setSomeSale(callback){
 }
 
 function setShapeScale(){
-  var config = setSomeSale(function(obj){
+  var config = setSomeScale(function(obj){
     var shape = defaultShape;
     if(config.scale){
-      shape = config.scale(obj[options[config.itemAttr]]);
+      shape = config.scale(obj[config.key]);
     }
     return d3["symbol"+shape];
   });
 
   config.exports.computeScale = function(){
-    if(options[config.itemAttr]){
+    if(config.key){
       var domain, range;
-      if(Graph[config.item+"names"].indexOf("_"+config.itemAttr+"_"+options[config.itemAttr])!=-1){
-        var aux = uniqueRangeDomain(config.data, options[config.itemAttr], "_"+config.itemAttr+"_"+options[config.itemAttr]);
+      if(Graph[config.item+"names"].indexOf("_"+config.item+config.attr+"_"+config.key)!=-1){
+        var aux = uniqueRangeDomain(config.data, config.key, "_"+config.item+config.attr+"_"+config.key);
         domain = aux.domain;
         range = aux.range;
       }else{
-        domain = d3.map(config.data, function(d) { return d[options[config.itemAttr]]; }).keys();
+        domain = d3.map(config.data, function(d) { return d[config.key]; }).keys();
         range = [];
         domain.forEach(function(d,i){
           range[i] = symbolTypes[i%symbolTypes.length];
@@ -3872,9 +3884,9 @@ function setShapeScale(){
 }
 
 function setColorScale(){
-  var config = setSomeSale(function(obj){
+  var config = setSomeScale(function(obj){
     if(config.scale){
-      return (obj[options[config.itemAttr]] === null)? (config.item == "node"? basicColors.white : basicColors.black) : config.scale(obj[options[config.itemAttr]]);
+      return (obj[config.key] === null)? (config.item == "node"? basicColors.white : basicColors.black) : config.scale(obj[config.key]);
     }else{
       return config.item == "link" && !options.heatmap ? defaultLinkColor : defaultColor;
     }
@@ -3883,32 +3895,33 @@ function setColorScale(){
   config.datatype = "string";
 
   config.exports.computeScale = function(){
-    if(options[config.itemAttr]){
-      if(Graph[config.item+"names"].indexOf("_"+config.itemAttr+"_"+options[config.itemAttr])!=-1){
-        var aux = uniqueRangeDomain(config.data, options[config.itemAttr], "_"+config.itemAttr+"_"+options[config.itemAttr]);
+    if(config.key){
+      if(Graph[config.item+"names"].indexOf("_"+config.item+config.attr+"_"+config.key)!=-1){
+        var aux = uniqueRangeDomain(config.data, config.key, "_"+config.item+config.attr+"_"+config.key);
         config.scale = d3.scaleOrdinal()
           .range(aux.range)
           .domain(aux.domain);
       }else{
         var domain, range;
-        var data = config.data.map(function(d){ return d[options[config.itemAttr]]; });
-        if(dataType(config.data,options[config.itemAttr]) == "object"){
+        var data = config.data.map(function(d){ return d[config.key]; });
+        data = data.filter(function(d){ return d !== null; });
+        if(dataType(config.data,config.key) == "object"){
             data = d3.merge(data.map(function(d){
               if(typeof d != "object"){
                 return [d];
               }
               return d;
             }));
+            data = data.filter(function(d){ return d !== null; });
         }
-        data = data.filter(function(d){ return d !== null; });
-        config.datatype = dataType(config.data,options[config.itemAttr],true);
+        config.datatype = dataType(config.data,config.key,true);
         if(config.datatype == "number"){
           domain = d3.extent(data);
           if(options[config.item+"Bipolar"]){
             var absmax = Math.max(Math.abs(domain[0]),Math.abs(domain[1]));
             domain = [-absmax,+absmax];
           }
-          range = colorScales[options["colorScale"+config.itemAttr]];
+          range = colorScales[options["colorScale"+config.item+config.attr]];
           if(range.length==3){
             domain = [domain[0],d3.mean(domain),domain[1]];
           }
@@ -3934,18 +3947,18 @@ function setColorScale(){
     if(config.scale && config.datatype == "number"){
       var selectionWindow = attrSelectionWindow()
             .visual("Color")
-            .active(options.nodeColor)
+            .active(config.key)
             .list(Graph[config.item+"names"].filter(function(d){ return hiddenFields.indexOf(d)==-1; }))
             .clickAction(function(val){
               applyAuto("nodeColor",val);
             });
       displayLinearScale(legendPanel,
-        options[config.itemAttr],
+        config.key,
         config.scale.range(),
         config.scale.domain(),
         function(){
-          displayPicker(options,config.itemAttr,function(){
-            delete VisualHandlers[config.itemAttr];
+          displayPicker(options,config.item+config.attr,function(){
+            delete VisualHandlers[config.item+config.attr];
             drawNet();
           });
         },
@@ -4652,6 +4665,7 @@ function showTables() {
             var nodes = [backupNodes[value]];
             computeDegrees(nodes);
             linePlots.items(nodes)
+              .colorHandler(VisualHandlers.nodeColor)
               .colors(options.nodeColor ? VisualHandlers.nodeColor(Graph.nodes[value]) : false);
             linePlots(container);
           }
@@ -4678,6 +4692,7 @@ function showTables() {
                   return l[options.linkSource]==source && l[options.linkTarget]==target && l["_frame_"]==frameControls.frame;
                 })[0];
             linePlots.items(getLinkData(source,target))
+              .colorHandler(VisualHandlers.linkColor)
               .colors(options.linkColor ? VisualHandlers.linkColor(currentlink) : false);
             linePlots(container);
           }
@@ -4717,6 +4732,7 @@ function showTables() {
                 });
             computeDegrees(nodes);
             linePlots.items(nodes)
+              .colorHandler(VisualHandlers.nodeColor)
               .colors(colors);
             linePlots(container);
           }else{
@@ -4731,6 +4747,7 @@ function showTables() {
                   return getLinkData(link[options.linkSource],link[options.linkTarget]);
                 });
             linePlots.items(links)
+              .colorHandler(VisualHandlers.linkColor)
               .colors(options.linkColor ? linksData.map(function(link){ return VisualHandlers.linkColor(link); }) : false);
             linePlots(container);
           }else{

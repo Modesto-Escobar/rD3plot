@@ -147,7 +147,7 @@ netCreate <- function(net, dir){
   #get language
   language <- getLanguageScript(net)
 
-  createHTML(dir, c("reset.css","styles.css"), c("d3.min.js","jspdf.min.js","jszip.min.js","iro.min.js","images.js","functions.js",language,"colorScales.js","network.js"),function(){ return(imgWrapper(net,networkJSON,dir)) })
+  createHTML(dir, c("reset.css","styles.css"), c("d3.min.js","jspdf.min.js","jszip.min.js","iro.min.js","images.js","colorScales.js","functions.js",language,"network.js"),function(){ return(imgWrapper(net,networkJSON,dir)) })
 }
 
 # network graph function 
