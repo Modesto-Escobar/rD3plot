@@ -115,5 +115,6 @@ var texts = {
     Deselect: "Desmarcar",
     more: "más",
     less: "menos",
-    Scale: "Escala"
+    Scale: "Escala",
+    Table: "Tabla"
   };

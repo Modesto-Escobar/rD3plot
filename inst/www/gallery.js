@@ -7,7 +7,8 @@ function gallery(Graph){
       filter = false,
       zoomRange = [0.1, 10],
       gridHeight = 60,
-      currentGridHeight = gridHeight;
+      currentGridHeight = gridHeight,
+      colorScale;
 
   if(!options.defaultColor){
     options.defaultColor = categoryColors[0];
@@ -160,6 +161,44 @@ function gallery(Graph){
         .job(nodes2xlsx));
   }
 
+  topBar.addIcon(iconButton()
+        .alt("table")
+        .width(24)
+        .height(24)
+        .src(b64Icons.table)
+        .title(texts.Table)
+        .job(function(){
+          body.classed("maximize-table",true);
+          var tables = body.append("div")
+            .attr("class","tables");
+
+          var header = tables.append("div")
+            .attr("class","table-header")
+          header.append("div")
+            .attr("class","close-button")
+            .on("click",function(){
+              body.classed("maximize-table",false);
+              tables.remove();
+            })
+
+          var table = tables.append("div")
+            .attr("class","table-container")
+            .append("table");
+
+          var columns = getSelectOptions();
+          var thead = table.append("thead")
+          columns.forEach(function(n){
+            thead.append("th").text(n)
+          })
+          var tbody = table.append("tbody");
+          nodes.forEach(function(node){
+            var tr = tbody.append("tr");
+            columns.forEach(function(n){
+              tr.append("td").text(node[n]);
+            })
+          })
+        }));
+
   if(frequencyBars){
       topBar.addIcon(iconButton()
         .alt("freq")
@@ -206,9 +245,9 @@ function gallery(Graph){
       if(options.nodeColor=="_none_"){
         delete options.nodeColor;
       }else if(dataType(nodes,options.nodeColor)=="number"){
-        displayPicker(options,"nodeColor",displayGraph);
+        displayPicker(options,"nodeColor",displayGraphColor);
       }
-      displayGraph();
+      displayGraphColor();
     })
     var opt = getSelectOptions(sortAsc).map(function(d){ return [d,d]; });
     opt.unshift(["_none_","-"+texts.none+"-"]);
@@ -308,7 +347,7 @@ function gallery(Graph){
                  .displayGraph(displayGraph)
                  .filterHandler(topFilterInst)
                  .displayScalePicker(function(){
-                   displayPicker(options,"nodeColor",displayGraph);
+                   displayPicker(options,"nodeColor",displayGraphColor);
                  })
                  .selectionWindow(attrSelectionWindow()
                    .list(getSelectOptions(sortAsc))
@@ -388,6 +427,11 @@ function gallery(Graph){
 
   function resetZoom(){
     gallery.call(zoom.transform,d3.zoomIdentity.scale(options.zoom));
+  }
+
+  function displayGraphColor(){
+    colorScale = undefined;
+    displayGraph();
   }
 
   function displayGraph(newfilter){
@@ -515,8 +559,7 @@ function gallery(Graph){
       })
     }
 
-    var colorScale;
-    if(options.nodeColor){
+    if(!colorScale && options.nodeColor){
       if(Graph.nodenames.indexOf("_color_"+options.nodeColor)!=-1){
           var aux = uniqueRangeDomain(nodes, options.nodeColor, "_color_"+options.nodeColor);
           colorScale = d3.scaleOrdinal()
@@ -535,6 +578,7 @@ function gallery(Graph){
           colorScale = d3.scaleLinear()
             .range(range)
             .domain(domain)
+            .clamp(true)
         }
         if(type=="string"){
           colorScale = d3.scaleOrdinal()
@@ -870,7 +914,11 @@ function gallery(Graph){
           scale.domain(),
           scalePicker,
           selectionWindow,
-          function(){ parent.classed("hide-legend",true); }
+          function(){ parent.classed("hide-legend",true); },
+          function(d){
+            scale.domain(d);
+            displayGraph();
+          }
         );
       }
     }

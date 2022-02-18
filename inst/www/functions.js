@@ -1309,8 +1309,9 @@ function stripTags(text){
   return text.replace(/(<([^>]+)>)/ig,"");
 }
 
-function displayLinearScale(sel,value,range,domain,selectScale,selectAttribute,closePanel){
+function displayLinearScale(sel,value,range,domain,selectScale,selectAttribute,closePanel,changeDomain){
     var panel = sel.select(".scale");
+    domain = d3.extent(domain);
     if(panel.empty()){
       panel = sel.append("div")
           .attr("class","scale")
@@ -1350,17 +1351,56 @@ function displayLinearScale(sel,value,range,domain,selectScale,selectAttribute,c
         .style("height","10px")
         .style("width","100%")
 
-      div.append("span")
-      .attr("class","domain1")
+      renderDomain(0);
+      renderDomain(1);
 
-      div.append("span")
-      .attr("class","domain2")
+      function renderDomain(i){
+            var container = document.createElement('div')
+            container.classList.add('domain'+(i+1))
+
+            var span = document.createElement('span');
+
+            container.appendChild(span);
+            div.node().appendChild(container);
+
+            if(changeDomain){
+              var domInput = document.createElement('input');
+              domInput.style.width = "80%";
+              domInput.type = "text";
+
+              domInput.addEventListener("keydown",function(event){
+                if(this.parentNode && getKey(event)=="Enter"){
+                    domain[i] = +domInput.value;
+                    close(event);
+                    changeDomain(domain);
+                }
+              })
+
+              domInput.addEventListener("blur",close)
+
+              span.addEventListener("click",function(){
+                event.preventDefault();
+                domInput.value = "";
+                span.parentNode.removeChild(span);
+                container.appendChild(domInput);
+                domInput.focus();
+              })
+
+              function close(event){
+                event.preventDefault();
+                if(domInput.parentNode){
+                  domInput.parentNode.removeChild(domInput);
+                }
+                container.appendChild(span);
+              }
+            }
+      }
     }
     panel.select("div.legend-scale-gradient")
       .datum(range)
       .style("background-image",function(d){ return "linear-gradient(to right, " + d.join(", ") + ")"; })
-    panel.select(".domain1").text(formatter(domain[0]));
-    panel.select(".domain2").text(formatter(domain[domain.length-1]));
+    panel.select(".domain1 > span").text(formatter(domain[0]));
+    panel.select(".domain2 > span").text(formatter(domain[1]));
 }
 
 function addGradient(defs,id,range){

@@ -231,7 +231,7 @@ function network(Graph){
           }
           return;
         case "a":
-          if(Graph.links.filter(checkSelectableLink).length){
+          if(Graph.links.filter(checkSelectableNodeLink).length){
             options.showArrows = !options.showArrows;
             if(options.heatmap){
               drawNet();
@@ -889,7 +889,16 @@ function displayBottomPanel(){
       .attr("class","table-header")
 
     tableHeader.append("div")
-      .attr("class","table-title " + (options.showNodes ? "nodes" : "links"));
+      .attr("class","size-button")
+      .on("click",function(){
+        body.classed("maximize-table",!body.classed("maximize-table"));
+      })
+
+    tableHeader = tableHeader.append("div")
+      .attr("class","inline-elements")
+
+    tableHeader.append("div")
+      .attr("class","table-title");
     tableHeader.call(iconButton()
         .alt("xlsx")
         .width(14)
@@ -911,7 +920,7 @@ function displayBottomPanel(){
           txt = new RegExp(txt,'i');
           Graph.nodes.forEach(function(node){
             node.selected = false;
-            if(checkSelectable(node)){
+            if(checkSelectableNode(node)){
               var i = 0;
               while(!node.selected && i<Graph.nodenames.length){
                 if(String(node[Graph.nodenames[i++]]).match(txt))
@@ -925,7 +934,7 @@ function displayBottomPanel(){
 
     displayButton(tableHeader,"tableselection",selectFromTable,"ctrl + o",false,"primary");
 
-    tables.append("div").attr("class",options.showNodes ? "nodes" : "links");
+    tables.append("div").attr("class","table-container");
     showTables();
   }
 
@@ -959,7 +968,7 @@ function displaySidebar(){
         .column(options.nodeLabel ? options.nodeLabel : options.nodeName)
         .update(showTables)
         .update2(switchEgoNet)
-        .filterData(checkSelectable));
+        .filterData(checkSelectableNode));
 
   }else{
     sidebar.selectAll("div.sidebar>div:not(.subSearch)").remove();
@@ -1115,7 +1124,7 @@ function displaySidebar(){
         .attr("class","sliders")
 
       if(!options.heatmap && options.dynamicNodes){
-        if(Graph.links.filter(checkSelectableLink).length){
+        if(Graph.links.filter(checkSelectableNodeLink).length){
           sliders.call(Sliders.distance);
           Sliders.distance.update(options['linkDistance']);
         }
@@ -1191,7 +1200,7 @@ function displaySidebar(){
       if(GraphLinksLength){
         buttons.append("g")
         .attr("class",function(d){ return "button showArrows"; })
-        .classed("disabled",!Graph.links.filter(checkSelectableLink).length)
+        .classed("disabled",!Graph.links.filter(checkSelectableNodeLink).length)
         .attr("transform","translate(0,"+countY*options.cex+")")
         .datum(showArrows)
 
@@ -1629,7 +1638,7 @@ function addFilterController(){
       valueSelector.selectAll("*").remove();
       slider = false;
       selectMultiple = false;
-      var tmpData = items=="nodes" ? Graph.nodes.filter(checkSelectable) : Graph.links.filter(checkSelectableLink);
+      var tmpData = items=="nodes" ? Graph.nodes.filter(checkSelectableNode) : Graph.links.filter(checkSelectableNodeLink);
       var type = dataType(tmpData,val);
       if(type == 'number'){
         var extent = d3.extent(tmpData, function(d){ return d[val]; }),
@@ -1641,7 +1650,7 @@ function addFilterController(){
             if(items=="nodes"){
               Graph.nodes.forEach(function(d){
                 delete d.selected;
-                if(checkSelectable(d) && (d[val]>=s[0] && d[val]<=s[1])){
+                if(checkSelectableNode(d) && (d[val]>=s[0] && d[val]<=s[1])){
                   d.selected = true;
                 }
               });
@@ -1649,7 +1658,7 @@ function addFilterController(){
             if(items=="links"){
               Graph.links.forEach(function(d){
                 delete d.selected;
-                if(checkSelectableLink(d) && d[val]>=s[0] && d[val]<=s[1]){
+                if(checkSelectableNodeLink(d) && d[val]>=s[0] && d[val]<=s[1]){
                   d.selected = true;
                 }
               });
@@ -1675,7 +1684,7 @@ function addFilterController(){
             if(items=="nodes"){
               Graph.nodes.forEach(function(d){
                 delete d.selected;
-                if(checkSelectable(d)){
+                if(checkSelectableNode(d)){
                   if(typeof d[val] == "object"){
                     if(intersection(values,d[val]).length){
                       d.selected = true;
@@ -1691,7 +1700,7 @@ function addFilterController(){
             if(items=="links"){
               Graph.links.forEach(function(d){
                 delete d.selected;
-                if(checkSelectableLink(d) && values.indexOf(String(d[val]))!=-1){
+                if(checkSelectableNodeLink(d) && values.indexOf(String(d[val]))!=-1){
                   d.selected = true;
                 }
               });
@@ -1928,7 +1937,7 @@ function drawSVG(){
             extent[1][0] = transform.invertX(extent[1][0]);
             extent[1][1] = transform.invertY(extent[1][1]);
             Graph.nodes.forEach(function(node) {
-              node.selected = checkSelectable(node) && (node.selected ^ (extent[0][0] <= node.x && node.x < extent[1][0] && extent[0][1] <= node.y && node.y < extent[1][1]));
+              node.selected = checkSelectableNode(node) && (node.selected ^ (extent[0][0] <= node.x && node.x < extent[1][0] && extent[0][1] <= node.y && node.y < extent[1][1]));
             });
             autoSelectLinks();
           }
@@ -2399,17 +2408,17 @@ function drawNet(){
       });
     }
     Graph.nodes.forEach(function(d){
-      if(checkSelectable(d) && d.childNodes.length)
+      if(checkSelectableNode(d) && d.childNodes.length)
         hideChildren(d);
     });
   }
 
   var nodes = Graph.nodes.filter(function(node){
     node.degree = 0;
-    return checkSelectable(node);
+    return checkSelectableNode(node);
   });
 
-  var links = Graph.links.filter(checkSelectableLink);
+  var links = Graph.links.filter(checkSelectableNodeLink);
 
   d3.select("button.primary-outline.resetfilter").classed("disabled",(nodes.length==GraphNodesLength) && (links.length==GraphLinksLength));
 
@@ -2743,7 +2752,7 @@ function drawNet(){
     d3.event.stopPropagation();
     links.forEach(function(l){ checkNeighbors(l,p); });
     nodes.forEach(function(n){
-      n.selected = (checkSelectable(n) && (n.index == p.x || n.index == p.y))? true : false;
+      n.selected = (checkSelectableNode(n) && (n.index == p.x || n.index == p.y))? true : false;
       delete n.__neighbor;
     });
     switchEgoNet();
@@ -2940,7 +2949,7 @@ function drawNet(){
         .attr("class","legend-selectall")
       displaycheck(gSelectAll,function(self){
         Graph.nodes.forEach(function(d){
-            if(self.selected && checkSelectable(d)){
+            if(self.selected && checkSelectableNode(d)){
               d.selected = true;
             }else{
               delete d.selected;
@@ -3598,7 +3607,7 @@ function dragged_constructural(d) {
     if(node.type=="parent"){
       dx = node.fx-dx;
       dy = node.fy-dy;
-      Graph.nodes.filter(checkSelectable)
+      Graph.nodes.filter(checkSelectableNode)
         .filter(function(n){ return isDescendant(n,node); })
         .forEach(function(n){
           n.fx = n.fx + dx;
@@ -3927,7 +3936,8 @@ function setColorScale(){
           }
           config.scale = d3.scaleLinear()
           .range(range)
-          .domain(domain);
+          .domain(domain)
+          .clamp(true);
         }else{
           domain = d3.set(data).values();
           range = [];
@@ -3962,7 +3972,15 @@ function setColorScale(){
             drawNet();
           });
         },
-        selectionWindow
+        selectionWindow,
+        false,
+        function(d){
+          if(config.scale.range().length==3){
+            d = [d[0],(d[0]+d[1])/2,d[1]];
+          }
+          config.scale.domain(d);
+          drawNet();
+        }
       );
     }
   }
@@ -4005,12 +4023,12 @@ function getNumAttr(data,itemAttr,range,def){
 
 function selectAllItems(){
   Graph.nodes.forEach(function(n){
-    if(checkSelectable(n)){
+    if(checkSelectableNode(n)){
       n.selected = true;
     }
   });
   Graph.links.forEach(function(l){
-    if(checkSelectableLink(l)){
+    if(checkSelectableNodeLink(l)){
       l.selected = true;
     }
   });
@@ -4019,7 +4037,7 @@ function selectAllItems(){
 
 function autoSelectLinks(){
   Graph.links.forEach(function(link){
-    link.selected = checkSelectableLink(link) && link.source.selected && link.target.selected;
+    link.selected = checkSelectableNodeLink(link) && link.source.selected && link.target.selected;
   })
 }
 
@@ -4053,12 +4071,12 @@ function showHidden(){
 
 function addNeighbors(){
     Graph.links.forEach(function(d){
-      if(checkSelectableLink(d))
+      if(checkSelectableNodeLink(d))
         if(d.source.selected || d.target.selected)
           d.source.__neighbor = d.target.__neighbor = true;
     });
     Graph.nodes.forEach(function(d){
-      d.selected = checkSelectable(d) && d.__neighbor;
+      d.selected = checkSelectableNode(d) && d.__neighbor;
       delete d.__neighbor;
     });
     autoSelectLinks();
@@ -4082,14 +4100,14 @@ function switchEgoNet(){
     drawNet();
 }
 
-function checkSelectable(node){
+function checkSelectableNode(node){
   var selectable = !node._hidden && !node._hideFrame;
   if(egoNet)
     selectable = selectable && node._neighbor;
   return selectable;
 }
 
-function checkSelectableLink(link){
+function checkSelectableNodeLink(link){
   var selectable = !link._hidden && !link.target._hidden && !link.source._hidden && !link._hideFrame;
   if(egoNet){
     selectable = selectable && ((link.source.selected || link.source._neighbor) && (link.target.selected || link.target._neighbor));
@@ -4100,7 +4118,7 @@ function checkSelectableLink(link){
 function treeAction(){
   if(!selectedNodesLength()){
       Graph.nodes.forEach(function(d){
-        if(checkSelectable(d))
+        if(checkSelectableNode(d))
           d.selected = true;
       });
   }
@@ -4262,7 +4280,7 @@ function displayLegend(){
             delete d.selected;
           }
           if(checkLegendKeyValue(d,key,value)){
-            if(self.selected && checkSelectable(d)){
+            if(self.selected && checkSelectableNode(d)){
               d.selected = true;
             }else{
               delete d.selected;
@@ -4413,7 +4431,7 @@ function displayBottomButton(sel,text,tooltip,callback){
           var selected = legendPanel.selectAll("div.legend-item").filter(function(){ return this.selected; });
           Graph.nodes.forEach(function(d){
             delete d.selected;
-            if(checkSelectable(d)){
+            if(checkSelectableNode(d)){
               selected.each(function(value){
                 if(!d.selected){
                   var key = this.parentNode.key;
@@ -4438,16 +4456,14 @@ function getImageName(path){
 }
 
 function showTables() {
-  var hidden = getTableHiddenFields();
-
   var totalItems = {};
   ["nodes","links"].forEach(function(name){
-    totalItems[name] = (frameControls ? Graph[name].filter(function(d){ return !d._hideFrame; }) : Graph[name]).filter(name=="nodes" ? checkSelectable : checkSelectableLink).length;
+    totalItems[name] = (frameControls ? Graph[name].filter(function(d){ return !d._hideFrame; }) : Graph[name]).filter(name=="nodes" ? checkSelectableNode : checkSelectableNodeLink).length;
   });
 
   var tableWrapper = function(dat, name, columns){
 
-    if(body.select("div.tables > ."+name).empty()){
+    if(body.select("div.tables > div.table-container").empty()){
       return;
     }
 
@@ -4459,10 +4475,10 @@ function showTables() {
           return null;
         });
     if(name=="nodes")
-      currentData = Graph.nodes.filter(checkSelectable);
+      currentData = Graph.nodes.filter(checkSelectableNode);
     else
-      currentData = Graph.links.filter(checkSelectableLink);
-    var table = d3.select("div.tables > div."+name),
+      currentData = Graph.links.filter(checkSelectableNodeLink);
+    var table = body.select("div.tables > div.table-container"),
         last = -1,
     drawTable = function(d){
       var tr = table.append("tr")
@@ -4513,7 +4529,7 @@ function showTables() {
           if(!options.heatmap)
             simulation.restart();
 
-          d3.select("button.primary.tableselection").classed("disabled",table.selectAll("tr.selected").empty());
+          body.select("button.primary.tableselection").classed("disabled",table.selectAll("tr.selected").empty());
 
           if(d3.select(this).classed("selected"))
             last = this.rowIndex;
@@ -4553,10 +4569,9 @@ function showTables() {
         return tbody;
     }
 
-    d3.select("div.tables > div.table-header > div.table-title."+name)
+    body.select("div.tables div.table-title")
       .html("<span>"+texts[name+"attributes"] + "</span> ("+dat.length+" "+texts.outof+" "+totalItems[name]+")")
     table.html("");
-    table = table.append("div");
     if(dat.length==0){
       table.style("cursor",null);
       table.on('mousedown.drag', null);
@@ -4592,47 +4607,50 @@ function showTables() {
             )
       })
     }
-  },
-
-  cleanData = function(d){
-    var dReturn = {}, key;
-    for(key in d)
-      if(hidden.indexOf(key)==-1)
-        dReturn[key] = d[key];
-    return dReturn;
-  },
-
-  filterHidden = function(d){
-    return hidden.indexOf(d)==-1;
   };
+
+  var cleanData = function(d,columns){
+    var dd = {};
+    columns.forEach(function(c){
+      dd[c] = d[c];
+    });
+    if(d.hasOwnProperty("index")){
+      dd.index = d.index;
+    }
+    if(options.showCoordinates && !options.heatmap){
+      if(dd.hasOwnProperty("x")){
+        dd["x"] = parseFloat(scaleCoorX.invert(dd["x"]).toFixed(2));
+      }
+      if(dd.hasOwnProperty("y")){
+        dd["y"] = parseFloat(scaleCoorY.invert(dd["y"]).toFixed(2));
+      }
+    }
+    return dd;
+  };
+
+  var nodeColumns = getTableColumns("node"),
+      linkColumns = getTableColumns("link");
 
   var nodesData = Graph.nodes.filter(function(n){
         delete n._selected;
-        return checkSelectable(n) && n.selected;
-      }).map(cleanData),
+        return checkSelectableNode(n) && n.selected;
+      }).map(function(d){ return cleanData(d,nodeColumns); }),
       linksData = Graph.links.filter(function(l){
         delete l._selected;
-        return checkSelectableLink(l) && l.selected;
-      }).map(cleanData),
-      nodeColumns = Graph.nodenames.filter(filterHidden),
-      linkColumns = Graph.linknames.filter(filterHidden);
+        return checkSelectableNodeLink(l) && l.selected;
+      }).map(function(d){ return cleanData(d,linkColumns); });
 
-  if(options.showCoordinates && !options.heatmap){
-    nodeColumns = d3.merge([nodeColumns,["x","y"]]);
-
-    nodesData.forEach(function(d){
-      d["x"] = parseFloat(scaleCoorX.invert(d["x"]).toFixed(2));
-      d["y"] = parseFloat(scaleCoorY.invert(d["y"]).toFixed(2));
-    });
+  if(options.showNodes){
+    tableWrapper(nodesData,"nodes",nodeColumns);
   }
-
-  tableWrapper(nodesData,"nodes",nodeColumns);
-  tableWrapper(linksData,"links",linkColumns);
+  if(options.showLinks){
+    tableWrapper(linksData,"links",linkColumns);
+  }
 
   // update frequency bars
   if(frequencyBars && options.frequencies){
     frequencyBars
-      .nodes(Graph.nodes.filter(checkSelectable))
+      .nodes(Graph.nodes.filter(checkSelectableNode))
       .nodeColor(options.nodeColor)
       .colorScale(VisualHandlers.nodeColor.getScale());
     infoPanel.open(function(div){
@@ -4810,13 +4828,13 @@ function showTables() {
     if(nodesData.length && nodesData.length!=totalItems["nodes"]){
       Graph.nodes.forEach(function(node){
         delete node._back;
-        if(checkSelectable(node) && !node.selected){
+        if(checkSelectableNode(node) && !node.selected){
           node._back = true;
         }
       })
       Graph.links.forEach(function(link){
         delete link._back;
-        if(checkSelectableLink(link)){
+        if(checkSelectableNodeLink(link)){
           if(names.indexOf(link[options.linkSource])!=-1 || names.indexOf(link[options.linkTarget])!=-1){
             delete link.source._back;
             delete link.target._back;
@@ -4848,7 +4866,7 @@ function showTables() {
     if(Graph.tree){
       d3.selectAll("button.primary.expand, button.primary.collapse").classed("disabled",true);
       Graph.nodes.forEach(function(node){
-        if(checkSelectable(node) && node.selected){
+        if(checkSelectableNode(node) && node.selected){
           if(node.childNodes.length){
             d3.selectAll("button.primary.expand").classed("disabled",false);
           }
@@ -4863,8 +4881,13 @@ function showTables() {
   }
 }
 
-function getTableHiddenFields(){
-  return hiddenFields.slice((options.showCoordinates && !options.heatmap) ? 2 : 0);
+function getTableColumns(item){
+  var names = Graph[item+"names"].filter(function(d){ return hiddenFields.indexOf(d)==-1; });
+  if(item=="node" && options.showCoordinates && !options.heatmap){
+    names.push("x");
+    names.push("y")
+  }
+  return names;
 }
 
 function renderCell(txt){
@@ -4891,7 +4914,7 @@ function checkLegendItemsChecked() {
     if(!legendSelectAll.empty()){
       var items = parent.selectAll(".legend-item");
       if(!items.empty()){
-        var unselectedNodes = Graph.nodes.filter(checkSelectable).filter(function(d){ return !d.selected; });
+        var unselectedNodes = Graph.nodes.filter(checkSelectableNode).filter(function(d){ return !d.selected; });
 
         items.each(function(value){
           checkInBox(this,true);
@@ -4920,10 +4943,9 @@ function checkLegendItemsChecked() {
 }
 
 function tables2xlsx(){
-      var hidden = getTableHiddenFields();
-      var nodenames = Graph.nodenames.filter(function(d){ return hidden.indexOf(d)==-1; }),
+      var nodenames = getTableColumns("node"),
           nodes = [nodenames],
-          linknames = Graph.linknames.filter(function(d){ return hidden.indexOf(d)==-1; }),
+          linknames = getTableColumns("link"),
           links = [linknames];
       
       Graph.nodes.forEach(function(node){
