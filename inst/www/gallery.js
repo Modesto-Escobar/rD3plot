@@ -180,23 +180,17 @@ function gallery(Graph){
               body.classed("maximize-table",false);
               tables.remove();
             })
+          header = header.append("div")
+          .attr("class","inline-elements")
+          header.append("div")
+          .attr("class","table-title");
 
           var table = tables.append("div")
             .attr("class","table-container")
-            .append("table");
 
-          var columns = getSelectOptions();
-          var thead = table.append("thead")
-          columns.forEach(function(n){
-            thead.append("th").text(n)
-          })
-          var tbody = table.append("tbody");
-          nodes.forEach(function(node){
-            var tr = tbody.append("tr");
-            columns.forEach(function(n){
-              tr.append("td").text(node[n]);
-            })
-          })
+          tables.call(tableWrapper()
+            .data(nodes)
+            .columns(getSelectOptions()));
         }));
 
   if(frequencyBars){

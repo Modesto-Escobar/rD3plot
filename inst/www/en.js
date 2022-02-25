@@ -12,9 +12,11 @@ var texts = {
     add: "Add",
     nodesattributes: "Node attributes",
     linksattributes: "Link attributes",
+    elementsattributes: "Element attributes",
     nonodesselected: "Select a node in the graph to see its attributes.",
     nolinksselected: "Select a link in the graph to see its attributes.",
     noitemsselected: "Select some nodes or links.",
+    noelementsselected: "Select some elements in the graph to see its attributes.",
     repulsion: "Repulsion",
     distance: "Distance",
     loading: "Loading...",
@@ -116,5 +118,6 @@ var texts = {
     more: "more",
     less: "less",
     Scale: "Scale",
-    Table: "Table"
+    Table: "Table",
+    goto: "go to"
   };

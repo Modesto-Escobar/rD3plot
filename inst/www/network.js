@@ -231,7 +231,7 @@ function network(Graph){
           }
           return;
         case "a":
-          if(Graph.links.filter(checkSelectableNodeLink).length){
+          if(Graph.links.filter(checkSelectableLink).length){
             options.showArrows = !options.showArrows;
             if(options.heatmap){
               drawNet();
@@ -888,6 +888,22 @@ function displayBottomPanel(){
     var tableHeader = tables.append("div")
       .attr("class","table-header")
 
+    if(items.length==2){
+      tableHeader.append("div")
+        .attr("class","switch-maximize-node-link")
+        .text(texts.goto + " " + (options.showLinks ? texts.nodes : texts.links))
+        .on("click",function(){
+              if(options.showLinks){
+                options.showNodes = true;
+                options.showLinks = false;
+              }else{
+                options.showLinks = true;
+                options.showNodes = false;
+              }
+              displayBottomPanel();
+        })
+    }
+
     tableHeader.append("div")
       .attr("class","size-button")
       .on("click",function(){
@@ -1124,7 +1140,7 @@ function displaySidebar(){
         .attr("class","sliders")
 
       if(!options.heatmap && options.dynamicNodes){
-        if(Graph.links.filter(checkSelectableNodeLink).length){
+        if(Graph.links.filter(checkSelectableLink).length){
           sliders.call(Sliders.distance);
           Sliders.distance.update(options['linkDistance']);
         }
@@ -1200,7 +1216,7 @@ function displaySidebar(){
       if(GraphLinksLength){
         buttons.append("g")
         .attr("class",function(d){ return "button showArrows"; })
-        .classed("disabled",!Graph.links.filter(checkSelectableNodeLink).length)
+        .classed("disabled",!Graph.links.filter(checkSelectableLink).length)
         .attr("transform","translate(0,"+countY*options.cex+")")
         .datum(showArrows)
 
@@ -1638,7 +1654,7 @@ function addFilterController(){
       valueSelector.selectAll("*").remove();
       slider = false;
       selectMultiple = false;
-      var tmpData = items=="nodes" ? Graph.nodes.filter(checkSelectableNode) : Graph.links.filter(checkSelectableNodeLink);
+      var tmpData = items=="nodes" ? Graph.nodes.filter(checkSelectableNode) : Graph.links.filter(checkSelectableLink);
       var type = dataType(tmpData,val);
       if(type == 'number'){
         var extent = d3.extent(tmpData, function(d){ return d[val]; }),
@@ -1658,7 +1674,7 @@ function addFilterController(){
             if(items=="links"){
               Graph.links.forEach(function(d){
                 delete d.selected;
-                if(checkSelectableNodeLink(d) && d[val]>=s[0] && d[val]<=s[1]){
+                if(checkSelectableLink(d) && d[val]>=s[0] && d[val]<=s[1]){
                   d.selected = true;
                 }
               });
@@ -1700,7 +1716,7 @@ function addFilterController(){
             if(items=="links"){
               Graph.links.forEach(function(d){
                 delete d.selected;
-                if(checkSelectableNodeLink(d) && values.indexOf(String(d[val]))!=-1){
+                if(checkSelectableLink(d) && values.indexOf(String(d[val]))!=-1){
                   d.selected = true;
                 }
               });
@@ -2418,7 +2434,7 @@ function drawNet(){
     return checkSelectableNode(node);
   });
 
-  var links = Graph.links.filter(checkSelectableNodeLink);
+  var links = Graph.links.filter(checkSelectableLink);
 
   d3.select("button.primary-outline.resetfilter").classed("disabled",(nodes.length==GraphNodesLength) && (links.length==GraphLinksLength));
 
@@ -4028,7 +4044,7 @@ function selectAllItems(){
     }
   });
   Graph.links.forEach(function(l){
-    if(checkSelectableNodeLink(l)){
+    if(checkSelectableLink(l)){
       l.selected = true;
     }
   });
@@ -4037,7 +4053,7 @@ function selectAllItems(){
 
 function autoSelectLinks(){
   Graph.links.forEach(function(link){
-    link.selected = checkSelectableNodeLink(link) && link.source.selected && link.target.selected;
+    link.selected = checkSelectableLink(link) && link.source.selected && link.target.selected;
   })
 }
 
@@ -4071,7 +4087,7 @@ function showHidden(){
 
 function addNeighbors(){
     Graph.links.forEach(function(d){
-      if(checkSelectableNodeLink(d))
+      if(checkSelectableLink(d))
         if(d.source.selected || d.target.selected)
           d.source.__neighbor = d.target.__neighbor = true;
     });
@@ -4107,7 +4123,7 @@ function checkSelectableNode(node){
   return selectable;
 }
 
-function checkSelectableNodeLink(link){
+function checkSelectableLink(link){
   var selectable = !link._hidden && !link.target._hidden && !link.source._hidden && !link._hideFrame;
   if(egoNet){
     selectable = selectable && ((link.source.selected || link.source._neighbor) && (link.target.selected || link.target._neighbor));
@@ -4456,196 +4472,42 @@ function getImageName(path){
 }
 
 function showTables() {
-  var totalItems = {};
-  ["nodes","links"].forEach(function(name){
-    totalItems[name] = (frameControls ? Graph[name].filter(function(d){ return !d._hideFrame; }) : Graph[name]).filter(name=="nodes" ? checkSelectableNode : checkSelectableNodeLink).length;
-  });
-
-  var tableWrapper = function(dat, name, columns){
-
-    if(body.select("div.tables > div.table-container").empty()){
-      return;
-    }
-
-    var currentData,
-        columnAlign = columns.map(function(col){
-          if(dataType(dat,col) == 'number'){
-            return "right";
-          }
-          return null;
-        });
-    if(name=="nodes")
-      currentData = Graph.nodes.filter(checkSelectableNode);
-    else
-      currentData = Graph.links.filter(checkSelectableNodeLink);
-    var table = body.select("div.tables > div.table-container"),
-        last = -1,
-    drawTable = function(d){
-      var tr = table.append("tr")
-        .datum(d.index)
-        .classed("selected",function(dd){
-          return currentData[dd]._selected;
-        });
-      columns.forEach(function(col,i){
-          var txt = renderCell(d[col]);
-          tr.append("td").html(txt)
-              .style("text-align",columnAlign[i])
-              .on("mousedown",function(){ d3.event.preventDefault(); });
-      });
-      tr.on("click",function(origin){
-          var selections = false;
-          if(d3.event.shiftKey && last!=-1){
-            selections = d3.range(Math.min(last,this.rowIndex),Math.max(last,this.rowIndex)+1);
-          }
-          table.selectAll("tr").classed("selected", function(d,i){
-            var selected = d3.select(this).classed("selected");
-            if(selections){
-              if(d3.event.ctrlKey || d3.event.metaKey){
-                selected = selected || selections.indexOf(i)!=-1;
-              }else{
-                selected = selections.indexOf(i)!=-1;
-              }
-            }else{
-              if(d3.event.ctrlKey || d3.event.metaKey){
-                selected = selected ^ d == origin;
-              }else{
-                selected = d == origin;
-                if(options.nodeText){
-                  plot.selectAll("div.tooltip").remove();
-                  if(name=="nodes"){
-                    showTooltip(currentData[origin],true);
-                  }else{
-                    showTooltip(currentData[origin].source,true);
-                    showTooltip(currentData[origin].target,true);
-                  }
-                }
-              }
-            }
-            if(!options.heatmap){
-              currentData[d]._selected = selected;                
-            }
-            return selected;
-          })
-          if(!options.heatmap)
-            simulation.restart();
-
-          body.select("button.primary.tableselection").classed("disabled",table.selectAll("tr.selected").empty());
-
-          if(d3.select(this).classed("selected"))
-            last = this.rowIndex;
-          else
-            last = -1;
-        });
-    },
-
-    drawHeader = function() {
-        var thead = table.append("thead"),
-            tbody = table.append("tbody"),
-            desc0 = columns.map(function(){ return false; }),
-            desc = desc0.slice();
-        columns.forEach(function(d,i){
-          var sort1 = function(a,b){
-                if(a[d]==null) return 1;
-                if(b[d]==null) return -1;
-                a = a[d][options.nodeName]?a[d][options.nodeName]:a[d];
-                b = b[d][options.nodeName]?b[d][options.nodeName]:b[d];
-                return compareFunction(a,b,desc[i]);
-              };
-          thead.append("th")
-            .attr("class","sorting")
-            .text(d)
-            .style("text-align",columnAlign[i])
-            .on("click",function(){
-              tbody.html("");
-              dat.sort(sort1);
-              var desci = desc[i];
-              desc = desc0.slice();
-              thead.selectAll("th").attr("class","sorting");
-              desc[i] = !desci;
-              d3.select(this).attr("class",desci ? "sorting_desc" : "sorting_asc");
-              dat.forEach(drawTable);
-            });
-        });
-        return tbody;
-    }
-
-    body.select("div.tables div.table-title")
-      .html("<span>"+texts[name+"attributes"] + "</span> ("+dat.length+" "+texts.outof+" "+totalItems[name]+")")
-    table.html("");
-    if(dat.length==0){
-      table.style("cursor",null);
-      table.on('mousedown.drag', null);
-      table.text(texts["no"+name+"selected"]);
-    }else{
-      table = table.append("table");
-      table.on("mousedown", function(){ d3.event.stopPropagation(); })
-      table = drawHeader();
-      dat.forEach(drawTable);
-      table.each(function(){
-        var twidth = this.parentNode.offsetWidth,
-            itemDiv = d3.select(this.parentNode.parentNode.parentNode),
-            thidden = itemDiv.style("display") == "none";
-        if(thidden){
-          itemDiv.style("display",null);
-          twidth = this.parentNode.offsetWidth;
-          itemDiv.style("display","none");
-        }
-        d3.select(this.parentNode.parentNode)
-            .style("width",(twidth+8)+"px")
-            .style("cursor","col-resize")
-            .call(d3.drag()
-              .on("drag",function(){
-                var coorx = d3.mouse(this)[0],
-                    self = d3.select(this),
-                    selfTable = self.select("table");
-                selfTable.style("width",(coorx-8)+"px");
-                if(selfTable.node().offsetWidth > (coorx-8))
-                  selfTable.style("width",selfTable.node().offsetWidth+"px");
-                else
-                  self.style("width",coorx+"px");
-              })
-            )
-      })
-    }
-  };
-
-  var cleanData = function(d,columns){
-    var dd = {};
-    columns.forEach(function(c){
-      dd[c] = d[c];
-    });
-    if(d.hasOwnProperty("index")){
-      dd.index = d.index;
-    }
-    if(options.showCoordinates && !options.heatmap){
-      if(dd.hasOwnProperty("x")){
-        dd["x"] = parseFloat(scaleCoorX.invert(dd["x"]).toFixed(2));
-      }
-      if(dd.hasOwnProperty("y")){
-        dd["y"] = parseFloat(scaleCoorY.invert(dd["y"]).toFixed(2));
-      }
-    }
-    return dd;
-  };
 
   var nodeColumns = getTableColumns("node"),
-      linkColumns = getTableColumns("link");
+      linkColumns = getTableColumns("link")
+      nodesData = Graph.nodes.filter(checkSelectableNode),
+      linksData = Graph.links.filter(checkSelectableLink),
+      selectedNodesData = nodesData.filter(function(n){ return n.selected; }),
+      selectedLinksData = linksData.filter(function(l){ return l.selected; });
 
-  var nodesData = Graph.nodes.filter(function(n){
-        delete n._selected;
-        return checkSelectableNode(n) && n.selected;
-      }).map(function(d){ return cleanData(d,nodeColumns); }),
-      linksData = Graph.links.filter(function(l){
-        delete l._selected;
-        return checkSelectableNodeLink(l) && l.selected;
-      }).map(function(d){ return cleanData(d,linkColumns); });
+  var tableInst = tableWrapper()
+    .update(options.heatmap ? false : function(){ simulation.restart() })
 
   if(options.showNodes){
-    tableWrapper(nodesData,"nodes",nodeColumns);
+    tableInst
+      .item("nodes")
+      .data(nodesData)
+      .columns(nodeColumns)
+      .renderCell(renderNodeCell)
+      .selectAction(options.nodeText && !options.heatmap ? function(d){
+        plot.selectAll("div.tooltip").remove();
+        showTooltip(d,true);
+      } : false)
   }
   if(options.showLinks){
-    tableWrapper(linksData,"links",linkColumns);
+    tableInst
+      .item("links")
+      .data(linksData)
+      .columns(linkColumns)
+      .renderCell(renderLinkCell)
+      .selectAction(options.nodeText && !options.heatmap ? function(d){
+        plot.selectAll("div.tooltip").remove();
+        showTooltip(d.source,true);
+        showTooltip(d.target,true);
+      } : false)
   }
+
+  body.select("div.tables").call(tableInst);
 
   // update frequency bars
   if(frequencyBars && options.frequencies){
@@ -4678,7 +4540,7 @@ function showTables() {
           })
         })
 
-        if(options.lineplotsItems=="nodes" && !nodesData.length){
+        if(options.lineplotsItems=="nodes" && !selectedNodesData.length){
           var selectItem = function(value){
             var nodes = [backupNodes[value]];
             computeDegrees(nodes);
@@ -4701,7 +4563,7 @@ function showTables() {
           });
         }
 
-        if(options.lineplotsItems=="links" && !linksData.length){
+        if(options.lineplotsItems=="links" && !selectedLinksData.length){
           var selectItem = function(value){
             var nodenames = value.split(" -> "),
                 source = nodenames[0],
@@ -4739,9 +4601,9 @@ function showTables() {
           linePlots
             .getName(function(item){ return item[options.nodeName]; })
             .bipolar(options.nodeBipolar);
-          if(nodesData.length){
-            var colors = options.nodeColor ? nodesData.map(function(node){ return VisualHandlers.nodeColor(node); }) : false,
-                nodes = nodesData.map(function(node){
+          if(selectedNodesData.length){
+            var colors = options.nodeColor ? selectedNodesData.map(function(node){ return VisualHandlers.nodeColor(node); }) : false,
+                nodes = selectedNodesData.map(function(node){
                   var name = node[options.nodeName],
                       newnode = backupNodes.filter(function(n){
                         return n[options.nodeName]==name;
@@ -4760,13 +4622,13 @@ function showTables() {
           linePlots
             .getName(function(item){ return item[options.linkSource] + " -> " + item[options.linkTarget]; })
             .bipolar(options.linkBipolar);
-          if(linksData.length){
-            var links = linksData.map(function(link){
+          if(selectedLinksData.length){
+            var links = selectedLinksData.map(function(link){
                   return getLinkData(link[options.linkSource],link[options.linkTarget]);
                 });
             linePlots.items(links)
               .colorHandler(VisualHandlers.linkColor)
-              .colors(options.linkColor ? linksData.map(function(link){ return VisualHandlers.linkColor(link); }) : false);
+              .colors(options.linkColor ? selectedLinksData.map(function(link){ return VisualHandlers.linkColor(link); }) : false);
             linePlots(container);
           }else{
             selectItem(select2.property("value"));
@@ -4818,14 +4680,14 @@ function showTables() {
     });
   }
 
-  if(!options.frequencies && !options.lineplots && nodesData.length==0){
+  if(!options.frequencies && !options.lineplots && selectedNodesData.length==0){
     infoPanel.close();
   }
 
   // highlight egonet of selection
   if(!options.heatmap){
-    var names = nodesData.map(function(node){ return node[options.nodeName]; });
-    if(nodesData.length && nodesData.length!=totalItems["nodes"]){
+    var names = selectedNodesData.map(function(node){ return node[options.nodeName]; });
+    if(selectedNodesData.length && selectedNodesData.length!=nodesData.length){
       Graph.nodes.forEach(function(node){
         delete node._back;
         if(checkSelectableNode(node) && !node.selected){
@@ -4834,7 +4696,7 @@ function showTables() {
       })
       Graph.links.forEach(function(link){
         delete link._back;
-        if(checkSelectableNodeLink(link)){
+        if(checkSelectableLink(link)){
           if(names.indexOf(link[options.linkSource])!=-1 || names.indexOf(link[options.linkTarget])!=-1){
             delete link.source._back;
             delete link.target._back;
@@ -4861,8 +4723,8 @@ function showTables() {
   checkLegendItemsChecked();
 
   // enable/disable selection buttons
-  if(nodesData.length){
-    d3.selectAll("button.primary.selectneighbors, button.primary.isolate, button.primary.filter").classed("disabled",!(nodesData.length<totalItems["nodes"]));
+  if(selectedNodesData.length){
+    d3.selectAll("button.primary.selectneighbors, button.primary.isolate, button.primary.filter").classed("disabled",!(selectedNodesData.length<nodesData.length));
     if(Graph.tree){
       d3.selectAll("button.primary.expand, button.primary.collapse").classed("disabled",true);
       Graph.nodes.forEach(function(node){
@@ -4890,7 +4752,16 @@ function getTableColumns(item){
   return names;
 }
 
-function renderCell(txt){
+function renderNodeCell(item,key){
+  var txt = item[key];
+  if(!options.heatmap && options.showCoordinates){
+    if(key=="x"){
+      return scaleCoorX.invert(item["x"]).toFixed(2);
+    }
+    if(key=="y"){
+      return scaleCoorY.invert(item["y"]).toFixed(2);
+    }
+  }
   if(txt == null){
     return "";
   }
@@ -4900,6 +4771,20 @@ function renderCell(txt){
     }else{
       return txt.join("; ");
     }
+  }
+  if(typeof txt == 'number'){
+    return formatter(txt);
+  }
+  return String(txt);
+}
+
+function renderLinkCell(item,key){
+  var txt = item[key];
+  if(txt == null){
+    return "";
+  }
+  if(typeof txt == 'object'){
+    return txt.join("; ");
   }
   if(typeof txt == 'number'){
     return formatter(txt);
@@ -4950,13 +4835,13 @@ function tables2xlsx(){
       
       Graph.nodes.forEach(function(node){
         if(node.selected){
-          nodes.push(nodenames.map(function(col){ return renderCell(node[col]); }));
+          nodes.push(nodenames.map(function(col){ return renderNodeCell(node,col); }));
         }
       })
 
       Graph.links.forEach(function(link){
         if(link.selected){
-          links.push(linknames.map(function(col){ return renderCell(link[col]); }));
+          links.push(linknames.map(function(col){ return renderLinkCell(link,col); }));
         }
       })
 
@@ -4973,11 +4858,11 @@ function tables2xlsx(){
 function selectFromTable(){
       var names = [],
           index = 0,
-          trSelected = d3.selectAll("div.tables table tr.selected");
+          table = body.select("div.tables > div.table-container > table"),
+          trSelected = table.selectAll("tr.selected");
       if(!trSelected.empty()){
-        if(!d3.select("div.tables > div.nodes").empty()){
-          if(!trSelected.empty()){
-            d3.selectAll("div.tables > div.nodes table th").each(function(d,i){
+        if(options.showNodes){
+            table.selectAll("th").each(function(d,i){
               if(this.textContent == options.nodeName)
                 index = i+1;
             })
@@ -4991,9 +4876,7 @@ function selectFromTable(){
             Graph.nodes.forEach(function(d){
               d.selected = names.indexOf(d[options.nodeName]) != -1;
             });
-          }
         }else{
-          if(!trSelected.empty()){
             trSelected
               .each(function(){
                 var source = d3.select(this).select("td:nth-child(1)").text(),
@@ -5008,7 +4891,6 @@ function selectFromTable(){
                 d.selected = true;
               }
             });
-          }
         }
         showTables();
       }

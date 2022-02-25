@@ -2173,12 +2173,12 @@ function displayTopBar(){
       exports.addBox(function(box){
         multiGraph.graphSelect(box);
       });
-    }else{
-      if(title){
+    }
+
+    if(title){
         exports.addBox(function(box){
           box.append("h2").text(title);
         })
-      }
     }
 
     d3.select(window).on("resize.topbar-collapse", collapseTopbar);
@@ -2701,3 +2701,180 @@ function displayLinePlots(){
 
   return exports;
 }
+
+function tableWrapper(){
+  var currentData = [],
+      selectedData = [],
+      columns = [],
+      item = "elements",
+      update = false,
+      selectAction = false,
+      renderCell = function renderCell(item,key){
+        var txt = item[key];
+        if(txt == null){
+          return "";
+        }
+        if(typeof txt == 'object'){
+          return txt.join("; ");
+        }
+        if(typeof txt == 'number'){
+          return formatter(txt);
+        }
+        return String(txt);
+      },
+      tableContainer,
+      table,
+      columnAlign,
+      last = -1;
+
+  function exports(tables){
+    tableContainer = tables.select("div.table-container");
+
+    if(tableContainer.empty()){
+      return;
+    }
+
+    selectedData = currentData.filter(function(d,i){
+        d.index = i;
+        delete d._selected;
+        return d.selected;
+    })
+
+    columnAlign = columns.map(function(col){
+          if(dataType(currentData,col) == 'number'){
+            return "right";
+          }
+          return null;
+        });
+
+    var tableTitle = tables.select("div.table-title")
+    tableTitle.selectAll("span").remove();
+    tableTitle.append("span").text(texts[item+"attributes"])
+    tableTitle.append("span").text(" ("+selectedData.length+" "+texts.outof+" "+currentData.length+")")
+    tableContainer.selectAll("*").remove();
+    if(selectedData.length==0){
+      tableContainer.text(texts["no"+item+"selected"]);
+    }else{
+      table = tableContainer.append("table");
+      table.on("mousedown", function(){ d3.event.stopPropagation(); })
+      table = drawHeader();
+      selectedData.forEach(drawTable);
+    }
+  }
+
+  function drawTable(d){
+      var tr = table.append("tr")
+        .datum(d.index)
+        .classed("selected",function(dd){
+          return currentData[dd]._selected;
+        });
+      columns.forEach(function(col,i){
+          var txt = renderCell(d,col);
+          tr.append("td").html(txt)
+              .style("text-align",columnAlign[i])
+              .on("mousedown",function(){ d3.event.preventDefault(); });
+      });
+      tr.on("click",function(origin){
+          var selections = false;
+          if(d3.event.shiftKey && last!=-1){
+            selections = d3.range(Math.min(last,this.rowIndex),Math.max(last,this.rowIndex)+1);
+          }
+          table.selectAll("tr").classed("selected", function(d,i){
+            var selected = d3.select(this).classed("selected");
+            if(selections){
+              if(d3.event.ctrlKey || d3.event.metaKey){
+                selected = selected || selections.indexOf(i)!=-1;
+              }else{
+                selected = selections.indexOf(i)!=-1;
+              }
+            }else{
+              if(d3.event.ctrlKey || d3.event.metaKey){
+                selected = selected ^ d == origin;
+              }else{
+                selected = d == origin;
+                if(selectAction){
+                  selectAction(currentData[origin]);
+                }
+              }
+            }
+            currentData[d]._selected = selected;                
+            return selected;
+          })
+          if(update){
+            update();
+          }
+
+          d3.select(tableContainer.node().parentNode).select("button.primary.tableselection").classed("disabled",table.selectAll("tr.selected").empty());
+
+          last = d3.select(this).classed("selected") ? this.rowIndex : -1;
+        });
+  }
+
+  function drawHeader() {
+        var thead = table.append("thead"),
+            tbody = table.append("tbody"),
+            desc0 = columns.map(function(){ return false; }),
+            desc = desc0.slice();
+        columns.forEach(function(d,i){
+          var sort1 = function(a,b){
+                if(a[d]==null) return 1;
+                if(b[d]==null) return -1;
+                return compareFunction(a[d],b[d],desc[i]);
+              };
+          thead.append("th")
+            .attr("class","sorting")
+            .text(d)
+            .style("text-align",columnAlign[i])
+            .on("click",function(){
+              tbody.selectAll("tr").remove();
+              selectedData.sort(sort1);
+              var desci = desc[i];
+              desc = desc0.slice();
+              thead.selectAll("th").attr("class","sorting");
+              desc[i] = !desci;
+              d3.select(this).attr("class",desci ? "sorting_desc" : "sorting_asc");
+              selectedData.forEach(drawTable);
+            });
+        });
+        return tbody;
+  }
+
+  exports.data = function(x){
+    if (!arguments.length) return currentData;
+    currentData = x;
+    return exports;
+  }
+
+  exports.columns = function(x){
+    if (!arguments.length) return columns;
+    columns = x;
+    return exports;
+  }
+
+  exports.item = function(x){
+    if (!arguments.length) return item;
+    item = x;
+    return exports;
+  }
+
+  exports.update = function(x){
+    if (!arguments.length) return update;
+    update = x;
+    return exports;
+  }
+
+  exports.selectAction = function(x){
+    if (!arguments.length) return selectAction;
+    selectAction = x;
+    return exports;
+  }
+
+  exports.renderCell = function(x){
+    if (!arguments.length) return renderCell;
+    renderCell = x;
+    return exports;
+  }
+
+  return exports;
+}
+

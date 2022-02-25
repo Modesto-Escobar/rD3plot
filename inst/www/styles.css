@@ -213,7 +213,7 @@ th.sorting_desc:after {
   margin-top: 10px;
   cursor: default;
 }
-.tables > .table-header > .inline-elements > .table-title span {
+.tables > .table-header > .inline-elements > .table-title > span:first-child {
   font-weight: bold;
   font-size: 1.4em;
 }
@@ -221,8 +221,7 @@ th.sorting_desc:after {
   margin: 10px;
 }
 .tables > .table-container > table {
-  cursor: initial;
-  max-width: 99%;
+  width: 100%;
 }
 .tables > .table-container > table > tbody > tr.selected {
   background-color: #cbdefb !important;
@@ -258,6 +257,23 @@ th.sorting_desc:after {
 img.icon {
   cursor: pointer;
   margin: 0 5px;
+}
+.switch-maximize-node-link {
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  text-decoration: underline;
+  margin-right: 30px;
+  font-size: 0.8em;
+  cursor: pointer;
+  color: #777777;
+}
+.switch-maximize-node-link:hover {
+  color: #000000;
+}
+.maximize-table .switch-maximize-node-link {
+  display: block;
 }
 div.switchNodeLink{
   position: absolute;
@@ -1074,12 +1090,6 @@ div.divFrameCtrl > .select-wrapper {
 .maximize-table > div.tables {
   font-size: 1.6em;
 }
-.maximize-table > div.tables div.table-container {
-  width: 100% !important;
-}
-.maximize-table > div.tables div.table-container > table {
-  width: 100%;
-}
 
 /* svg buttons and brush */
 svg .checkbox rect {
@@ -1542,9 +1552,16 @@ div.gallery-content > .legend-panel {
   left: unset;
   right: 10px;
   width: 240px;
+  pointer-events: none;
+}
+div.gallery-content > .legend-panel > div {
+   pointer-events: all;
 }
 div.gallery-content > .legend-panel > .show-panel-button {
   display: none;
+}
+div.gallery-content > .legend-panel.hide-legend {
+  width: unset;
 }
 div.gallery-content > .legend-panel.hide-legend > .show-panel-button  {
   display: inline-block;

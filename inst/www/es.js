@@ -12,9 +12,11 @@ var texts = {
     add: "Añadir",
     nodesattributes: "Atributos de nodos",
     linksattributes: "Atributos de enlaces",
+    elementsattributes: "Atributos de elementos",
     nonodesselected: "Seleciona un nodo en el gráfico para ver sus atributos.",
     nolinksselected: "Seleciona un enlace en el gráfico para ver sus atributos.",
     noitemsselected: "Selecciona nodos o enlaces.",
+    noelementsselected: "Selecciona elementos en el gráfico para ver sus atributos.",
     repulsion: "Repulsión",
     distance: "Distancia",
     loading: "Cargando...",
@@ -116,5 +118,6 @@ var texts = {
     more: "más",
     less: "menos",
     Scale: "Escala",
-    Table: "Tabla"
+    Table: "Tabla",
+    goto: "ir a"
   };

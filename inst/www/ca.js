@@ -12,9 +12,11 @@ var texts = {
     add: "Afegeix",
     nodesattributes: "Atributs dels nodes",
     linksattributes: "Atributs dels enllaços",
+    elementsattributes: "Atributs dels elements",
     nonodesselected: "Selecciona un node en el gràfic per veure els atributs.",
     nolinksselected: "Selecciona un enllaç en el gràfic per veure els atributs.",
     noitemsselected: "Selecciona nodes o enllaços.",
+    noelementsselected: "Selecciona elements en el gràfic per veure els atributs.",
     repulsion: "Repulsió",
     distance: "Distància",
     loading: "Carregant...",
@@ -116,5 +118,6 @@ var texts = {
     more: "més",
     less: "menys",
     Scale: "Escala",
-    Table: "Taula"
+    Table: "Taula",
+    goto: "anar a"
   };
