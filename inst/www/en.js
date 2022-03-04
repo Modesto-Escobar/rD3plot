@@ -15,7 +15,7 @@ var texts = {
     elementsattributes: "Element attributes",
     nonodesselected: "Select a node in the graph to see its attributes.",
     nolinksselected: "Select a link in the graph to see its attributes.",
-    noitemsselected: "Select some nodes or links.",
+    noitemsselected: "Select some elements.",
     noelementsselected: "Select some elements in the graph to see its attributes.",
     repulsion: "Repulsion",
     distance: "Distance",
@@ -104,7 +104,7 @@ var texts = {
     removefilter: "Remove filter",
     alertrecordheatmap: "Heatmap cannot be recorded.",
     speed: "Speed",
-    searchanode: "Search a node",
+    searchintable: "Search in table",
     goback: "Return",
     newtab: "Open in new tab",
     tools: "Tools",
@@ -119,5 +119,6 @@ var texts = {
     less: "less",
     Scale: "Scale",
     Table: "Table",
-    goto: "go to"
+    goto: "go to",
+    showonlyselecteditems: "Show only selected items"
   };

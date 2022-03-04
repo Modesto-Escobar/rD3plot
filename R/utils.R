@@ -390,6 +390,17 @@ showSomething <- function(opt,item,show){
     return(opt)
 }
 
+check_defaultColor <- function(defaultColor){
+  if(!is.null(defaultColor)){
+    if(isColor(defaultColor)){
+      return(col2hex(defaultColor))
+    }else{
+      warning("defaultColor: you must pass a valid color")
+    }
+  }
+  return(NULL)
+}
+
 # igraph -> network_rd3
 rd3_fromIgraph <- function(G, ...){
   if (inherits(G,"igraph")){

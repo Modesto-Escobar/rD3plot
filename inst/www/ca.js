@@ -104,7 +104,7 @@ var texts = {
     removefilter: "Treure filtre",
     alertrecordheatmap: "el heatmap no es pot gravar.",
     speed: "Velocitat",
-    searchanode: "Cerqueu un node",
+    searchintable: "Cerca a la taula ",
     goback: "Tornar",
     newtab: "Obriu a la pestanya nova",
     tools: "Eines",
@@ -119,5 +119,6 @@ var texts = {
     less: "menys",
     Scale: "Escala",
     Table: "Taula",
-    goto: "anar a"
+    goto: "anar a",
+    showonlyselecteditems: "Mostra només ítems seleccionats"
   };

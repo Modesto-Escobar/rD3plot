@@ -1113,8 +1113,8 @@ function getSVG(d,w,h){
 function displayMultiSearch(){
   var data = [],
       column = "name",
-      update = function(){},
-      update2 = function(){},
+      updateSelection = function(){},
+      updateFilter = function(){},
       filterData = function(){ return true; };
 
   function exports(sel){
@@ -1152,14 +1152,15 @@ function displayMultiSearch(){
           }
 
           var searchBoxInput = this,
-              values = searchBoxInput.value.split("\n");
+              values = searchBoxInput.value.split("\n"),
+              cutoff = data.length>100 ? 3 : 1;
 
           checkContainer.selectAll("span").remove();
           data.forEach(function(node){ delete node.selected; });
 
           values.forEach(function(value){
             var found = false;
-            if(value.length){
+            if(value.length>=cutoff){
               value = new RegExp(value,'i');
               data.filter(filterData).forEach(function(node){
                 if(String(node[column]).match(value)){
@@ -1171,7 +1172,7 @@ function displayMultiSearch(){
               .attr("class",found ? "yes": "no")
           });
 
-          update();
+          updateSelection();
 
           searchIcon.classed("disabled",!checkContainer.selectAll("span.yes").size());
         })
@@ -1184,7 +1185,7 @@ function displayMultiSearch(){
         .d(d4paths.search)
         .width(16).height(16))
       .on("click",function(){
-        update2();
+        updateFilter();
         checkContainer.selectAll("span").remove();
         searchIcon.classed("disabled",true);
         searchBox.select("textarea").property("value","");
@@ -1203,15 +1204,15 @@ function displayMultiSearch(){
     return exports;
   };
 
-  exports.update = function(x) {
-    if (!arguments.length) return update;
-    update = x;
+  exports.updateSelection = function(x) {
+    if (!arguments.length) return updateSelection;
+    updateSelection = x;
     return exports;
   };
 
-  exports.update2 = function(x) {
-    if (!arguments.length) return update2;
-    update2 = x;
+  exports.updateFilter = function(x) {
+    if (!arguments.length) return updateFilter;
+    updateFilter = x;
     return exports;
   };
 
@@ -2709,7 +2710,8 @@ function tableWrapper(){
       item = "elements",
       update = false,
       selectAction = false,
-      renderCell = function renderCell(item,key){
+      onlySelectedData = true,
+      renderCell = function(item,key){
         var txt = item[key];
         if(txt == null){
           return "";
@@ -2737,7 +2739,7 @@ function tableWrapper(){
     selectedData = currentData.filter(function(d,i){
         d.index = i;
         delete d._selected;
-        return d.selected;
+        return !onlySelectedData || d.selected;
     })
 
     columnAlign = columns.map(function(col){
@@ -2750,15 +2752,21 @@ function tableWrapper(){
     var tableTitle = tables.select("div.table-title")
     tableTitle.selectAll("span").remove();
     tableTitle.append("span").text(texts[item+"attributes"])
-    tableTitle.append("span").text(" ("+selectedData.length+" "+texts.outof+" "+currentData.length+")")
-    tableContainer.selectAll("*").remove();
+    if(onlySelectedData){
+      tableTitle.append("span").text(" ("+selectedData.length+" "+texts.outof+" "+currentData.length+")")
+    }
+    tableContainer.selectAll("table, p").remove();
     if(selectedData.length==0){
-      tableContainer.text(texts["no"+item+"selected"]);
+      tableContainer.append("p").text(texts["no"+item+"selected"]);
     }else{
       table = tableContainer.append("table");
       table.on("mousedown", function(){ d3.event.stopPropagation(); })
       table = drawHeader();
       selectedData.forEach(drawTable);
+    }
+
+    if(update){
+      update();
     }
   }
 
@@ -2800,11 +2808,10 @@ function tableWrapper(){
             currentData[d]._selected = selected;                
             return selected;
           })
+
           if(update){
             update();
           }
-
-          d3.select(tableContainer.node().parentNode).select("button.primary.tableselection").classed("disabled",table.selectAll("tr.selected").empty());
 
           last = d3.select(this).classed("selected") ? this.rowIndex : -1;
         });
@@ -2875,6 +2882,25 @@ function tableWrapper(){
     return exports;
   }
 
+  exports.onlySelectedData = function(x){
+    if (!arguments.length) return onlySelectedData;
+    onlySelectedData = x ? true : false;
+    return exports;
+  }
+
   return exports;
 }
 
+function defaultColorManagement(defaultColor){
+    if(defaultColor){
+      if(Array.isArray(defaultColor)){
+        colorScales['custom1'] = defaultColor.slice(0,3);
+        defaultColor.reverse();
+        colorScales['custom2'] = defaultColor.slice(0,3);
+        defaultColor.reverse();
+        return defaultColor[0];
+      }
+      return defaultColor;
+    }
+    return categoryColors[0];
+}

@@ -280,6 +280,7 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
   }
   
   options[["language"]] <- checkLanguage(language)
+  options[["defaultColor"]] <- check_defaultColor(defaultColor)
 
   if(is.null(help) && options[["language"]]=="es"){
     options[["help"]] <- paste0(scan(file = paste(wwwDirectory(), "help_es.html", sep = "/"), what = character(0), sep = "\n", quiet = TRUE),collapse="")
@@ -289,13 +290,6 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
   options <- showSomething(options,"linkBipolar",linkBipolar)
   options <- showSomething(options,"helpOn",helpOn)
   options <- showSomething(options,"frequencies",frequencies)
-  if(!is.null(defaultColor)){
-    if(isColor(defaultColor)){
-      options[["defaultColor"]] <- col2hex(defaultColor)
-    }else{
-      warning("defaultColor: you must pass a valid color")
-    }
-  }
   if (!is.null(controls)) options[["controls"]] <- as.numeric(controls)
   if (!is.null(mode)) options[["mode"]] <- tolower(substr(as.character(mode),1,1))
   if (!is.null(axesLabels)) options[["axesLabels"]] <- as.character(axesLabels)

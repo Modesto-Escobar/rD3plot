@@ -21,8 +21,7 @@ function network(Graph){
 
   delete Graph.options;
 
-  var defaultColor = categoryColors[0], // nodes and areas default color
-      defaultLinkColor = "#999999", // links default color
+  var defaultLinkColor = "#999999", // links default color
       linkSelectedColor = "#BB0", // Color of selected links
       nodeSelectedColor = "#FF0", // Color of selected nodes
       defaultShape = "Circle", // node shape by default
@@ -514,8 +513,7 @@ function network(Graph){
         hiddenFields.push(options[d]);
     });
 
-    if(options.defaultColor)
-      defaultColor = options.defaultColor;
+    options.defaultColor = defaultColorManagement(options.defaultColor);
 
     options.colorScalenodeColor = "RdWhGn"; // default linear scale for nodes
     options.colorScalelinkColor = "RdWhGn"; // default linear scale for links
@@ -523,7 +521,7 @@ function network(Graph){
     options.colorScalelinkIntensity = "WhBu"; // default linear scale for intensity
 
     if(options.nodeBipolar){
-      switch(defaultColor) {
+      switch(options.defaultColor) {
         case basicColors.black:
           options.colorScalenodeColor = "RdWhBk";
           break;
@@ -531,12 +529,14 @@ function network(Graph){
           options.colorScalenodeColor = "RdWhGn";
           break;
         default:
-          colorScales['custom1'] = [categoryColors[4],basicColors.white,defaultColor];
-          colorScales['custom2'] = [defaultColor,basicColors.white,categoryColors[4]];
+          if(!(colorScales.custom1 && colorScales.custom2)){
+            colorScales['custom1'] = [categoryColors[4],basicColors.white,options.defaultColor];
+            colorScales['custom2'] = [options.defaultColor,basicColors.white,categoryColors[4]];
+          }
           options.colorScalenodeColor = "custom1";
       }
     }else{
-      switch(defaultColor) {
+      switch(options.defaultColor) {
         case basicColors.black:
           options.colorScalenodeColor = "WhBk";
           break;
@@ -550,9 +550,11 @@ function network(Graph){
           options.colorScalenodeColor = "WhRd";
           break;
         default:
-          colorScales['custom1'] = [defaultColor,basicColors.white];
-          colorScales['custom2'] = [basicColors.white,defaultColor];
-          options.colorScalenodeColor = "custom2";
+          if(!(colorScales.custom1 && colorScales.custom2)){
+            colorScales['custom1'] = [basicColors.white,options.defaultColor];
+            colorScales['custom2'] = [options.defaultColor,basicColors.white];
+          }
+          options.colorScalenodeColor = "custom1";
       }
     }
 
@@ -836,6 +838,7 @@ function displayBottomPanel(){
         if(value > 200){
           height = value-dragOffset;
           plot.style("height",height+"px");
+          tables.style("height",computeTablesHeight() + "px")
         }
       })
       .on("end", function() {
@@ -847,6 +850,7 @@ function displayBottomPanel(){
     // tables
     var tables = body.append("div")
       .attr("class", "tables")
+      .style("height",computeTablesHeight() + "px")
 
     var items = [];
     if(typeof options.showNodes != "undefined"){
@@ -856,7 +860,6 @@ function displayBottomPanel(){
       items.push("links")
     }
 
-    tables.style("min-height","150px");
     panel.append("div")
       .attr("class","switchNodeLink")
       .selectAll("div")
@@ -908,6 +911,7 @@ function displayBottomPanel(){
       .attr("class","size-button")
       .on("click",function(){
         body.classed("maximize-table",!body.classed("maximize-table"));
+        tables.style("height",computeTablesHeight()+"px");
       })
 
     tableHeader = tableHeader.append("div")
@@ -915,27 +919,26 @@ function displayBottomPanel(){
 
     tableHeader.append("div")
       .attr("class","table-title");
+
     tableHeader.call(iconButton()
         .alt("xlsx")
-        .width(14)
-        .height(14)
+        .float("none")
         .src(b64Icons.xlsx)
         .title(texts.downloadtable)
         .job(tables2xlsx))
       .select("img")
-        .style("float","none")
         .style("margin-right","24px")
         .style("margin-bottom","-2px")
 
     tableHeader.append("input")
       .attr("type", "text")
-      .attr("placeholder",texts.searchanode)
+      .attr("placeholder",texts.searchintable)
       .on("keyup",function(){
         var txt = d3.select(this).property("value");
         if(txt.length>1){
           txt = new RegExp(txt,'i');
           Graph.nodes.forEach(function(node){
-            node.selected = false;
+            delete node.selected;
             if(checkSelectableNode(node)){
               var i = 0;
               while(!node.selected && i<Graph.nodenames.length){
@@ -944,6 +947,7 @@ function displayBottomPanel(){
               }
             }
           });
+          autoSelectLinks();
           showTables();
         }
       })
@@ -982,8 +986,8 @@ function displaySidebar(){
       .call(displayMultiSearch()
         .data(Graph.nodes)
         .column(options.nodeLabel ? options.nodeLabel : options.nodeName)
-        .update(showTables)
-        .update2(switchEgoNet)
+        .updateSelection(showTables)
+        .updateFilter(switchEgoNet)
         .filterData(checkSelectableNode));
 
   }else{
@@ -1758,14 +1762,18 @@ function addFilterController(){
 
   exports.update = function(onlyslider){
     // cancel if event came fom this select multiple
-    if(d3.event && d3.event.target && d3.event.target.parentNode && d3.select(d3.event.target.parentNode).classed("value-selector")){
-      return;
-    }
+    try{
+      if(d3.select(d3.event.target.parentNode).classed("value-selector")){
+        return;
+      }
+    }catch(error){}
 
     // cancel if event came fom this brush slider
-    if(d3.event && d3.event.sourceEvent && d3.event.sourceEvent.target && d3.event.sourceEvent.target.parentNode && d3.select(d3.event.sourceEvent.target.parentNode.parentNode.parentNode).classed("value-selector")){
-      return;
-    }
+    try{
+      if(d3.select(d3.event.sourceEvent.target.parentNode.parentNode.parentNode).classed("value-selector")){
+        return;
+      }
+    }catch(error){}
 
     if(onlyslider ^ !slider){
       attrSelect.dispatch("change");
@@ -3913,7 +3921,7 @@ function setColorScale(){
     if(config.scale){
       return (obj[config.key] === null)? (config.item == "node"? basicColors.white : basicColors.black) : config.scale(obj[config.key]);
     }else{
-      return config.item == "link" && !options.heatmap ? defaultLinkColor : defaultColor;
+      return config.item == "link" && !options.heatmap ? defaultLinkColor : options.defaultColor;
     }
   });
 
@@ -4480,8 +4488,16 @@ function showTables() {
       selectedNodesData = nodesData.filter(function(n){ return n.selected; }),
       selectedLinksData = linksData.filter(function(l){ return l.selected; });
 
+  var tables = body.select("div.tables");
+
   var tableInst = tableWrapper()
-    .update(options.heatmap ? false : function(){ simulation.restart() })
+    .update(function(){
+      if(!options.heatmap){
+        simulation.restart()
+      }
+      tables.select("button.primary.tableselection")
+        .classed("disabled",tables.selectAll("tr.selected").empty());
+    })
 
   if(options.showNodes){
     tableInst
@@ -4507,7 +4523,7 @@ function showTables() {
       } : false)
   }
 
-  body.select("div.tables").call(tableInst);
+  tables.call(tableInst);
 
   // update frequency bars
   if(frequencyBars && options.frequencies){
@@ -4739,7 +4755,7 @@ function showTables() {
       });
     }
   }else{
-    d3.selectAll("button.primary.tableselection, button.primary.selectneighbors, button.primary.isolate, button.primary.filter, button.primary.expand, button.primary.collapse").classed("disabled",true);
+    d3.selectAll("button.primary.selectneighbors, button.primary.isolate, button.primary.filter, button.primary.expand, button.primary.collapse").classed("disabled",true);
   }
 }
 
@@ -5253,6 +5269,13 @@ function computeHeight(){
       h = h - 165;
     }
     return h;
+}
+
+function computeTablesHeight(){
+  if(body.classed("maximize-table")){
+    return docSize.height - 20;
+  }
+  return docSize.height - height - (main ? main.node().offsetHeight : 0) - 20;
 }
 
 window.onresize = function(){

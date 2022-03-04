@@ -10,9 +10,7 @@ function gallery(Graph){
       currentGridHeight = gridHeight,
       colorScale;
 
-  if(!options.defaultColor){
-    options.defaultColor = categoryColors[0];
-  }
+  options.defaultColor = defaultColorManagement(options.defaultColor);
   options.colorScalenodeColor = "RdWhGn"; // default linear scale
 
   var splitMultiVariable = function(d){
@@ -121,6 +119,10 @@ function gallery(Graph){
           nodes.forEach(function(n){ n.selected = true; });
           displayGraph();
           return;
+        case "o":
+          d3.event.preventDefault();
+          body.select("button.tableselection").dispatch("click");
+          return;
       }
     }
   });
@@ -151,14 +153,6 @@ function gallery(Graph){
         .src(b64Icons.pdf)
         .title(texts.pdfexport)
         .job(gallery2pdf));
-
-    topBar.addIcon(iconButton()
-        .alt("xlsx")
-        .width(24)
-        .height(24)
-        .src(b64Icons.xlsx)
-        .title(texts.downloadtable)
-        .job(nodes2xlsx));
   }
 
   topBar.addIcon(iconButton()
@@ -167,31 +161,7 @@ function gallery(Graph){
         .height(24)
         .src(b64Icons.table)
         .title(texts.Table)
-        .job(function(){
-          body.classed("maximize-table",true);
-          var tables = body.append("div")
-            .attr("class","tables");
-
-          var header = tables.append("div")
-            .attr("class","table-header")
-          header.append("div")
-            .attr("class","close-button")
-            .on("click",function(){
-              body.classed("maximize-table",false);
-              tables.remove();
-            })
-          header = header.append("div")
-          .attr("class","inline-elements")
-          header.append("div")
-          .attr("class","table-title");
-
-          var table = tables.append("div")
-            .attr("class","table-container")
-
-          tables.call(tableWrapper()
-            .data(nodes)
-            .columns(getSelectOptions()));
-        }));
+        .job(displayTable));
 
   if(frequencyBars){
       topBar.addIcon(iconButton()
@@ -210,8 +180,8 @@ function gallery(Graph){
   topBar.addBox(displayMultiSearch()
         .data(nodes)
         .column(options.nodeLabel)
-        .update(displayGraph)
-        .update2(filterSelection)
+        .updateSelection(displayGraph)
+        .updateFilter(filterSelection)
         .filterData(filterNodes));
 
   // count elements
@@ -1002,24 +972,163 @@ function gallery(Graph){
     });
   }
 
-  function nodes2xlsx(){
-      var opt = getSelectOptions(),
-          data = nodes.filter(filterNodes).map(function(d){
-            return opt.map(function(dd){
-                     var txt = d[dd];
-                     if(txt == null){
-                       return "";
-                     }
-                     if(typeof txt == 'number'){
-                       return formatter(txt);
-                     }
-                     return String(txt);
-                   });
+  function displayTable(){
+    body.classed("maximize-table",true);
+    var tables = body.append("div")
+            .attr("class","tables")
+            .style("height",(docSize.height-20)+"px")
+
+    var header = tables.append("div")
+            .attr("class","table-header")
+
+    header.append("div")
+            .attr("class","close-button")
+            .on("click",closeTable)
+
+    var onlySelectedData = header.append("div")
+      .attr("class","only-selected-data")
+      .on("click",function(){
+        check.classed("checked",!check.classed("checked"));
+        tableInst.onlySelectedData(check.classed("checked"));
+        tables.call(tableInst);
+      })
+    onlySelectedData.append("span")
+        .text(texts.showonlyselecteditems+" ")
+    var check = onlySelectedData.append("div")
+        .attr("class","legend-check-box")
+
+    header = header.append("div")
+          .attr("class","inline-elements")
+
+    header.append("div")
+          .attr("class","table-title");
+
+    header.call(iconButton()
+            .alt("xlsx")
+            .float("none")
+            .src(b64Icons.xlsx)
+            .title(texts.downloadtable)
+            .job(tables2xlsx))
+            .select("img")
+              .style("margin-right","24px")
+              .style("margin-bottom","-2px")
+
+    header.append("input")
+      .attr("type", "text")
+      .attr("placeholder",texts.searchintable)
+      .on("keyup",function(){
+        var txt = d3.select(this).property("value");
+        if(txt.length>1){
+          txt = new RegExp(txt,'i');
+          var columns = tableInst.columns();
+          tableInst.data().forEach(function(node){
+            delete node.selected;
+            var i = 0;
+            while(!node.selected && i<columns.length){
+              if(String(node[columns[i++]]).match(txt))
+                node.selected = true;
+            }
           });
-      data.unshift(opt);
-      if(data.length != 0){
-        downloadExcel({items: data}, d3.select("head>title").text());
+          check.classed("checked",true);
+          tableInst.onlySelectedData(true);
+          tables.call(tableInst);
+          displayGraph();
+        }
+      })
+
+    header.append("button")
+            .attr("class","primary tableselection disabled")
+            .text(texts.tableselection)
+            .on("click",function(){
+              selectFromTable();
+              displayGraph();
+              closeTable();
+            })
+            .attr("title","ctrl + o")
+
+    header.append("button")
+            .attr("class","primary tablefilter disabled")
+            .text(texts.filter)
+            .on("click",function(){
+              selectFromTable();
+              filterSelection();
+              tableInst.data(nodes.filter(filterNodes));
+              tables.call(tableInst);
+              clearButton.classed("disabled",!filter.length);
+            })
+
+    var clearButton = header.append("button")
+      .attr("class","primary-outline clear disabled")
+      .text(texts.clear)
+      .on("click", function(){
+        topFilterInst.removeFilter();
+        tableInst.data(nodes);
+        tables.call(tableInst);
+        clearButton.classed("disabled",true);
+      });
+
+    var table = tables.append("div")
+            .attr("class","table-container")
+
+    var tableInst = tableWrapper()
+            .data(nodes.filter(filterNodes))
+            .onlySelectedData(false)
+            .columns(getSelectOptions())
+            .update(function(){
+              tables.selectAll("button.primary.tableselection, button.primary.tablefilter")
+                .classed("disabled",tables.selectAll("tr.selected").empty());
+            })
+
+    tables.call(tableInst);
+    clearButton.classed("disabled",!filter.length);
+
+    function closeTable(){
+      body.classed("maximize-table",false);
+      tables.remove();
+    }
+
+    function tables2xlsx(){
+      var columns = tableInst.columns(),
+          items = [columns];
+
+      tableInst.data().forEach(function(d){
+        if(d.selected){
+          items.push(columns.map(function(col){ return tableInst.renderCell()(d,col); }));
+        }
+      })
+
+      if(items.length == 1){
+        displayWindow()
+            .append("p")
+              .attr("class","window-message")
+              .text(texts.noitemsselected);
+      }else{
+        downloadExcel({elements: items}, d3.select("head>title").text());
       }
+    }
+
+    function selectFromTable(){
+      var names = [],
+          index = 0,
+          table = tables.select("table"),
+          trSelected = table.selectAll("tr.selected");
+      if(!trSelected.empty()){
+            table.selectAll("th").each(function(d,i){
+              if(this.textContent == options.nodeName)
+                index = i+1;
+            })
+
+            trSelected
+              .each(function(){
+                names.push(d3.select(this).select("td:nth-child("+index+")").text());
+              })
+              .classed("selected",false);
+
+            nodes.forEach(function(d){
+              d.selected = names.indexOf(d[options.nodeName]) != -1;
+            });
+      }
+    }
   }
 } // gallery function end
 

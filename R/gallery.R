@@ -22,7 +22,7 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
     showLegend = TRUE, frequencies = FALSE,
     help = NULL, helpOn = FALSE, description = NULL,
     descriptionWidth = NULL, roundedItems = FALSE, controls = 1:2,
-    cex = 1, language = c("en", "es", "ca"), dir = NULL){
+    cex = 1, defaultColor = "#1f77b4", language = c("en", "es", "ca"), dir = NULL){
   if(is.null(name)){
     name <- colnames(nodes)[1]
   }
@@ -75,6 +75,7 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
   }
   options[["cex"]] <- check_cex(cex)
   options[["language"]] <- checkLanguage(language)
+  options[["defaultColor"]] <- check_defaultColor(defaultColor)
 
   if (!is.null(image)){
     image <- image[1]
