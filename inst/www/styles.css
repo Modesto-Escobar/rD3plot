@@ -162,7 +162,7 @@ table {
   color: #000000;
   border-spacing: 0;
   border-collapse: collapse;
-} 
+}
 td, th {
   border: solid 0px #ffffff;
   padding: 4px;
@@ -232,7 +232,6 @@ th.sorting_desc:after {
   margin: 10px;
   flex-grow: 1;
   overflow-y: auto;
-  height: 100%;
 }
 .tables > .table-container > table {
   width: 100%;
@@ -246,6 +245,17 @@ th.sorting_desc:after {
 .tables > .table-container > table > tbody > tr > td {
   white-space: nowrap;
 }
+/*
+.tables > .table-container > table > thead,
+.tables > .table-container > table > tbody {
+  display: block;
+}
+.tables > .table-container > table > tbody {
+    height: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+*/
 .select-wrapper {
     display: inline-block;
     position: relative;
@@ -1561,7 +1571,6 @@ div.grid-gallery > .gallery-items.fade-labels > .item > span:after {
 div.grid-gallery > .gallery-items > .item > .tooltip {
   top: 0;
   left: 0;  
-  z-index: 1;
 }
 div.gallery-content > .legend-panel {
   left: unset;

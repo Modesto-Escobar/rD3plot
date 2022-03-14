@@ -4,7 +4,7 @@ function gallery(Graph){
       width = docSize.width,
       height = docSize.height,
       options = Graph.options,
-      filter = false,
+      itemsFilter = false,
       zoomRange = [0.1, 10],
       gridHeight = 60,
       currentGridHeight = gridHeight,
@@ -116,8 +116,7 @@ function gallery(Graph){
           return;
         case "s":
           d3.event.preventDefault();
-          nodes.forEach(function(n){ n.selected = true; });
-          displayGraph();
+          selectAllItems();
           return;
         case "o":
           d3.event.preventDefault();
@@ -223,12 +222,18 @@ function gallery(Graph){
         .property("selected",function(d){ return d[0]==options.nodeColor ? true : null; })
   });
 
-  // Deselect
+  // Select all / none
   topBar.addBox(function(box){
     box.append("button")
       .attr("class","primary")
-      .text(texts.Deselect)
-      .on("click",deselectAllItems)
+      .text(texts.selectallnone)
+      .on("click",function(){
+        if(nodes.filter(function(n){ return n.selected; }).length==nodes.filter(function(n){ return !itemsFilter || itemsFilter.indexOf(n[options.nodeName])!=-1 }).length){
+          deselectAllItems();
+        }else{
+          selectAllItems();
+        }
+      })
   })
 
   // filter selection
@@ -401,7 +406,7 @@ function gallery(Graph){
   function displayGraph(newfilter){
 
     if(typeof newfilter != "undefined")
-      filter = newfilter;
+      itemsFilter = newfilter;
 
     var data = nodes.filter(filterNodes);
 
@@ -613,6 +618,15 @@ function gallery(Graph){
     }
   }
 
+  function selectAllItems(){
+    nodes.forEach(function(n){
+      if(!itemsFilter || itemsFilter.indexOf(n[options.nodeName])!=-1){
+        n.selected = true;
+      }
+    });
+    displayGraph();
+  }
+
   function deselectAllItems(){
     nodes.forEach(function(n){ delete n.selected; });
     displayGraph();
@@ -636,7 +650,7 @@ function gallery(Graph){
   }
 
   function filterNodes(n){
-      return !filter || filter.indexOf(n[options.nodeName])!=-1 ? true : false;
+      return !itemsFilter || itemsFilter.indexOf(n[options.nodeName])!=-1 ? true : false;
   }
 
   function getSelectOptions(order){
@@ -988,13 +1002,13 @@ function gallery(Graph){
     var onlySelectedData = header.append("div")
       .attr("class","only-selected-data")
       .on("click",function(){
-        check.classed("checked",!check.classed("checked"));
-        tableInst.onlySelectedData(check.classed("checked"));
+        onlySelectedCheck.classed("checked",!onlySelectedCheck.classed("checked"));
+        tableInst.onlySelectedData(onlySelectedCheck.classed("checked"));
         tables.call(tableInst);
       })
     onlySelectedData.append("span")
         .text(texts.showonlyselecteditems+" ")
-    var check = onlySelectedData.append("div")
+    var onlySelectedCheck = onlySelectedData.append("div")
         .attr("class","legend-check-box")
 
     header = header.append("div")
@@ -1029,7 +1043,7 @@ function gallery(Graph){
                 node.selected = true;
             }
           });
-          check.classed("checked",true);
+          onlySelectedCheck.classed("checked",true);
           tableInst.onlySelectedData(true);
           tables.call(tableInst);
           displayGraph();
@@ -1041,8 +1055,11 @@ function gallery(Graph){
             .text(texts.tableselection)
             .on("click",function(){
               selectFromTable();
+              onlySelectedCheck.classed("checked",true);
+              tableInst.onlySelectedData(true);
+              tables.call(tableInst);
+
               displayGraph();
-              closeTable();
             })
             .attr("title","ctrl + o")
 
@@ -1054,7 +1071,7 @@ function gallery(Graph){
               filterSelection();
               tableInst.data(nodes.filter(filterNodes));
               tables.call(tableInst);
-              clearButton.classed("disabled",!filter.length);
+              clearButton.classed("disabled",!itemsFilter.length);
             })
 
     var clearButton = header.append("button")
@@ -1080,7 +1097,7 @@ function gallery(Graph){
             })
 
     tables.call(tableInst);
-    clearButton.classed("disabled",!filter.length);
+    clearButton.classed("disabled",!itemsFilter.length);
 
     function closeTable(){
       body.classed("maximize-table",false);
@@ -1092,7 +1109,7 @@ function gallery(Graph){
           items = [columns];
 
       tableInst.data().forEach(function(d){
-        if(d.selected){
+        if(!tableInst.onlySelectedData() || d.selected){
           items.push(columns.map(function(col){ return tableInst.renderCell()(d,col); }));
         }
       })

@@ -69,10 +69,6 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
   options <- showSomething(options,"frequencies",frequencies)
 
   if (!is.null(controls)) options[["controls"]] <- as.numeric(controls)
-  if(!is.numeric(cex)){
-    cex <- formals(gallery_rd3)[["cex"]]
-    warning("cex: must be numeric")
-  }
   options[["cex"]] <- check_cex(cex)
   options[["language"]] <- checkLanguage(language)
   options[["defaultColor"]] <- check_defaultColor(defaultColor)

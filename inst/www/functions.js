@@ -1153,7 +1153,7 @@ function displayMultiSearch(){
 
           var searchBoxInput = this,
               values = searchBoxInput.value.split("\n"),
-              cutoff = data.length>100 ? 3 : 1;
+              cutoff = data.length>1000 ? 3 : 1;
 
           checkContainer.selectAll("span").remove();
           data.forEach(function(node){ delete node.selected; });
@@ -2761,7 +2761,7 @@ function tableWrapper(){
     }else{
       table = tableContainer.append("table");
       table.on("mousedown", function(){ d3.event.stopPropagation(); })
-      table = drawHeader();
+      drawHeader();
       selectedData.forEach(drawTable);
     }
 
@@ -2771,7 +2771,8 @@ function tableWrapper(){
   }
 
   function drawTable(d){
-      var tr = table.append("tr")
+      var tbody = table.select("tbody"),
+          tr = tbody.append("tr")
         .datum(d.index)
         .classed("selected",function(dd){
           return currentData[dd]._selected;
@@ -2787,7 +2788,7 @@ function tableWrapper(){
           if(d3.event.shiftKey && last!=-1){
             selections = d3.range(Math.min(last,this.rowIndex),Math.max(last,this.rowIndex)+1);
           }
-          table.selectAll("tr").classed("selected", function(d,i){
+          tbody.selectAll("tr").classed("selected", function(d,i){
             var selected = d3.select(this).classed("selected");
             if(selections){
               if(d3.event.ctrlKey || d3.event.metaKey){
@@ -2818,7 +2819,7 @@ function tableWrapper(){
   }
 
   function drawHeader() {
-        var thead = table.append("thead"),
+        var thead = table.append("thead").append("tr"),
             tbody = table.append("tbody"),
             desc0 = columns.map(function(){ return false; }),
             desc = desc0.slice();
@@ -2843,7 +2844,6 @@ function tableWrapper(){
               selectedData.forEach(drawTable);
             });
         });
-        return tbody;
   }
 
   exports.data = function(x){
