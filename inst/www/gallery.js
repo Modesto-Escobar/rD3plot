@@ -4,7 +4,7 @@ function gallery(Graph){
       width = docSize.width,
       height = docSize.height,
       options = Graph.options,
-      itemsFilter = false,
+      itemsFiltered = false,
       zoomRange = [0.1, 10],
       gridHeight = 60,
       currentGridHeight = gridHeight,
@@ -42,7 +42,6 @@ function gallery(Graph){
   var topFilterInst = topFilter()
     .data(nodes)
     .datanames(getSelectOptions(sortAsc))
-    .attr(options.nodeName)
     .displayGraph(displayGraph);
 
   var frequencyBars = false;
@@ -177,11 +176,10 @@ function gallery(Graph){
 
   // node multi search
   topBar.addBox(displayMultiSearch()
-        .data(nodes)
+        .data(itemsFiltered ? itemsFiltered : nodes)
         .column(options.nodeLabel)
         .updateSelection(displayGraph)
-        .updateFilter(filterSelection)
-        .filterData(filterNodes));
+        .updateFilter(filterSelection));
 
   // count elements
   var elementsCount;
@@ -228,7 +226,7 @@ function gallery(Graph){
       .attr("class","primary")
       .text(texts.selectallnone)
       .on("click",function(){
-        if(nodes.filter(function(n){ return n.selected; }).length==nodes.filter(function(n){ return !itemsFilter || itemsFilter.indexOf(n[options.nodeName])!=-1 }).length){
+        if(nodes.filter(function(n){ return n.selected; }).length==(itemsFiltered ? itemsFiltered.length : nodes.length)){
           deselectAllItems();
         }else{
           selectAllItems();
@@ -405,22 +403,26 @@ function gallery(Graph){
 
   function displayGraph(newfilter){
 
-    if(typeof newfilter != "undefined")
-      itemsFilter = newfilter;
+    if(typeof newfilter != "undefined"){
+      nodes.forEach(function(node){ delete node.selected; });
+      itemsFiltered = newfilter;
+    }
 
-    var data = nodes.filter(filterNodes);
+    var filteredData = itemsFiltered ? itemsFiltered : nodes;
 
-    elementsCount.text(data.length);
+    elementsCount.text(filteredData.length);
 
     if(options.order){
-      data.sort(function(a,b){
+      filteredData.sort(function(a,b){
         var aa = a[options.order],
             bb = b[options.order];
         return compareFunction(aa,bb,options.rev);
       })
     }
 
-    var items = galleryItems.selectAll(".item").data(data, function(d){ return d[options.nodeName]; });
+    var displayData = filteredData;
+
+    var items = galleryItems.selectAll(".item").data(displayData, function(d){ return d[options.nodeName]; });
 
     var itemsEnter = items.enter()
           .append("div").attr("class","item")
@@ -501,12 +503,12 @@ function gallery(Graph){
             }
           }else if(d3.event.shiftKey){
             n.selected = true;
-            var ext = d3.extent(data.map(function(d,i){ return [i,d.selected]; }).filter(function(d){ return d[1]; }).map(function(d){ return d[0]; }));
+            var ext = d3.extent(displayData.map(function(d,i){ return [i,d.selected]; }).filter(function(d){ return d[1]; }).map(function(d){ return d[0]; }));
             d3.range(ext[0],ext[1]).forEach(function(i){
-              data[i].selected = true;
+              displayData[i].selected = true;
             });
           }else{
-            data.forEach(function(n){ delete n.selected; });
+            displayData.forEach(function(n){ delete n.selected; });
             n.selected = true;
           }
           displayGraph();
@@ -576,7 +578,7 @@ function gallery(Graph){
       }
     }
     legend
-      .data(data)
+      .data(filteredData)
       .value(options.nodeColor)
       .scale(colorScale)
     legendPanel.call(legend);
@@ -599,7 +601,7 @@ function gallery(Graph){
 
     if(descriptionPanel && frequencyBars && options.frequencies){
       frequencyBars
-            .nodes(data)
+            .nodes(filteredData)
             .nodeColor(options.nodeColor)
             .colorScale(colorScale);
       content.classed("hide-description",false);
@@ -619,10 +621,8 @@ function gallery(Graph){
   }
 
   function selectAllItems(){
-    nodes.forEach(function(n){
-      if(!itemsFilter || itemsFilter.indexOf(n[options.nodeName])!=-1){
+    (itemsFiltered ? itemsFiltered : nodes).forEach(function(n){
         n.selected = true;
-      }
     });
     displayGraph();
   }
@@ -647,10 +647,6 @@ function gallery(Graph){
       }else{
         topFilterInst.newFilter(options.nodeName,values);
       }
-  }
-
-  function filterNodes(n){
-      return !itemsFilter || itemsFilter.indexOf(n[options.nodeName])!=-1 ? true : false;
   }
 
   function getSelectOptions(order){
@@ -761,7 +757,7 @@ function gallery(Graph){
             .append("div").attr("class","legend")
         }
 
-        legends.select(".goback").style("display", filterHandler.getFilteredNames()===false ? "none" : null)
+        legends.select(".goback").style("display", itemsFiltered===false ? "none" : null)
 
         var content = legends.select(".legends-content");
         var legend = legends.select(".legend");
@@ -1069,9 +1065,9 @@ function gallery(Graph){
             .on("click",function(){
               selectFromTable();
               filterSelection();
-              tableInst.data(nodes.filter(filterNodes));
+              tableInst.data(itemsFiltered ? itemsFiltered : nodes);
               tables.call(tableInst);
-              clearButton.classed("disabled",!itemsFilter.length);
+              clearButton.classed("disabled",!itemsFiltered);
             })
 
     var clearButton = header.append("button")
@@ -1088,7 +1084,7 @@ function gallery(Graph){
             .attr("class","table-container")
 
     var tableInst = tableWrapper()
-            .data(nodes.filter(filterNodes))
+            .data(itemsFiltered ? itemsFiltered : nodes)
             .onlySelectedData(false)
             .columns(getSelectOptions())
             .update(function(){
@@ -1097,7 +1093,7 @@ function gallery(Graph){
             })
 
     tables.call(tableInst);
-    clearButton.classed("disabled",!itemsFilter.length);
+    clearButton.classed("disabled",!itemsFiltered);
 
     function closeTable(){
       body.classed("maximize-table",false);

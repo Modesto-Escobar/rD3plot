@@ -7,7 +7,7 @@ function timeline(json){
       symbolTypes = ["Circle","Square","Diamond","Triangle","Cross","Star","Wye"], // list of available shapes
       infoLeft = 0, // global variable for panel left position
       selectedGroups, // temporarily selected in checkboxes
-      filter = false; // global filter
+      itemsFiltered = false; // global filter
 
   var renderTime = function(t){
     return formatter(t);
@@ -122,7 +122,6 @@ function timeline(json){
   var topFilterInst = topFilter()
     .data(periods)
     .datanames(getOptions(periods))
-    .attr(options.name)
     .displayGraph(displayGraph);
 
   topBar.addBox(topFilterInst);
@@ -184,7 +183,7 @@ function timeline(json){
   function displayGraph(newfilter){
 
     if(typeof newfilter != "undefined")
-      filter = newfilter;
+      itemsFiltered = newfilter;
 
     var plot = body.select("div.plot")
 
@@ -206,7 +205,7 @@ function timeline(json){
           return y === null ? currentTime : y;
         };
 
-    var items = (filter ? periods.filter(function(d){ return filter.indexOf(d[options.name])!=-1; }) : periods).filter(function(d){ return d[options.group]!==null; });
+    var items = (itemsFiltered ? itemsFiltered : periods).filter(function(d){ return d[options.group]!==null; });
 
     var lanes = options.group?d3.set(items.map(function(d){ return String(d[options.group]); })).values().sort(sortAsc):[""],
         laneLength = lanes.length,
@@ -382,7 +381,7 @@ function timeline(json){
 
     var gLaneTexts = mini.append("g");
 
-    var showCheckControls = !filter && laneLength>1;
+    var showCheckControls = !itemsFiltered && laneLength>1;
 
     headerButtons.selectAll("*").remove();
 
@@ -391,7 +390,7 @@ function timeline(json){
       enableFilterButton(false);
 
       displaySeparator(mini,margin[3],y);
-    }else if(filter){
+    }else if(itemsFiltered){
       headerButtons.append("div").html("&nbsp;")
       headerButtons.append("div")
         .attr("class","goback")

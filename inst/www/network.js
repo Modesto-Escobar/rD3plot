@@ -984,11 +984,10 @@ function displaySidebar(){
     sidebar.append("div")
       .attr("class","subSearch")
       .call(displayMultiSearch()
-        .data(Graph.nodes)
+        .data(Graph.nodes.filter(checkSelectableNode))
         .column(options.nodeLabel ? options.nodeLabel : options.nodeName)
         .updateSelection(showTables)
-        .updateFilter(switchEgoNet)
-        .filterData(checkSelectableNode));
+        .updateFilter(switchEgoNet));
 
   }else{
     sidebar.selectAll("div.sidebar>div:not(.subSearch)").remove();

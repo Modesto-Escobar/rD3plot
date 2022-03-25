@@ -637,7 +637,6 @@ function topFilter(){
 
   var data = [],
       datanames = [],
-      attr = "",
       displayGraph = function(){},
       selectedValues = {},
       selFilter,
@@ -698,7 +697,7 @@ function topFilter(){
           .text(texts.apply)
           .on("click",function(){
             add2filter();
-            displayGraph(getNames());
+            displayGraph(getFilteredData());
             displayTags();
           })
       }
@@ -745,11 +744,26 @@ function topFilter(){
     }
   }
 
-  function getNames(){
-    var names = false;
+  function displayTags(){
+    if(filterTags){
+      var tags = filterTags.selectAll(".tag").data(d3.keys(selectedValues),String)
+      tags.enter().append("div")
+        .attr("class","tag")
+        .text(String)
+        .on("click",function(d){
+            delete selectedValues[d];
+            displayGraph(getFilteredData());
+            displayTags();
+         })
+
+      tags.exit().remove()
+    }
+  }
+
+  function getFilteredData(){
     var keys = d3.keys(selectedValues);
     if(keys.length){
-      names = data.filter(function(d){
+      return data.filter(function(d){
         for(var i = 0; i<keys.length; i++){
           var value = false,
               k = keys[i],
@@ -780,25 +794,9 @@ function topFilter(){
           }
         }
         return true;
-      }).map(function(d){ return d[attr]; });
+      });
     }
-    return names;
-  }
-
-  function displayTags(){
-    if(filterTags){
-      var tags = filterTags.selectAll(".tag").data(d3.keys(selectedValues),String)
-      tags.enter().append("div")
-        .attr("class","tag")
-        .text(String)
-        .on("click",function(d){
-            delete selectedValues[d];
-            displayGraph(getNames());
-            displayTags();
-         })
-
-      tags.exit().remove()
-    }
+    return false;
   }
 
   exports.removeFilter = function(){
@@ -819,12 +817,6 @@ function topFilter(){
     return exports;
   };
 
-  exports.attr = function(x) {
-    if (!arguments.length) return attr;
-    attr = x;
-    return exports;
-  };
-
   exports.displayGraph = function(x) {
     if (!arguments.length) return displayGraph;
     displayGraph = x;
@@ -836,7 +828,7 @@ function topFilter(){
     if(key){
       selectedValues[key] = values;
     }
-    displayGraph(getNames());
+    displayGraph(getFilteredData());
     displayTags();
   }
 
@@ -844,12 +836,8 @@ function topFilter(){
     if(key){
       selectedValues[key] = values;
     }
-    displayGraph(getNames());
+    displayGraph(getFilteredData());
     displayTags();
-  }
-
-  exports.getFilteredNames = function(){
-    return getNames();
   }
 
   return exports;
@@ -872,8 +860,8 @@ function compareFunction(a,b,rev){
   if(typeof a == "number" && typeof b == "number"){
     return a-b;
   }else{
-    var aa = a.substring(0,1)==".",
-        bb = b.substring(0,1)==".";
+    var aa = String(a).substring(0,1)==".",
+        bb = String(b).substring(0,1)==".";
     if(aa && !bb){
       return 1;
     }else if(bb && !aa){
@@ -1114,8 +1102,7 @@ function displayMultiSearch(){
   var data = [],
       column = "name",
       updateSelection = function(){},
-      updateFilter = function(){},
-      filterData = function(){ return true; };
+      updateFilter = function(){};
 
   function exports(sel){
 
@@ -1162,7 +1149,7 @@ function displayMultiSearch(){
             var found = false;
             if(value.length>=cutoff){
               value = new RegExp(value,'i');
-              data.filter(filterData).forEach(function(node){
+              data.forEach(function(node){
                 if(String(node[column]).match(value)){
                   node.selected = found = true;
                 }
@@ -1213,12 +1200,6 @@ function displayMultiSearch(){
   exports.updateFilter = function(x) {
     if (!arguments.length) return updateFilter;
     updateFilter = x;
-    return exports;
-  };
-
-  exports.filterData = function(x) {
-    if (!arguments.length) return filterData;
-    filterData = x;
     return exports;
   };
 
@@ -2726,7 +2707,7 @@ function tableWrapper(){
       },
       tableContainer,
       table,
-      columnAlign,
+      rightAlign,
       last = -1;
 
   function exports(tables){
@@ -2742,11 +2723,11 @@ function tableWrapper(){
         return !onlySelectedData || d.selected;
     })
 
-    columnAlign = columns.map(function(col){
+    rightAlign = columns.map(function(col){
           if(dataType(currentData,col) == 'number'){
-            return "right";
+            return true;
           }
-          return null;
+          return false;
         });
 
     var tableTitle = tables.select("div.table-title")
@@ -2762,7 +2743,7 @@ function tableWrapper(){
       table = tableContainer.append("table");
       table.on("mousedown", function(){ d3.event.stopPropagation(); })
       drawHeader();
-      selectedData.forEach(drawTable);
+      drawTable();
     }
 
     if(update){
@@ -2770,7 +2751,8 @@ function tableWrapper(){
     }
   }
 
-  function drawTable(d){
+  function drawTable(){
+    selectedData.forEach(function(d){
       var tbody = table.select("tbody"),
           tr = tbody.append("tr")
         .datum(d.index)
@@ -2779,9 +2761,12 @@ function tableWrapper(){
         });
       columns.forEach(function(col,i){
           var txt = renderCell(d,col);
-          tr.append("td").html(txt)
-              .style("text-align",columnAlign[i])
-              .on("mousedown",function(){ d3.event.preventDefault(); });
+          tr.append("td")
+              .classed("text-right",rightAlign[i] ? true : false)
+              .on("mousedown",function(){ d3.event.preventDefault(); })
+              .append("div")
+                .attr("title",txt ? txt : null)
+                .html(!txt ? "&nbsp;" : txt)
       });
       tr.on("click",function(origin){
           var selections = false;
@@ -2816,6 +2801,8 @@ function tableWrapper(){
 
           last = d3.select(this).classed("selected") ? this.rowIndex : -1;
         });
+    });
+    computeColumnWidth();
   }
 
   function drawHeader() {
@@ -2830,20 +2817,56 @@ function tableWrapper(){
                 return compareFunction(a[d],b[d],desc[i]);
               };
           thead.append("th")
-            .attr("class","sorting")
-            .text(d)
-            .style("text-align",columnAlign[i])
+            .attr("class","sorting"+(rightAlign[i] ? " text-right" : ""))
             .on("click",function(){
               tbody.selectAll("tr").remove();
               selectedData.sort(sort1);
               var desci = desc[i];
               desc = desc0.slice();
-              thead.selectAll("th").attr("class","sorting");
+              thead.selectAll("th").classed("sorting",true)
+                .classed("sorting_desc",false)
+                .classed("sorting_asc",false);
               desc[i] = !desci;
-              d3.select(this).attr("class",desci ? "sorting_desc" : "sorting_asc");
-              selectedData.forEach(drawTable);
-            });
+              d3.select(this)
+                .classed("sorting_desc",desci)
+                .classed("sorting_asc",!desci);
+              drawTable();
+            })
+            .append("div")
+              .attr("title",d)
+              .text(d)
         });
+  }
+
+  function computeColumnWidth(){
+    var thead = table.select("thead"),
+        tbody = table.select("tbody");
+        widths = [];
+
+    thead.selectAll("tr > th").each(function(d,i){
+      widths[i] = Math.min(this.offsetWidth,400);
+    });
+    tbody.selectAll("tr").filter(function(d,i){
+      return i<50;
+    }).each(function(){
+      d3.select(this).selectAll("td").each(function(d,i){
+        var w = Math.min(this.offsetWidth+10,400);
+        if(w > widths[i]){
+          widths[i] = w;
+        }
+      });
+    })
+
+    thead.selectAll("tr > th").style("width",function(d,i){
+      return widths[i]+"px";
+    });
+    tbody.selectAll("tr").each(function(){
+      d3.select(this).selectAll("td").style("width",function(d,i){
+        return widths[i]+"px";
+      });
+    })
+
+    tbody.style("width",widths.reduce(function(p,c){ return p+c; },10)+"px");
   }
 
   exports.data = function(x){

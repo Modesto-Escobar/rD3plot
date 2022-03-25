@@ -175,32 +175,16 @@ th {
   text-align: left;
   white-space: nowrap;
 }
-th.sorting,
-th.sorting_asc,
-th.sorting_desc {
-  cursor: pointer;
-}
-th.sorting:after {
-  content: "\20\2195";
-  font-size: 1.4em;
-  color: #c6c6c6;
-}
-th.sorting_asc:after {
-  content: "\20\2191";
-  font-size: 1.4em;
-  color: #2f7bee;
-}
-th.sorting_desc:after {
-  content: "\20\2193";
-  font-size: 1.4em;
-  color: #2f7bee;
-}
 .tables {
   background-color: #ffffff;
   padding: 6px 10px;
   border-top: solid 2px #2f7bee;
   display: flex;
   flex-direction: column;
+}
+.tables > h3 {
+  margin: 10px;
+  margin-bottom: 0;
 }
 .tables > .table-header {
   margin: 0 10px;
@@ -212,8 +196,7 @@ th.sorting_desc:after {
   top: 0;
   cursor: pointer;
   margin: 0px 25px 0 0;
-  font-size: 0.8em;
-  line-height: 1.4;
+  line-height: 2;
 }
 .tables > .table-header > .inline-elements > * {
   display: inline-block;
@@ -235,6 +218,9 @@ th.sorting_desc:after {
 }
 .tables > .table-container > table {
   width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 .tables > .table-container > table > tbody > tr.selected {
   background-color: #cbdefb !important;
@@ -242,20 +228,87 @@ th.sorting_desc:after {
 .tables > .table-container > table > tbody > tr:nth-child(odd) {
   background-color: #ffffff;
 }
-.tables > .table-container > table > tbody > tr > td {
-  white-space: nowrap;
-}
-/*
 .tables > .table-container > table > thead,
 .tables > .table-container > table > tbody {
   display: block;
 }
 .tables > .table-container > table > tbody {
-    height: 300px;
     overflow-y: auto;
     overflow-x: hidden;
+    flex-grow: 1;
 }
-*/
+.tables > .table-container > table > thead > tr,
+.tables > .table-container > table > tbody > tr {
+  display: block;
+  white-space: nowrap;
+}
+.tables > .table-container > table > thead > tr > th,
+.tables > .table-container > table > tbody > tr > td {
+  overflow: hidden;
+  white-space: nowrap;
+  display: inline-block;
+  padding: 0;
+  position: relative;
+}
+.tables > .table-container > table > thead > tr > th > div,
+.tables > .table-container > table > tbody > tr > td > div {
+  padding: 4px;
+}
+.tables > .table-container > table > thead > tr > th.sorting,
+.tables > .table-container > table > thead > tr > th.sorting_asc,
+.tables > .table-container > table > thead > tr > th.sorting_desc {
+  cursor: pointer;
+  position: relative;
+}
+.tables > .table-container > table > thead > tr > th.sorting > div,
+.tables > .table-container > table > thead > tr > th.sorting_asc > div,
+.tables > .table-container > table > thead > tr > th.sorting_desc > div {
+  padding-right: 1.2em;
+}
+.tables > .table-container > table > thead > tr > th.sorting:after,
+.tables > .table-container > table > thead > tr > th.sorting_asc:after,
+.tables > .table-container > table > thead > tr > th.sorting_desc:after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 1.4em;
+  background: linear-gradient(to right, transparent 0%, white 25%);
+}
+.tables > .table-container > table > thead > tr > th.sorting:after {
+  content: "\20\2195";
+  color: #c6c6c6;
+}
+.tables > .table-container > table > thead > tr > th.sorting_asc:after {
+  content: "\20\2191";
+  color: #2f7bee;
+}
+.tables > .table-container > table > thead > tr > th.sorting_desc:after {
+  content: "\20\2193";
+  color: #2f7bee;
+}
+.tables > .table-container > table > tbody > tr > td:after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%; 
+  background: linear-gradient(to right, transparent 90%, white);
+  pointer-events: none;
+}
+.tables > .table-container > table > thead > tr > th.text-right,
+.tables > .table-container > table > tbody > tr > td.text-right {
+  text-align: right;
+}
+.tables > .table-container > table > tbody > tr > td.text-right:after {
+  background: linear-gradient(to left, transparent 90%, white);
+}
+.tables > .table-container > table > tbody > tr.selected > td:after {
+  background: linear-gradient(to right, transparent 90%, #cbdefb);
+}
+.tables > .table-container > table > tbody > tr.selected > td.text-right:after {
+  background: linear-gradient(to left, transparent 90%, #cbdefb);
+}
 .select-wrapper {
     display: inline-block;
     position: relative;
@@ -289,7 +342,6 @@ img.icon {
   right: 0;
   text-decoration: underline;
   margin-right: 30px;
-  font-size: 0.8em;
   cursor: pointer;
   color: #777777;
 }
@@ -1111,9 +1163,6 @@ div.divFrameCtrl > .select-wrapper {
 /* maximize table */
 .maximize-table > div:not(.tables,.window-background){
   display: none;
-}
-.maximize-table > div.tables {
-  font-size: 1.6em;
 }
 
 /* svg buttons and brush */
