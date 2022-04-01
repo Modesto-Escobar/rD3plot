@@ -8,7 +8,8 @@ function gallery(Graph){
       zoomRange = [0.1, 10],
       gridHeight = 60,
       currentGridHeight = gridHeight,
-      colorScale;
+      colorScale,
+      pagination = false;
 
   options.defaultColor = defaultColorManagement(options.defaultColor);
   options.colorScalenodeColor = "RdWhGn"; // default linear scale
@@ -34,6 +35,10 @@ function gallery(Graph){
       splitMultiVariable(node);
       node[options.nodeName] = String(node[options.nodeName]);
       nodes.push(node);
+  }
+
+  if(nodes.length>1000){
+    pagination = 1;
   }
 
   options.showTopbar = showControls(options,1);
@@ -283,6 +288,18 @@ function gallery(Graph){
   var gallery = content.append("div")
         .attr("class","grid-gallery");
 
+  if(pagination){
+    gallery.on("scroll",function(){
+      if(this.scrollTop==0){
+        pagination = 1;
+        displayGraph();
+      }else if((this.scrollTop + this.clientHeight >= this.scrollHeight) && (galleryItems.selectAll("div.item").size()<(itemsFiltered ? itemsFiltered.length : nodes.length))) {
+        pagination++;
+        displayGraph();
+      }
+    })
+  }
+
   if(descriptionPanel && options.descriptionWidth){
       descriptionPanel.style("width",options.descriptionWidth+"%")
       gallery.style("width",(100-options.descriptionWidth)+"%")
@@ -421,6 +438,10 @@ function gallery(Graph){
     }
 
     var displayData = filteredData;
+    if(pagination){
+      var limit  = width/(currentGridHeight+12) * height/(currentGridHeight+12);
+      displayData = filteredData.filter(function(d,i){ return i<pagination*limit; });
+    }
 
     var items = galleryItems.selectAll(".item").data(displayData, function(d){ return d[options.nodeName]; });
 

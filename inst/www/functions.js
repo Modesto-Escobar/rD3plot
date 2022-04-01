@@ -2708,7 +2708,8 @@ function tableWrapper(){
       tableContainer,
       table,
       rightAlign,
-      last = -1;
+      last = -1,
+      pagination = false;
 
   function exports(tables){
     tableContainer = tables.select("div.table-container");
@@ -2740,9 +2741,23 @@ function tableWrapper(){
     if(selectedData.length==0){
       tableContainer.append("p").text(texts["no"+item+"selected"]);
     }else{
+      if(selectedData.length>100){
+        pagination = 1;
+      }
       table = tableContainer.append("table");
       table.on("mousedown", function(){ d3.event.stopPropagation(); })
       drawHeader();
+      var tbody = table.append("tbody");
+      if(pagination){
+        tbody.on("scroll",function(){
+          if(this.scrollTop==0){
+            pagination = 1;
+          }else if((this.scrollTop + this.clientHeight >= this.scrollHeight) && (tbody.selectAll("tr").size() < selectedData.length)){
+            pagination++;
+          }
+          drawTable();
+        })
+      }
       drawTable();
     }
 
@@ -2752,8 +2767,17 @@ function tableWrapper(){
   }
 
   function drawTable(){
-    selectedData.forEach(function(d){
-      var tbody = table.select("tbody"),
+    var tbody = table.select("tbody");
+    tbody.selectAll("tr").remove();
+    var stop = selectedData.length;
+    if(pagination){
+      stop = 100*pagination;
+      if(stop>selectedData.length){
+        stop = selectedData.length
+      }
+    }
+    for(var i=0; i<stop; i++){
+      var d = selectedData[i],
           tr = tbody.append("tr")
         .datum(d.index)
         .classed("selected",function(dd){
@@ -2769,9 +2793,10 @@ function tableWrapper(){
                 .html(!txt ? "&nbsp;" : txt)
       });
       tr.on("click",function(origin){
-          var selections = false;
+          var selections = false,
+              rowIndex = this.rowIndex-1;
           if(d3.event.shiftKey && last!=-1){
-            selections = d3.range(Math.min(last,this.rowIndex),Math.max(last,this.rowIndex)+1);
+            selections = d3.range(Math.min(last,rowIndex),Math.max(last,rowIndex)+1);
           }
           tbody.selectAll("tr").classed("selected", function(d,i){
             var selected = d3.select(this).classed("selected");
@@ -2799,15 +2824,14 @@ function tableWrapper(){
             update();
           }
 
-          last = d3.select(this).classed("selected") ? this.rowIndex : -1;
+          last = d3.select(this).classed("selected") ? rowIndex : -1;
         });
-    });
+    }
     computeColumnWidth();
   }
 
   function drawHeader() {
         var thead = table.append("thead").append("tr"),
-            tbody = table.append("tbody"),
             desc0 = columns.map(function(){ return false; }),
             desc = desc0.slice();
         columns.forEach(function(d,i){
@@ -2819,7 +2843,6 @@ function tableWrapper(){
           thead.append("th")
             .attr("class","sorting"+(rightAlign[i] ? " text-right" : ""))
             .on("click",function(){
-              tbody.selectAll("tr").remove();
               selectedData.sort(sort1);
               var desci = desc[i];
               desc = desc0.slice();
@@ -2844,13 +2867,13 @@ function tableWrapper(){
         widths = [];
 
     thead.selectAll("tr > th").each(function(d,i){
-      widths[i] = Math.min(this.offsetWidth,400);
+      widths[i] = Math.min(this.offsetWidth,300);
     });
     tbody.selectAll("tr").filter(function(d,i){
       return i<50;
     }).each(function(){
       d3.select(this).selectAll("td").each(function(d,i){
-        var w = Math.min(this.offsetWidth+10,400);
+        var w = Math.min(this.offsetWidth+10,300);
         if(w > widths[i]){
           widths[i] = w;
         }

@@ -39,7 +39,7 @@ function network(Graph){
       sidebarWidth = 240, // sidebar width (will increase with cex)
       nodeRadius = 4.514, // base node radius
       findNodeRadius = 20, // radius in which to find a node in the canvas
-      hiddenFields = ["x","y","source","target","fx","fy","hidden","childNodes","parentNode","_frame_"]; // not to show in sidebar controllers or tables
+      hiddenFields = d3.set(["x","y","source","target","fx","fy","hidden","childNodes","parentNode","_frame_"]); // not to show in sidebar controllers or tables
 
   var simulation = d3.forceSimulation()
       .force("link", d3.forceLink())
@@ -448,7 +448,7 @@ function network(Graph){
       Graph.nodenames.forEach(function(d,j){
         node[d] = Graph.nodes[j][i];
         if(d.substr(0,1)=="_"){
-          hiddenFields.push(d);
+          hiddenFields.add(d);
         }
       })
       node.degree = 0;
@@ -510,7 +510,7 @@ function network(Graph){
 
     ["nodeText","nodeInfo"].forEach(function(d){
       if(options[d] && options[d]!=options.nodeName)
-        hiddenFields.push(options[d]);
+        hiddenFields.add(options[d]);
     });
 
     options.defaultColor = defaultColorManagement(options.defaultColor);
@@ -581,11 +581,13 @@ function network(Graph){
     if(options.imageNames){
       if(!Array.isArray(options.imageNames))
         options.imageNames = [options.imageNames];
-    }else
+    }else{
       options.imageNames = [];
+    }
     if(options.imageItems){
-      if(!Array.isArray(options.imageItems))
+      if(!Array.isArray(options.imageItems)){
         options.imageItems = [options.imageItems];
+      }
       options.nodeImage = options.imageNames[0];
       images = {};
       Graph.nodes.forEach(function(node){
@@ -600,11 +602,15 @@ function network(Graph){
           });
         })
       })
-    }else
+    }else{
       options.imageItems = [];
+    }
 
     options.imageItems.forEach(function(d){
-      hiddenFields.push(d);
+      hiddenFields.add(d);
+    })
+    options.imageNames.forEach(function(d){
+      hiddenFields.add(d);
     })
 
     options.showSidebar = showControls(options,1);
@@ -739,7 +745,7 @@ function displayMain(){
   if(options.frequencies){
       options.frequencies = false;
       frequencyBars = displayFreqBars()
-        .nodenames(Graph.nodenames.filter(function(d){ return hiddenFields.indexOf(d)==-1; }).filter(function(d){ return d!=options.nodeName; }))
+        .nodenames(Graph.nodenames.filter(function(d){ return !hiddenFields.has(d); }).filter(function(d){ return d!=options.nodeName; }))
         .updateSelection(showTables)
         .applyColor(function(name){ applyAuto("nodeColor",name); })
         .applyShape(function(name){ applyAuto("nodeShape",name); })
@@ -1471,7 +1477,7 @@ function addVisualController(){
 
     sels.each(function(visual){
       var attributes = Graph[item+"names"].filter(function(d){
-          if(hiddenFields.indexOf(d)==-1 && (items!="links" || (options.linkSource!=d && options.linkTarget!=d))){
+          if(!hiddenFields.has(d) && (items!="links" || (options.linkSource!=d && options.linkTarget!=d))){
             var t = dataType(data,d,true);
             if(!((onlyNumeric.indexOf(visual)!=-1 && t!="number") || (visual=="Image" && options.imageNames.indexOf(d)==-1))){
               return true;
@@ -1584,7 +1590,7 @@ function addFilterController(){
       .attr("class","attrSel");
 
     var attributes = Graph[item+"names"].filter(function(d){
-      return hiddenFields.indexOf(d)==-1 && (items!="links" || (options.linkSource!=d && options.linkTarget!=d));
+      return !hiddenFields.has(d) && (items!="links" || (options.linkSource!=d && options.linkTarget!=d));
     });
 
     attrSelect.selectAll("option")
@@ -3981,7 +3987,7 @@ function setColorScale(){
       var selectionWindow = attrSelectionWindow()
             .visual("Color")
             .active(config.key)
-            .list(Graph[config.item+"names"].filter(function(d){ return hiddenFields.indexOf(d)==-1; }))
+            .list(Graph[config.item+"names"].filter(function(d){ return !hiddenFields.has(d); }))
             .clickAction(function(val){
               applyAuto("nodeColor",val);
             });
@@ -4276,7 +4282,7 @@ function displayLegend(){
     var selectionWindow = attrSelectionWindow()
             .visual(type)
             .active(options["node"+type])
-            .list(Graph.nodenames.filter(function(d){ return hiddenFields.indexOf(d)==-1; }))
+            .list(Graph.nodenames.filter(function(d){ return !hiddenFields.has(d); }))
             .clickAction(function(val){
               applyAuto("node"+type,val);
             });
@@ -4759,7 +4765,7 @@ function showTables() {
 }
 
 function getTableColumns(item){
-  var names = Graph[item+"names"].filter(function(d){ return hiddenFields.indexOf(d)==-1; });
+  var names = Graph[item+"names"].filter(function(d){ return !hiddenFields.has(d); });
   if(item=="node" && options.showCoordinates && !options.heatmap){
     names.push("x");
     names.push("y")
