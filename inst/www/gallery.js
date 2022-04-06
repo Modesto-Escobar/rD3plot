@@ -293,7 +293,7 @@ function gallery(Graph){
       if(this.scrollTop==0){
         pagination = 1;
         displayGraph();
-      }else if((this.scrollTop + this.clientHeight >= this.scrollHeight) && (galleryItems.selectAll("div.item").size()<(itemsFiltered ? itemsFiltered.length : nodes.length))) {
+      }else if((this.scrollTop + this.clientHeight >= (this.scrollHeight-(this.clientHeight*2))) && (galleryItems.selectAll("div.item").size()<(itemsFiltered ? itemsFiltered.length : nodes.length))) {
         pagination++;
         displayGraph();
       }
@@ -439,7 +439,7 @@ function gallery(Graph){
 
     var displayData = filteredData;
     if(pagination){
-      var limit  = width/(currentGridHeight+12) * height/(currentGridHeight+12);
+      var limit  = Math.max(1000,(width/(currentGridHeight+12) * height/(currentGridHeight+12)));
       displayData = filteredData.filter(function(d,i){ return i<pagination*limit; });
     }
 

@@ -644,7 +644,7 @@ function topFilter(){
 
   function exports(div){
 
-    div.append("h3").text(texts.filter + ":")
+    div.append("h3").attr("class","top-filter").text(texts.filter + ":")
 
     var changeAttrSel = function(val){
       if(d3.select("body>div>div.window").empty()){
@@ -1115,7 +1115,10 @@ function displayMultiSearch(){
     var checkContainer = searchBox.append("div")
       .attr("class","check-container")
 
-    searchBox.append("div")
+    var typingTimer;
+    var typingInterval = data.length>1000 ? 1000 : 500; 
+
+    var searchBoxInput = searchBox.append("div")
       .attr("class","text-wrapper")
       .append("div")
       .attr("class","text-content")
@@ -1127,7 +1130,11 @@ function displayMultiSearch(){
         .on("blur",function(){
           searchBox.classed("focused",false);
         })
+        .on("keydown",function(){
+          clearTimeout(typingTimer);
+        })
         .on("keyup",function(){
+          clearTimeout(typingTimer);
           if(getKey(d3.event)=="Enter"){
             if(d3.event.shiftKey){
               searchIcon.dispatch("click");
@@ -1137,31 +1144,11 @@ function displayMultiSearch(){
               d3.event.stopPropagation();
             }
           }
-
-          var searchBoxInput = this,
-              values = searchBoxInput.value.split("\n"),
-              cutoff = data.length>1000 ? 3 : 1;
-
-          checkContainer.selectAll("span").remove();
-          data.forEach(function(node){ delete node.selected; });
-
-          values.forEach(function(value){
-            var found = false;
-            if(value.length>=cutoff){
-              value = new RegExp(value,'i');
-              data.forEach(function(node){
-                if(String(node[column]).match(value)){
-                  node.selected = found = true;
-                }
-              });
-            }
-            checkContainer.append("span")
-              .attr("class",found ? "yes": "no")
-          });
-
-          updateSelection();
-
-          searchIcon.classed("disabled",!checkContainer.selectAll("span.yes").size());
+          if(["ArrowLeft","ArrowRight","ArrowDown","ArrowUp"].indexOf(getKey(d3.event))!=-1){
+            return;
+          }
+          
+          typingTimer = setTimeout(doneTyping, typingInterval);
         })
 
     searchBox.append("p").text("shift + Enter to filter")
@@ -1177,6 +1164,33 @@ function displayMultiSearch(){
         searchIcon.classed("disabled",true);
         searchBox.select("textarea").property("value","");
       })
+
+    function doneTyping () {
+          var cutoff = data.length>1000 ? 3 : 1,
+              values = searchBoxInput.property("value").split("\n").filter(function(d){
+                return d.length>=cutoff;
+              });
+
+          checkContainer.selectAll("span").remove();
+          if(values.length){
+            data.forEach(function(node){ delete node.selected; });
+
+            values.forEach(function(value){
+            var found = false;
+              value = new RegExp(value,'i');
+              data.forEach(function(node){
+                if(String(node[column]).match(value)){
+                  node.selected = found = true;
+                }
+              });
+            checkContainer.append("span")
+              .attr("class",found ? "yes": "no")
+            });
+
+            updateSelection();
+          }
+          searchIcon.classed("disabled",!checkContainer.selectAll("span.yes").size());
+    }
   }
 
   exports.data = function(x) {
