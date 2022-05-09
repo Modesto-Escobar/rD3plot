@@ -9,18 +9,23 @@ galleryJSON <- function(gallery){
 
 galleryCreate <- function(gallery, dir){
   language <- getLanguageScript(gallery)
+  styles <- c("reset.css","styles.css")
   scripts <- c("d3.min.js","jspdf.min.js","jszip.min.js","html2canvas.min.js","images.js","colorScales.js","functions.js",language,"gallery.js")
   if(!is.null(gallery$options$frequencies)){
     scripts <- c(scripts,"d3.layout.cloud.js")
   }
-  createHTML(dir, c("reset.css","styles.css"), scripts, function(){ return(imgWrapper(gallery,galleryJSON,dir)) })
+  if(!is.null(gallery$options$tutorial) && gallery$options$tutorial){
+    scripts <- c(scripts,"tutorial.js",paste0("tutorial_",language))
+    styles <- c(styles,"tutorial.css")
+  }
+  createHTML(dir, styles, scripts, function(){ return(imgWrapper(gallery,galleryJSON,dir)) })
 }
 
 gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
     border = NULL, ntext = NULL, info = NULL, image = NULL, zoom = 1,
     itemsPerRow = NULL, main = NULL, note = NULL,
     showLegend = TRUE, frequencies = FALSE,
-    help = NULL, helpOn = FALSE, description = NULL,
+    help = NULL, helpOn = FALSE, tutorial = FALSE, description = NULL,
     descriptionWidth = NULL, roundedItems = FALSE, controls = 1:2,
     cex = 1, defaultColor = "#1f77b4", language = c("en", "es", "ca"), dir = NULL){
   if(is.null(name)){
@@ -66,6 +71,7 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
   options <- showSomething(options,"roundedItems",roundedItems)
   options <- showSomething(options,"showLegend",showLegend)
   options <- showSomething(options,"helpOn",helpOn)
+  options <- showSomething(options,"tutorial",tutorial)
   options <- showSomething(options,"frequencies",frequencies)
 
   if (!is.null(controls)) options[["controls"]] <- as.numeric(controls)

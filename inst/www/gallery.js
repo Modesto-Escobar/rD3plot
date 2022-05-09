@@ -409,6 +409,10 @@ function gallery(Graph){
     resetZoom();
   }
 
+  if(typeof tutorialTour != "undefined"){
+    tutorialTour(options);
+  }
+
   function resetZoom(){
     gallery.call(zoom.transform,d3.zoomIdentity.scale(options.zoom));
   }

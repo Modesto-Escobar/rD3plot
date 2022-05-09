@@ -3223,7 +3223,7 @@ function drawNet(){
       });
 
       doc.setTextColor(64);
-      d3.selectAll("g.heatmap .row text").each(function(){
+      d3.selectAll("g.heatmap > .row > text.label").each(function(){
         var self = d3.select(this),
             y = (getTranslation(d3.select(this.parentNode).attr("transform"))[1]*scale) + translate[1],
             txt = self.text(),
@@ -3232,7 +3232,7 @@ function drawNet(){
         doc.setFontSize(fontSize);
         doc.text(x-6, y+fontSize, txt, { align: "right" });
       });
-      d3.selectAll("g.heatmap .column text").each(function(){
+      d3.selectAll("g.heatmap > .column > text.label").each(function(){
         var self = d3.select(this),
             x = (getTranslation(d3.select(this.parentNode).attr("transform"))[0]*scale) + translate[0],
             txt = self.text(),
@@ -3240,6 +3240,17 @@ function drawNet(){
             fontSize = parseInt(self.style("font-size"))*scale;
         doc.setFontSize(fontSize);
         doc.text(x+fontSize, y-6, txt, null, 90);
+      });
+      d3.selectAll("g.heatmap > .row > text.cellText").each(function(){
+        var self = d3.select(this),
+            y = (getTranslation(d3.select(this.parentNode).attr("transform"))[1]*scale) + translate[1],
+            txt = self.text(),
+            x = translate[0] + parseInt(self.attr("x"))*scale,
+            fontSize = parseInt(self.style("font-size"))*scale,
+            color = self.style("fill");
+        doc.setFontSize(fontSize);
+        doc.setTextColor(color);
+        doc.text(x, y+fontSize+(dim/4), txt, { align: "center" });
       });
 
     }else{ // network display
