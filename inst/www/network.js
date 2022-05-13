@@ -513,6 +513,8 @@ function network(Graph){
         hiddenFields.add(options[d]);
     });
 
+    options.highlightNeighbors = 1;
+
     options.defaultColor = defaultColorManagement(options.defaultColor);
 
     options.colorScalenodeColor = "RdWhGn"; // default linear scale for nodes
@@ -2988,6 +2990,21 @@ function drawNet(){
       gSelectAll.append("span")
         .text(texts.selectall)
 
+      var gHighNeigh = legendBottomControls.append("div")
+        .attr("class","highlight-neighbors")
+      gHighNeigh.append("div")
+        .attr("class","legend-check-box")
+        .classed("checked",options.highlightNeighbors)
+      gHighNeigh.style("cursor","pointer")
+        .on("click",function(){
+          options.highlightNeighbors = !options.highlightNeighbors;
+          gHighNeigh.select(".legend-check-box")
+            .classed("checked",options.highlightNeighbors)
+          showTables();
+        })
+      gHighNeigh.append("span")
+        .text(texts["highlightneighbors"])
+
       displayBottomButton(legendBottomControls,"filter",texts.filterInfo+" (ctrl + e)",switchEgoNet);
       displayBottomButton(legendBottomControls,"isolate",texts.isolateInfo+" (ctrl + f)",filterSelection);
     }
@@ -4729,11 +4746,17 @@ function showTables() {
       Graph.links.forEach(function(link){
         delete link._back;
         if(checkSelectableLink(link)){
-          if(names.indexOf(link[options.linkSource])!=-1 || names.indexOf(link[options.linkTarget])!=-1){
-            delete link.source._back;
-            delete link.target._back;
+          if(options.highlightNeighbors){
+            if(names.indexOf(link[options.linkSource])!=-1 || names.indexOf(link[options.linkTarget])!=-1){
+              delete link.source._back;
+              delete link.target._back;
+            }else{
+              link._back = true;
+            }
           }else{
-            link._back = true;
+            if(names.indexOf(link[options.linkSource])==-1 || names.indexOf(link[options.linkTarget])==-1){
+              link._back = true;
+            }
           }
         }
       })

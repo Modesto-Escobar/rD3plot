@@ -120,5 +120,8 @@ var texts = {
     Scale: "Escala",
     Table: "Taula",
     goto: "anar a",
-    showonlyselecteditems: "Mostra només ítems seleccionats"
+    showonlyselecteditems: "Mostra només ítems seleccionats",
+    Variable: "Variable",
+    Value: "Valor",
+    highlightneighbors: "Ressaltar veïns"
   };

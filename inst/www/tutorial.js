@@ -128,12 +128,12 @@ function tutorialTour(options){
       var div = tutorial2.append("div")
         .attr("class","img-and-text");
       var img = div.append("div");
-      img.append("h2").text("Variable");
+      img.append("h2").text(texts.Variable);
       var options = img.append("div").attr("class","filter-options");
-      ["value1","value2","value3"].forEach(function(d){
+      [1,2,3].forEach(function(d){
         var item = options.append("div").attr("class","legend-item");
         item.append("div").attr("class","legend-check-box");
-        item.append("span").text(d);
+        item.append("span").text(texts.Value + " " + d);
       });
       img.append("center").append("button").attr("class","primary").text("Apply");
       div.append("p").text(tutorial_texts['checkingtheboxes'])
@@ -204,10 +204,10 @@ function tutorialTour(options){
       var img = div.append("div"),
           multiselect = img.append("div").attr("class","multi-select");
       multiselect.append("img").attr("src",b64Icons.menu)
-      multiselect.append("span").text("Gráfico 1")
+      multiselect.append("span").text(texts.graph + " 1")
       var dropdown = img.append("div").attr("class","dropdown");
-      ["Gráfico 1","Gráfico 2","Gráfico 3"].forEach(function(d){
-        var option = dropdown.append("div").text(d);
+      [1,2,3].forEach(function(d){
+        var option = dropdown.append("div").text(texts.graph + " " + d);
       });
       div.append("p").text(tutorial_texts['inthismenuyoucanselect'])
       div.append("p").text(tutorial_texts['movefromonetoanother'])

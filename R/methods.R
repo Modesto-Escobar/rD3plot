@@ -14,6 +14,14 @@ print.gallery_rd3 <- function(x, ...) {
   printNetwork(x)
 }
 
+print.pie_rd3 <- function(x, ...) {
+  aux <- x$data
+  if(!is.null(x$labels)){
+    names(aux) <- x$labels
+  }
+  print(aux)
+}
+
 printMain <- function(x){
   if(!is.null(x$options$main)){
     cat("Title:",x$options$main,"\n")
@@ -68,6 +76,10 @@ plot.timeline_rd3 <- function(x, dir = tempDir(), ...){
 
 plot.gallery_rd3 <- function(x, dir = tempDir(), ...){
   plotObj(x, dir, galleryCreate)
+}
+
+plot.pie_rd3 <- function(x, dir = tempDir(), ...){
+  plotObj(x, dir, pieCreate)
 }
 
 plotObj <- function(x,dir,callback){
