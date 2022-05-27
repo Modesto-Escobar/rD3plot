@@ -5166,8 +5166,8 @@ function embedImages(callback){
         canvas.width = img.width;
         canvas.height = img.height;
         var ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0);
         try{
+            ctx.drawImage(img, 0, 0);
             images64[imgSrc] = canvas.toDataURL();
         }catch(e){
             console.log(e);
@@ -5204,7 +5204,8 @@ function svg2png(callback){
   if(options.main){
     svg.append("text")
       .attr("class","main")
-      .attr({"x":+svg.attr("width")/2, "y":30})
+      .attr("x", +svg.attr("width")/2)
+      .attr("y", 30)
       .style("text-anchor","middle")
       .style("font-size",d3.select("div.main span.title").style("font-size"))
       .text(options.main);
@@ -5212,7 +5213,8 @@ function svg2png(callback){
   if(options.note){
     svg.append("text")
       .attr("class","note")
-      .attr({"x":10, "y":+svg.attr("height")-10})
+      .attr("x",10)
+      .attr("y",+svg.attr("height")-10)
       .style("font-size",d3.select("div.note").style("font-size"))
       .text(options.note);
   }

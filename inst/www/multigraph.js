@@ -84,6 +84,9 @@ window.onload = function(){
     case 'gallery':
       gallery(json);
       break;
+    case 'pie':
+      piechart(json);
+      break;
     case 'iFrame':
       displayIframe(json);
       break;

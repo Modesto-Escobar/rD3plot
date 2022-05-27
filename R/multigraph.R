@@ -19,6 +19,9 @@ for(item in names(multi)){
   }else if(inherits(graph,"gallery_rd3")){
     gClass <- "gallery"
     jsongraph <- imgWrapper(graph,galleryJSON,dir)
+  }else if(inherits(graph,"pie_rd3")){
+    gClass <- "pie"
+    jsongraph <- pieJSON(graph)
   }else if(is.character(graph) && file.exists(paste0(graph,'/index.html'))){
     gClass <- "iFrame"
     graphName <- sub("^.*/","",graph)
@@ -43,7 +46,7 @@ multiGraph <- function(multi,dir){
   language <- unique(unlist(lapply(multi,getLanguageScript)))
   if(length(language)!=1)
     language <- "en.js"
-  createHTML(dir, c("reset.css","styles.css"), c("d3.min.js","jspdf.min.js","jszip.min.js","iro.min.js","images.js","colorScales.js","functions.js",language,"multigraph.js","network.js","barplot.js","timeline.js","gallery.js"), function(){ return(multigraphJSON(multi,dir)) })
+  createHTML(dir, c("reset.css","styles.css"), c("d3.min.js","jspdf.min.js","jszip.min.js","iro.min.js","images.js","colorScales.js","functions.js",language,"multigraph.js","network.js","barplot.js","timeline.js","gallery.js","pie.js"), function(){ return(multigraphJSON(multi,dir)) })
 }
 
 polyGraph <- function(multi,dir){
