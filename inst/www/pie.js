@@ -1,9 +1,7 @@
 function piechart(json){
   var docSize = viewport(),
       width = docSize.width,
-      height = docSize.height,
-      size = Math.min(width,height),
-      radius = size/4;
+      height = docSize.height;
 
   var options = json.options;
 
@@ -13,6 +11,10 @@ function piechart(json){
       body.style("font-size", 10*options.cex + "px")
   }else{
       options.cex = 1;
+  }
+
+  if(json.linknames && typeof json.linknames == "string"){
+    json.linknames = [json.linknames];
   }
 
   // info panel
@@ -63,7 +65,9 @@ function piechart(json){
              .attr("class","tooltip")
              .style("display","none");
 
-  var colors = json.colors
+  var labels = options.labels,
+      colors = options.colors;
+
   if(!colors){
       colors = d3.range(json.dim[2]).map(function(d,i){
         return categoryColors[i % categoryColors.length];
@@ -74,27 +78,66 @@ function piechart(json){
       .attr("width", width)
       .attr("height", height);
 
+  var size = Math.min(width,height),
+      radius = size/4;
+
   if(json.dim[0]>1 || json.dim[1]>1){
+    height = height - 80;
+    size = Math.min(width,height);
     radius = Math.min(height/json.dim[0],width/json.dim[1])/2;
-    var i, j, g, w;
+    var marginleft = (width-(radius*2*json.dim[1]))/2;
+
+    if(json.rownames){
+      svg.selectAll(".rownames")
+        .data(json.rownames)
+      .enter().append("text")
+        .attr("class","rownames")
+        .attr("text-anchor","end")
+        .attr("transform",function(d,i){
+          return "translate("+(marginleft-10)+","+((radius*i*2)+radius)+")";
+        })
+        .text(String)
+    }
+
+    if(json.colnames){
+      svg.selectAll(".colnames")
+        .data(json.colnames)
+      .enter().append("text")
+        .attr("class","colnames")
+        .attr("transform",function(d,i){
+          return "translate("+(marginleft+((radius*i*2)+radius))+","+(size+10)+")rotate(45)";
+        })
+        .text(String)
+    }
+
+    var linkColors = false,
+        linkColorScale = false;
+    if(json.links && options.linkColor){
+      linkColors = json.links[json.linknames.indexOf(options.linkColor)];
+      linkColorScale = d3.scaleOrdinal()
+        .domain(d3.set(linkColors).values().sort(sortAsc))
+        .range(categoryColors)
+    }
+
+    var i, j, w;
     for(i=0; i<json.dim[0]; i++){
       for(j=0; j<json.dim[1]; j++){
-        g = svg.append("g")
-          .attr("transform","translate("+(((width-size)/2)+(radius*j*2)+radius)+","+((radius*i*2)+radius)+")")
         w = json.dataw ? json.dataw[i][j] : false;
-        drawPie(g,json.data[i][j],json.labels,colors,radius-4,false,w);
+        var color = linkColors ? linkColorScale(linkColors[(j*json.dim[1])+i]) : false;
+        drawPie(svg,marginleft+(radius*j*2)+radius,(radius*i*2)+radius,json.data[i][j],labels,colors,radius-4,false,w, color);
       }
     }
   }else{
-    var g = svg.append("g")
-      .attr("transform","translate("+(width/2)+","+(height/2)+")")
-    drawPie(g,json.data,json.labels,json.colors,radius,true,json.dataw);
+    drawPie(svg,width/2,height/2,json.data,labels,colors,radius,true,json.dataw);
   }
 
-  function drawPie(g,data, labels, colors, radius, showlabels, dataw){
+  function drawPie(svg,x,y,data, labels, colors, radius, showlabels, dataw, color){
+    var g = svg.append("g")
+      .attr("transform","translate("+x+","+y+")")
+
     g.append("circle")
-      .attr("r",radius+1)
-      .style("fill",basicColors.black)
+      .attr("r",radius+(color ? 2 : 1))
+      .style("fill",color ? color : basicColors.black)
 
     data.reverse();
 
@@ -141,6 +184,8 @@ function piechart(json){
       }
     }
 
+    var topoffset = svg.node().getBoundingClientRect().top;
+
     arcs.on("mouseenter",function(d,i){
       var text = data[i];
       if(labels && labels[labels.length-1-i]){
@@ -148,9 +193,9 @@ function piechart(json){
       }
       tooltip.text(text);
 
-      var coords = d3.mouse(body.node());
-      tooltip.style("top",(coords[1]+4)+"px");
-      tooltip.style("left",(coords[0]+4)+"px");
+      var coords = arc.centroid(d);
+      tooltip.style("top",(topoffset+y+coords[1]+4)+"px");
+      tooltip.style("left",(x+coords[0]+4)+"px");
 
       tooltip.style("display",null);
     })
@@ -159,7 +204,7 @@ function piechart(json){
       tooltip.text("");
     })
 
-    if(dataw){
+    if(dataw && dataw[0]!==null && dataw[1]!==null){
       var initAngle2 = (-180*dataw[0]/d3.sum(dataw)) * Math.PI / 180;
  
       var arc2 = d3.arc()
@@ -185,9 +230,9 @@ function piechart(json){
         if(!i){
           tooltip.text(data[i]);
 
-          var coords = d3.mouse(body.node());
-          tooltip.style("top",(coords[1]+4)+"px");
-          tooltip.style("left",(coords[0]+4)+"px");
+          var coords = arc2.centroid(d);
+          tooltip.style("top",(topoffset+y+coords[1]+4)+"px");
+          tooltip.style("left",(x+coords[0]+4)+"px");
 
           tooltip.style("display",null);
         }
@@ -199,15 +244,36 @@ function piechart(json){
     }
   }
 
-  if(options.showLegend && json.labels){
-    var datalegend = json.labels.map(function(d,i){
+  if(options.showLegend && labels){
+    var datalegend = labels.map(function(d,i){
       return [d,colors[i]];
     }).filter(function(d){
       return d[0];
     });
+    drawLegend(svg,datalegend);
+  }
+
+  if(options.showLegend && options.linkColor && linkColorScale){
+    var datalegend = linkColorScale.domain().map(function(d,i){
+      return [d,linkColorScale(d)];
+    }).filter(function(d){
+      return d[0];
+    });
+    drawLegend(svg,datalegend);
+  }
+
+  if(options.helpOn){
+    infoPanel.changeInfo(options.help);
+  }
+
+  function drawLegend(svg,datalegend){
+    var y = 50;
+    svg.selectAll(".pie-legend").each(function(){
+      y = y + this.getBBox().height + 25;
+    })
     var legend = svg.append("g")
       .attr("class","pie-legend")
-      .attr("transform","translate("+(width-200)+",50)")
+      .attr("transform","translate("+(width-200)+","+y+")")
     var items = legend.selectAll(".pie-legend-item")
         .data(datalegend)
       .enter().append("g")
@@ -225,10 +291,6 @@ function piechart(json){
       return d[0];
     })
   }
-
-  if(options.helpOn){
-    infoPanel.changeInfo(options.help);
-  } 
 
   function svg2png(){
 

@@ -9,15 +9,18 @@ Object of class \code{pie_rd3}.
 }
 
 \usage{
-pie_rd3(x, labels = NULL, colors = NULL,
-  main = NULL, note = NULL, showLegend = TRUE,
-  help = NULL, helpOn = FALSE, cex = 1,
-  language = c("en", "es", "ca"), dir = NULL)
+pie_rd3(v, w = NULL, links = NULL, labels = NULL, colors = NULL,
+  lcolor = NULL, main = NULL, note = NULL,
+  showLegend = TRUE, help = NULL, helpOn = FALSE,
+  cex = 1, language = c("en", "es", "ca"), dir = NULL)
 }
 \arguments{
-\item{x}{a vector of non-negative numerical quantities. The values in 'x' are displayed as the areas of pie slices.}
+\item{v}{a vector or array of non-negative numerical quantities. The values are displayed as the areas of pie slices.}
+\item{w}{an array of non-negative numerical quantities. The first value is displayed as a pie slice bordered red.}
+\item{links}{a data frame with information for each pie.}
 \item{labels}{character strings giving names for the slices.}
 \item{colors}{a vector of colors to be used in filling the slices.}
+\item{lcolor}{name of the column with color variable in the links data frame.}
 \item{main}{upper title of the graph.}
 \item{note}{lower title of the graph.}
 \item{showLegend}{a logical value true if the legend is to be shown.}
@@ -31,8 +34,8 @@ pie_rd3(x, labels = NULL, colors = NULL,
 Modesto Escobar, Department of Sociology and Communication, University of Salamanca.
 }
 \examples{
-pie <- pie_rd3(1:4,c("XY","X","","Y"),
-  c("black","cadetblue2", "white","cadetblue3"))
+pie <- pie_rd3(1:4, labels = c("XY","X","","Y"),
+  colors = c("black","cadetblue2", "white","cadetblue3"))
 \dontrun{
 plot(pie)
 }
