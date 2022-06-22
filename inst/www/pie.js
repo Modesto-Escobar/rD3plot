@@ -5,6 +5,9 @@ function piechart(json){
 
   var options = json.options;
 
+  var nodes = false,
+      nodesFiltered = false;
+
   var body = d3.select("body");
 
   if(options.cex){
@@ -13,8 +16,35 @@ function piechart(json){
       options.cex = 1;
   }
 
+  if(!json.nodenames && json.rownames && json.colnames){
+    json.nodenames = ["name"];
+    json.nodes = [d3.set(d3.merge([json.rownames, json.colnames])).values()];
+  }
+  if(json.nodenames){
+    nodes = [];
+    for(var i=0; i<json.nodes[0].length; i++){
+      var node = {};
+      json.nodenames.forEach(function(n,j){
+        node[n] = json.nodes[j][i];
+      });
+      nodes.push(node);
+    }
+  }
+
   if(json.linknames && typeof json.linknames == "string"){
     json.linknames = [json.linknames];
+  }
+
+  var links = false;
+  if(json.links){
+    links = linksMGMT()
+     .linknames(json.linknames)
+     .linkSource(options.linkSource)
+     .linkTarget(options.linkTarget)
+     .links(json.links)
+     .rownames(json.rownames)
+     .colnames(json.colnames)
+     .linkColor(options.linkColor);
   }
 
   // info panel
@@ -52,6 +82,51 @@ function piechart(json){
         .title(texts.svgexport)
         .job(svgDownload));
 
+  // order
+  if(nodes){
+    topBar.addBox(function(box){
+      topOrder(box,displayGraph);
+    });
+  }
+
+  // colors
+  if(links){
+    var colorSelect;
+    topBar.addBox(function(box){
+      box.append("h3").text(texts.Color + ":")
+
+      colorSelect = box.append("div")
+        .attr("class","select-wrapper")
+      .append("select")
+      .on("change",function(){
+        options.linkColor = this.value;
+        if(options.linkColor=="_none_"){
+          delete options.linkColor;
+        }
+        links.linkColor(options.linkColor);
+        displayGraph();
+      })
+      var opt = getSelectOptions(json.linknames).map(function(d){ return [d,d]; });
+      opt.unshift(["_none_","-"+texts.none+"-"]);
+      colorSelect.selectAll("option")
+          .data(opt)
+        .enter().append("option")
+          .property("value",function(d){ return d[0]; })
+          .text(function(d){ return d[1]; })
+          .property("selected",function(d){ return d[0]==options.linkColor ? true : null; })
+    });
+  }
+
+  // node filter in topBar
+  if(nodes){
+    var topFilterInst = topFilter()
+      .data(nodes)
+      .datanames(getSelectOptions(json.nodenames))
+      .displayGraph(displayGraph);
+
+    topBar.addBox(topFilterInst);
+  }
+
   height = height - topBar.height() - 4;
 
   if(options.note){
@@ -74,71 +149,282 @@ function piechart(json){
       });
   }
 
-  var svg = body.append("svg")
-      .attr("width", width)
-      .attr("height", height);
+  displayGraph();
 
-  var size = Math.min(width,height),
-      radius = size/4;
+  if(options.helpOn){
+    infoPanel.changeInfo(options.help);
+  }
 
-  if(json.dim[0]>1 || json.dim[1]>1){
-    height = height - 80;
-    size = Math.min(width,height);
-    radius = Math.min(height/json.dim[0],width/json.dim[1])/2;
-    var marginleft = (width-(radius*2*json.dim[1]))/2;
+  function displayGraph(newfilter){
+
+    if(typeof newfilter != "undefined"){
+      if(newfilter){
+        nodesFiltered = newfilter.map(function(d){ return d[options.nodeName]; });
+      }else{
+        nodesFiltered = false;
+      }
+    }
+
+    var svg = body.select("body > svg");
+    if(svg.empty()){
+      svg = body.append("svg");
+    }else{
+      svg.selectAll("*").remove();
+    }
+    svg.attr("width", width)
+       .attr("height", height);
+
+    var h = height,
+        w = width;
+
+    var size = Math.min(w,h),
+        radius = size/4;
+
+    var nrow = json.dim[0],
+        ncol = json.dim[1];
+
+    if(nrow>1 || ncol>1){
+
+      var rangei, rangej;
+      rangei = d3.range(0,nrow);
+      rangej = d3.range(0,ncol);
+
+      // order data
+      if(nodes && options.order && json.rownames && json.colnames){
+        var names = nodes.map(function(d){ return d[options.nodeName]; }),
+            orders = nodes.map(function(d){ return d[options.order]; });
+
+        rangei.sort(function order(a,b){
+            var aa = orders[names.indexOf(json.rownames[a])],
+                bb = orders[names.indexOf(json.rownames[b])];
+            return compareFunction(aa,bb,options.rev);
+        });
+
+        rangej.sort(function order(a,b){
+            var aa = orders[names.indexOf(json.colnames[a])],
+                bb = orders[names.indexOf(json.colnames[b])];
+            return compareFunction(aa,bb,options.rev);
+        });
+      }
+
+      // filter data
+      if(nodesFiltered){
+        rangei = rangei.filter(function(d,i){
+          return nodesFiltered.indexOf(json.rownames[d])!=-1;
+        });
+        rangej = rangej.filter(function(d,j){
+          return nodesFiltered.indexOf(json.colnames[d])!=-1;
+        });
+      }
+
+      h = h - 80;
+      size = Math.min(w,h);
+      radius = Math.min(h/rangei.length,w/rangej.length)/2;
+      var marginleft = (w-(radius*2*rangej.length))/2;
 
     if(json.rownames){
-      svg.selectAll(".rownames")
-        .data(json.rownames)
-      .enter().append("text")
+      rangei.forEach(function(d,i){
+        svg.append("text")
         .attr("class","rownames")
         .attr("text-anchor","end")
-        .attr("transform",function(d,i){
-          return "translate("+(marginleft-10)+","+((radius*i*2)+radius)+")";
-        })
-        .text(String)
+        .attr("transform","translate("+(marginleft-10)+","+((radius*i*2)+radius)+")")
+        .text(json.rownames[d])
+      });
     }
 
     if(json.colnames){
-      svg.selectAll(".colnames")
-        .data(json.colnames)
-      .enter().append("text")
+      rangej.forEach(function(d,i){
+        svg.append("text")
         .attr("class","colnames")
-        .attr("transform",function(d,i){
-          return "translate("+(marginleft+((radius*i*2)+radius))+","+(size+10)+")rotate(45)";
-        })
-        .text(String)
+        .attr("transform","translate("+(marginleft+((radius*i*2)+radius))+","+(size+10)+")rotate(45)")
+        .text(json.colnames[d])
+      });
     }
 
-    var linkColors = false,
-        linkColorScale = false;
-    if(json.links && options.linkColor){
-      linkColors = json.links[json.linknames.indexOf(options.linkColor)];
-      linkColorScale = d3.scaleOrdinal()
-        .domain(d3.set(linkColors).values().sort(sortAsc))
-        .range(categoryColors)
+    var e, d, c;
+    rangei.forEach(function(newI,i){
+      rangej.forEach(function(newJ,j){
+        if(options.hideUpper && i<j){
+          return;
+        }
+        e = json.dataw ? json.dataw[newI][newJ] : false;
+        c = links ? links.getLinkColor(newI,newJ) : false;
+        d = json.data[newI][newJ];
+        if(d.filter(function(dd){ return dd!==null; }).length){
+          drawPie(svg,marginleft+(radius*j*2)+radius,(radius*i*2)+radius,d,labels,colors,radius-4,false,e,c);
+        }
+      });
+    });
+
+    }else{
+      drawPie(svg,w/2,h/2,json.data,labels,colors,radius,true,json.dataw);
     }
 
-    var i, j, w;
-    for(i=0; i<json.dim[0]; i++){
-      for(j=0; j<json.dim[1]; j++){
-        w = json.dataw ? json.dataw[i][j] : false;
-        var color = linkColors ? linkColorScale(linkColors[(j*json.dim[1])+i]) : false;
-        drawPie(svg,marginleft+(radius*j*2)+radius,(radius*i*2)+radius,json.data[i][j],labels,colors,radius-4,false,w, color);
+    if(!options.order && options.ablineX){
+      if(typeof options.ablineX == "number"){
+        options.ablineX = [options.ablineX];
       }
+      options.ablineX.forEach(function(d){
+        var x = marginleft+(radius*d*2);
+        svg.append("line")
+        .attr("y1",0)
+        .attr("y2",h)
+        .attr("x1",x)
+        .attr("x2",x)
+        .style("stroke","black")
+      });
     }
-  }else{
-    drawPie(svg,width/2,height/2,json.data,labels,colors,radius,true,json.dataw);
+
+    if(!options.order && options.ablineY){
+      if(typeof options.ablineY == "number"){
+        options.ablineY = [options.ablineY];
+      }
+      options.ablineY.forEach(function(d){
+        var y = radius*d*2;
+        svg.append("line")
+        .attr("x1",marginleft)
+        .attr("x2",w-marginleft)
+        .attr("y1",y)
+        .attr("y2",y)
+        .style("stroke","black")
+      });
+    }
+
+    if(options.showLegend && labels){
+      var datalegend = labels.map(function(d,i){
+        return [d,colors[i]];
+      }).filter(function(d){
+        return d[0];
+      });
+      drawLegend(svg,datalegend);
+    }
+
+    if(options.showLegend && links && options.linkColor){
+      var datalegend = links.getColorLegend();
+      drawLegend(svg,datalegend);
+    }
   }
 
-  function drawPie(svg,x,y,data, labels, colors, radius, showlabels, dataw, color){
+  function linksMGMT(){
+    var links = [],
+        sources = [],
+        targets = [],
+        sourcetarget = [],
+        linknames = [],
+        linkSource = false,
+        linkTarget = false,
+        rownames = [],
+        colnames = [],
+        linkColor = false,
+        linkColors = false,
+        linkColorScale = false;
+
+    function exports(){
+      
+    }
+
+    function getLinkIdx(i,j){
+      if(!rownames || !colnames){
+        console.log("missing rownames or colnames");
+        return null;
+      }
+      return sourcetarget.indexOf(rownames[i]+colnames[j]);
+    }
+
+    function loadlinks(x){
+      links = x;
+      if(linknames.length && linkSource && linkTarget){
+        sources = links[linknames.indexOf(linkSource)];
+        targets = links[linknames.indexOf(linkTarget)];
+        sourcetarget = sources.map(function(s,k){ return s+targets[k]; });
+      }else{
+        console.log("missing linknames, linkSource or linkTarget");
+      }
+    }
+
+    exports.linknames = function(x){
+      if (!arguments.length) return linknames;
+      linknames = x;
+      return exports;
+    }
+
+    exports.linkSource = function(x){
+      if (!arguments.length) return linkSource;
+      linkSource = x;
+      return exports;
+    }
+
+    exports.linkTarget = function(x){
+      if (!arguments.length) return linkTarget;
+      linkTarget = x;
+      return exports;
+    }
+
+    exports.linkColor = function(x){
+      if (!arguments.length) return linkColor;
+      linkColor = x;
+      if(linkColor){
+        linkColors = links[linknames.indexOf(linkColor)];
+        linkColorScale = d3.scaleOrdinal()
+        .unknown(basicColors.black)
+        .domain(d3.set(linkColors).values().sort(sortAsc))
+        .range(categoryColors)
+      }else{
+        linkColorScale = false;
+        linkColors = false;
+        linkColor = false;
+      }
+      return exports;
+    }
+
+    exports.links = function(x){
+      if (!arguments.length) return links;
+      loadlinks(x);
+      return exports;
+    }
+
+    exports.rownames = function(x){
+      if (!arguments.length) return rownames;
+      rownames = x;
+      return exports;
+    }
+
+    exports.colnames = function(x){
+      if (!arguments.length) return colnames;
+      colnames = x;
+      return exports;
+    }
+
+    exports.getLinkColor = function(i,j){
+      if(!linkColorScale){
+        return false;
+      }
+      return linkColorScale(linkColors[getLinkIdx(i,j)]);
+    }
+
+    exports.getColorLegend = function(){
+      if(linkColorScale){
+        return linkColorScale.domain().map(function(d,i){
+          return [d,linkColorScale(d)];
+        }).filter(function(d){
+          return d[0];
+        });
+      }
+      return null;
+    }
+
+    return exports;
+  }
+
+  function drawPie(svg, x, y, d, labels, colors, radius, showlabels, dataw, color){
     var g = svg.append("g")
       .attr("transform","translate("+x+","+y+")")
 
     g.append("circle")
-      .attr("r",radius+(color ? 2 : 1))
+      .attr("r",radius+(!color || d3.hsl(color).l==0 ? 1 : 2))
       .style("fill",color ? color : basicColors.black)
 
+    var data = d.slice();
     data.reverse();
 
     var initAngle = (180*data[data.length-1]/d3.sum(data)) * Math.PI / 180;
@@ -244,26 +530,40 @@ function piechart(json){
     }
   }
 
-  if(options.showLegend && labels){
-    var datalegend = labels.map(function(d,i){
-      return [d,colors[i]];
-    }).filter(function(d){
-      return d[0];
-    });
-    drawLegend(svg,datalegend);
-  }
+  function topOrder(div,displayGraph){
 
-  if(options.showLegend && options.linkColor && linkColorScale){
-    var datalegend = linkColorScale.domain().map(function(d,i){
-      return [d,linkColorScale(d)];
-    }).filter(function(d){
-      return d[0];
-    });
-    drawLegend(svg,datalegend);
-  }
+    div.append("h3").text(texts.Order + ":")
+    var selOrder = div.append("div")
+      .attr("class","select-wrapper")
+    .append("select")
+    .on("change",function(){
+      options.order = this.value;
+      if(options.order=="-default-")
+        options.order = false;
+      displayGraph();
+    })
 
-  if(options.helpOn){
-    infoPanel.changeInfo(options.help);
+    var opt = getSelectOptions(json.nodenames);
+    opt.unshift("-default-");
+    selOrder.selectAll("option")
+        .data(opt)
+      .enter().append("option")
+        .property("selected",function(d){
+          return d==options.order;
+        })
+        .property("value",String)
+        .text(String)
+
+    div.append("h3")
+    .text(texts.Reverse)
+    div.append("button")
+    .attr("class","switch-button")
+    .classed("active",options.rev)
+    .on("click",function(){
+      options.rev = !options.rev;
+      d3.select(this).classed("active",options.rev);
+      displayGraph();
+    })
   }
 
   function drawLegend(svg,datalegend){
@@ -290,6 +590,16 @@ function piechart(json){
     items.append("text").text(function(d){
       return d[0];
     })
+  }
+
+  function getSelectOptions(names){
+    if(!names){
+      return [];
+    }
+    return names.filter(function(d){
+          return d.substring(0,1)!="_"; 
+        })
+        .sort(sortAsc);
   }
 
   function svg2png(){
@@ -320,7 +630,7 @@ function piechart(json){
     var blob = new Blob([svgString], {type: 'image/svg+xml;charset=utf-8'});
     fileDownload(blob, d3.select("head>title").text()+'.svg');
   }
-} // timeline function end
+}
 
 if(typeof multiGraph == 'undefined'){
   window.onload = function(){

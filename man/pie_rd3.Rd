@@ -9,18 +9,26 @@ Object of class \code{pie_rd3}.
 }
 
 \usage{
-pie_rd3(v, w = NULL, links = NULL, labels = NULL, colors = NULL,
-  lcolor = NULL, main = NULL, note = NULL,
+pie_rd3(v, w = NULL, labels = NULL, colors = NULL, nodes = NULL, links = NULL,
+  name = NULL, source = NULL, target = NULL, lcolor = NULL,
+  ablineX = NULL, ablineY = NULL, hideUpper = FALSE, main = NULL, note = NULL,
   showLegend = TRUE, help = NULL, helpOn = FALSE,
   cex = 1, language = c("en", "es", "ca"), dir = NULL)
 }
 \arguments{
 \item{v}{a vector or array of non-negative numerical quantities. The values are displayed as the areas of pie slices.}
 \item{w}{an array of non-negative numerical quantities. The first value is displayed as a pie slice bordered red.}
-\item{links}{a data frame with information for each pie.}
 \item{labels}{character strings giving names for the slices.}
 \item{colors}{a vector of colors to be used in filling the slices.}
+\item{nodes}{a data frame with information for rows and columns.}
+\item{links}{a data frame with information for each pie.}
+\item{name}{name of the column with rownames and colnames in the nodes data frame.}
+\item{source}{name of the column with rownames in the links data frame.}
+\item{target}{name of the column with colnames in the links data frame.}
 \item{lcolor}{name of the column with color variable in the links data frame.}
+\item{ablineX}{adds one or more straight vertical lines between pies.}
+\item{ablineY}{adds one or more straight horizontal lines between pies.}
+\item{hideUpper}{should hide the upper triangle?}
 \item{main}{upper title of the graph.}
 \item{note}{lower title of the graph.}
 \item{showLegend}{a logical value true if the legend is to be shown.}

@@ -33,7 +33,7 @@ network_rd3(nodes = NULL, links = NULL, tree = NULL,
 \item{nodes}{a data frame with at least one column of node names.}
 \item{links}{a data frame with at least two columns with source and target node names.}
 \item{tree}{a data frame with two columns: source and target, describing relationships between nodes. It indicates a hierarchy between nodes which can be dynamically explored.}
-\item{name}{name of the column with names in the nodes data frame. By default, if language="en", name is "name".}
+\item{name}{name of the column with names in the nodes data frame.}
 \item{source}{name of the column with source names in the links data frame.}
 \item{target}{name of the column with target names in the links data frame.}
 \item{label}{name of the column with labels in the nodes data frame.}

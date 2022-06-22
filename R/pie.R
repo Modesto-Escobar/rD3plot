@@ -1,5 +1,12 @@
 pieJSON <- function(pie){
   json <- list(data=pie$data, dim=pie$dim, colnames=pie$colnames, rownames=pie$rownames, dataw=pie$dataw)
+  if(length(pie$nodes)){
+    nodenames <- colnames(pie$nodes)
+    nodes <- as.list(pie$nodes)
+    names(nodes) <- NULL
+    json$nodes <- nodes
+    json$nodenames <- nodenames
+  }
   if(length(pie$links)){
     linknames <- colnames(pie$links)
     links <- as.list(pie$links)
@@ -16,7 +23,7 @@ pieCreate <- function(pie, dir){
   createHTML(dir, c("reset.css","styles.css"), c("d3.min.js","images.js","colorScales.js","functions.js",language,"pie.js"), pieJSON(pie))
 }
 
-pie_rd3 <- function(v, w = NULL, links = NULL, labels = NULL, colors = NULL, lcolor = NULL, main = NULL, note = NULL, showLegend = TRUE, help = NULL, helpOn = FALSE, cex = 1, language = c("en", "es", "ca"), dir = NULL){
+pie_rd3 <- function(v, w = NULL, labels = NULL, colors = NULL, nodes = NULL, links = NULL, name = NULL, source = NULL, target = NULL, lcolor = NULL, ablineX = NULL, ablineY = NULL, hideUpper = FALSE, main = NULL, note = NULL, showLegend = TRUE, help = NULL, helpOn = FALSE, cex = 1, language = c("en", "es", "ca"), dir = NULL){
   dimensions <- c(1,1,1)
   data <- NULL
   if(is.array(v) && length(dim(v))==3){
@@ -49,20 +56,56 @@ pie_rd3 <- function(v, w = NULL, links = NULL, labels = NULL, colors = NULL, lco
     pielist[["dataw"]] <- dataw
   }
 
-  if(!is.null(links)){
-    links <- as.data.frame(links)
-    if(dimensions[1]==1 && dimensions[2]==1){
-      links <- NULL
-      warning("links: not enough dimensions to apply link information")
-    }else if(nrow(links)!=(dimensions[1]*dimensions[2])){
-      links <- NULL
-      warning("links: number of links not matching with pies")
+  options <- list()
+
+  if(!is.null(nodes)){
+    if(is.null(name)){
+      name <- colnames(nodes)[1]
+    }
+
+    nodes[[name]] <- as.character(nodes[[name]])
+    matches <- intersect(nodes[[name]],union(colnames(data),rownames(data)))
+    if(length(matches)){
+      options$nodeName <- name
+      rownames(nodes) <- nodes[[name]]
+      nodes <- nodes[matches,]
+      pielist[["nodes"]] <- nodes
     }else{
-      pielist[["links"]] <- links
+      nodes <- NULL
+      warning("nodes: no match with 'v'")
     }
   }
 
-  options <- list()
+  if(!is.null(links)){
+    if(dimensions[1]==1 && dimensions[2]==1){
+      links <- NULL
+      warning("links: not enough dimensions to apply link information")
+    }else{
+      links <- as.data.frame(links)
+
+      if(is.null(source)){
+        source <- colnames(links)[1]
+      }
+      links[[source]] <- as.character(links[[source]])
+      links <- links[links[[source]] %in% rownames(data),]
+      options$linkSource <- source
+
+      if(is.null(target)){
+        target <- colnames(links)[2]
+      }
+      links[[target]] <- as.character(links[[target]])
+      links <- links[links[[target]] %in% colnames(data),]
+      options$linkTarget <- target
+
+      if(!nrow(links)){
+        links <- NULL
+        warning("links: no row (source and target) matches the rownames and colnames of data")
+      }else{
+        pielist[["links"]] <- links
+      }
+    }
+  }
+
   if(!is.null(labels)){
     if(length(labels)!=dimensions[3]){
      warning("labels: incorrect length")
@@ -78,11 +121,27 @@ pie_rd3 <- function(v, w = NULL, links = NULL, labels = NULL, colors = NULL, lco
     }
   }
 
+  if(!is.null(ablineX)){
+    if(ablineX<1 || ablineX>=dimensions[1]){
+      warning("ablineX: incorrect values")
+    }else{
+      options[["ablineX"]] <- as.integer(ablineX)
+    }
+  }
+  if(!is.null(ablineY)){
+    if(ablineY<1 || ablineY>=dimensions[2]){
+      warning("ablineY: incorrect values")
+    }else{
+      options[["ablineY"]] <- as.integer(ablineY)
+    }
+  }
+
   if (!is.null(main)) options[["main"]] <- main
   if (!is.null(note)) options[["note"]] <- note
   if (!is.null(help)) options[["help"]] <- help
   options[["cex"]] <- check_cex(cex)
   options[["language"]] <- checkLanguage(language)
+  options <- showSomething(options,"hideUpper",hideUpper)
   options <- showSomething(options,"showLegend",showLegend)
   options <- showSomething(options,"helpOn",helpOn)
   pielist$options <- options

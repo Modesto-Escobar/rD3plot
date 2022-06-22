@@ -6,8 +6,13 @@ wwwDirectory = function(){
 createHTML <- function(directory, styles, dependencies, json){
   indexfile <- paste(directory, "index.html", sep = "/")
   if(file.exists(directory)){
-    if(length(dir(directory))==0 || file.exists(indexfile)){
-      unlink(directory, recursive = TRUE)
+    if(file.exists(indexfile)){
+      content <- scan(file = indexfile, what = character(0), sep = "\n", quiet = TRUE)
+      if(sum(content=="<!--netCoin Project-->")==1){
+        unlink(directory, recursive = TRUE)
+      }else{
+        stop(paste0("directory: '",directory,"' already exists"))
+      }
     }else{
       stop(paste0("directory: '",directory,"' already exists"))
     }
