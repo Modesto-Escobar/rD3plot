@@ -44,7 +44,6 @@ function piechart(json){
      .links(json.links)
      .rownames(json.rownames)
      .colnames(json.colnames)
-     .linkColor(options.linkColor);
   }
 
   // info panel
@@ -103,7 +102,6 @@ function piechart(json){
         if(options.linkColor=="_none_"){
           delete options.linkColor;
         }
-        links.linkColor(options.linkColor);
         displayGraph();
       })
       var opt = getSelectOptions(json.linknames).map(function(d){ return [d,d]; });
@@ -163,6 +161,10 @@ function piechart(json){
       }else{
         nodesFiltered = false;
       }
+    }
+
+    if(links){
+      links.linkColor(options.linkColor);
     }
 
     var svg = body.select("body > svg");
@@ -256,38 +258,38 @@ function piechart(json){
       });
     });
 
+      if(!options.order && !nodesFiltered && options.ablineX){
+        if(typeof options.ablineX == "number"){
+          options.ablineX = [options.ablineX];
+        }
+        options.ablineX.forEach(function(d){
+          var x = marginleft+(radius*d*2);
+          svg.append("line")
+          .attr("y1",0)
+          .attr("y2",h)
+          .attr("x1",x)
+          .attr("x2",x)
+          .style("stroke","black")
+        });
+      }
+
+      if(!options.order && !nodesFiltered && options.ablineY){
+        if(typeof options.ablineY == "number"){
+          options.ablineY = [options.ablineY];
+        }
+        options.ablineY.forEach(function(d){
+          var y = radius*d*2;
+          svg.append("line")
+          .attr("x1",marginleft)
+          .attr("x2",w-marginleft)
+          .attr("y1",y)
+          .attr("y2",y)
+          .style("stroke","black")
+        });
+      }
+
     }else{
       drawPie(svg,w/2,h/2,json.data,labels,colors,radius,true,json.dataw);
-    }
-
-    if(!options.order && options.ablineX){
-      if(typeof options.ablineX == "number"){
-        options.ablineX = [options.ablineX];
-      }
-      options.ablineX.forEach(function(d){
-        var x = marginleft+(radius*d*2);
-        svg.append("line")
-        .attr("y1",0)
-        .attr("y2",h)
-        .attr("x1",x)
-        .attr("x2",x)
-        .style("stroke","black")
-      });
-    }
-
-    if(!options.order && options.ablineY){
-      if(typeof options.ablineY == "number"){
-        options.ablineY = [options.ablineY];
-      }
-      options.ablineY.forEach(function(d){
-        var y = radius*d*2;
-        svg.append("line")
-        .attr("x1",marginleft)
-        .attr("x2",w-marginleft)
-        .attr("y1",y)
-        .attr("y2",y)
-        .style("stroke","black")
-      });
     }
 
     if(options.showLegend && labels){
@@ -317,7 +319,8 @@ function piechart(json){
         colnames = [],
         linkColor = false,
         linkColors = false,
-        linkColorScale = false;
+        linkColorScale = false,
+        legendColors = d3.set();
 
     function exports(){
       
@@ -363,6 +366,7 @@ function piechart(json){
     exports.linkColor = function(x){
       if (!arguments.length) return linkColor;
       linkColor = x;
+      legendColors.clear();
       if(linkColor){
         linkColors = links[linknames.indexOf(linkColor)];
         linkColorScale = d3.scaleOrdinal()
@@ -399,7 +403,9 @@ function piechart(json){
       if(!linkColorScale){
         return false;
       }
-      return linkColorScale(linkColors[getLinkIdx(i,j)]);
+      var d = linkColors[getLinkIdx(i,j)];
+      legendColors.add(d);
+      return linkColorScale(d);
     }
 
     exports.getColorLegend = function(){
@@ -407,7 +413,7 @@ function piechart(json){
         return linkColorScale.domain().map(function(d,i){
           return [d,linkColorScale(d)];
         }).filter(function(d){
-          return d[0];
+          return d[0] && legendColors.has(d[0]);
         });
       }
       return null;
