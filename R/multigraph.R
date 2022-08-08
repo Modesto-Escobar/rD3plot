@@ -46,7 +46,33 @@ multiGraph <- function(multi,dir){
   language <- unique(unlist(lapply(multi,getLanguageScript)))
   if(length(language)!=1)
     language <- "en.js"
-  createHTML(dir, c("reset.css","styles.css"), c("d3.min.js","jspdf.min.js","jszip.min.js","iro.min.js","images.js","colorScales.js","functions.js",language,"multigraph.js","network.js","barplot.js","timeline.js","gallery.js","pie.js"), function(){ return(multigraphJSON(multi,dir)) })
+  styles <- c("reset.css","styles.css")
+  scripts <- c("d3.min.js","jspdf.min.js","jszip.min.js","iro.min.js","images.js","colorScales.js","functions.js",language,"multigraph.js")
+  for(i in seq_along(multi)){
+    graph <- multi[[i]]
+    if(inherits(graph,"network_rd3")){
+      scripts <- c(scripts,"network.js")
+    }
+    if(inherits(graph,"timeline_rd3")){
+      scripts <- c(scripts,"timeline.js")
+    }
+    if(inherits(graph,"barplot_rd3")){
+      scripts <- c(scripts,"barplot.js")
+    }
+    if(inherits(graph,"gallery_rd3")){
+      scripts <- c(scripts,"gallery.js")
+      if(!is.null(graph$options$tutorial) && graph$options$tutorial){
+        scripts <- c(scripts,"tutorial.js",paste0("tutorial_",language))
+        styles <- c(styles,"tutorial.css")
+      }
+    }
+    if(inherits(graph,"pie_rd3")){
+      scripts <- c(scripts,"pie.js")
+    }
+  }
+  styles <- unique(styles)
+  scripts <- unique(scripts)
+  createHTML(dir, styles, scripts, function(){ return(multigraphJSON(multi,dir)) })
 }
 
 polyGraph <- function(multi,dir){
