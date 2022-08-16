@@ -4,6 +4,12 @@ galleryJSON <- function(gallery){
     nodenames = array(colnames(gallery$nodes)),
     options = gallery$options
   )
+
+  #prepare tree
+  if(length(gallery$tree)){
+    json$tree <- unname(as.list(gallery$tree))
+  }
+
   return(toJSON(json))
 }
 
@@ -21,9 +27,9 @@ galleryCreate <- function(gallery, dir){
   createHTML(dir, styles, scripts, function(){ return(imgWrapper(gallery,galleryJSON,dir)) })
 }
 
-gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
-    border = NULL, ntext = NULL, info = NULL, image = NULL, zoom = 1,
-    itemsPerRow = NULL, main = NULL, note = NULL,
+gallery_rd3 <- function(nodes, tree = NULL, name = NULL, label = NULL,
+    color = NULL, border = NULL, ntext = NULL, info = NULL, image = NULL,
+    zoom = 1, itemsPerRow = NULL, main = NULL, note = NULL,
     showLegend = TRUE, frequencies = FALSE,
     help = NULL, helpOn = FALSE, tutorial = FALSE, description = NULL,
     descriptionWidth = NULL, roundedItems = FALSE, controls = 1:2,
@@ -93,6 +99,18 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
 
   # more options
   gallery <- checkItemValue(gallery,"nodes","nodeColor",color,"color",isColor,categoryColors,col2hex)
+  
+    #check tree
+  if(!is.null(tree)){
+    tree <- tree[tree[,1] %in% nodes[[name]] & tree[,2] %in% nodes[[name]] & as.character(tree[,2])!=as.character(tree[,1]),]
+    if(nrow(tree)==0){
+      warning("tree: no row (Source and Target) matches the name column of the nodes")
+    }else if(sum(duplicated(as.character(tree[,2])))){
+      warning("tree: there must be only one parent per node")
+    }else{
+      gallery$tree <- data.frame(Source=tree[,1],Target=tree[,2])
+    }
+  }
 
   if (!is.null(dir)) galleryCreate(gallery,dir)
   return(gallery)

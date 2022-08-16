@@ -9,7 +9,8 @@ function gallery(Graph){
       gridHeight = 60,
       currentGridHeight = gridHeight,
       colorScale,
-      pagination = false;
+      pagination = false,
+      treeParent = false;
 
   options.defaultColor = defaultColorManagement(options.defaultColor);
   options.colorScalenodeColor = "RdWhGn"; // default linear scale
@@ -431,6 +432,43 @@ function gallery(Graph){
 
     var filteredData = itemsFiltered ? itemsFiltered : nodes;
 
+    if(Graph.tree){
+      galleryBox.select(".topbar > .breadcrumbs").remove();
+      if(treeParent){
+        var breadcrumbs = galleryBox.select(".topbar").append("div")
+          .attr("class","breadcrumbs")
+          .style("padding","4px 12px")
+        breadcrumbs.append("span")
+          .text("home")
+          .style("cursor","pointer")
+          .style("color",basicColors.mediumBlue)
+          .on("click",function(){
+            treeParent = false;
+            displayGraph();
+          })
+        makePath(treeParent);
+
+        function makePath(parent){
+          var grandparent = Graph.tree[1].indexOf(parent);
+          if(grandparent!=-1){
+            makePath(Graph.tree[0][grandparent]);
+          }
+          breadcrumbs.append("span").text(" > ")
+          breadcrumbs.append("span").text(parent)
+            .style("cursor","pointer")
+            .style("color",basicColors.mediumBlue)
+            .on("click",function(){
+              treeParent = parent;
+              displayGraph();
+            })
+        }
+      }
+
+      filteredData = filteredData.filter(function(d){
+        return treeParent ? Graph.tree[0][Graph.tree[1].indexOf(d[options.nodeName])]==treeParent : Graph.tree[1].indexOf(d[options.nodeName])==-1;
+      });
+    }
+
     elementsCount.text(filteredData.length);
 
     if(options.order){
@@ -545,6 +583,13 @@ function gallery(Graph){
             }
           }
       })
+      .on("dblclick", Graph.tree ? function(d){
+        if(Graph.tree[0].indexOf(d[options.nodeName])!=-1){
+          nodes.forEach(function(node){ delete node.selected; });
+          treeParent = d[options.nodeName];
+          displayGraph();
+        }
+      } : null)
 
     if(options.nodeBorder && Graph.nodenames.indexOf(options.nodeBorder)!=-1 && dataType(nodes,options.nodeBorder)=="number"){
       var borderScale = d3.scaleLinear()

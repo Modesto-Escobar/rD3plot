@@ -38,7 +38,7 @@ div.tutorial p > img {
   vertical-align: middle;
 }
 
-div.tutorial > .tutorial-content > ul > li {
+div.tutorial > .tutorial-content > ul.ul-table > li {
   display: inline-block;
   width: 30%;
   margin-top: 12px;
