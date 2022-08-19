@@ -89,6 +89,11 @@ evolvingWrapper <- function(multi,frame,speed,loop=FALSE,lineplots=NULL){
     stop("All graphs must be 'network_rd3' objects")
   }
 
+  if(is.null(names(multi)) || !all(!duplicated(names(multi)))){
+    message("Graph names will be generated automatically")
+    names(multi) <- paste0("graph",seq_along(multi))
+  }
+
   if(!(is.numeric(frame) && frame>=0)){
       frame <- formals(evolNetwork_rd3)[["frame"]]
       warning("frame: must be integer greater than 0")
@@ -184,40 +189,66 @@ evolvingWrapper <- function(multi,frame,speed,loop=FALSE,lineplots=NULL){
   return(net)
 }
 
-getGraphList <- function(...){
-  graphs <- list(...)
-  if(!length(graphs))
-    stop("Cannot make a multigraph without graphs!")
-
-  if(is.null(names(graphs)) || !all(!duplicated(names(graphs)))){
-    message("Graph names will be generated automatically")
-    names(graphs) <- paste0("graph",seq_along(graphs))
-  }
-  return(graphs)
-}
-
 #create html wrapper for multigraph
-rd3_multigraph <- function(...,  mode = c("default","parallel","frame"), frame = 0, speed = 50, loop = FALSE, lineplots = NULL, dir = "MultiGraph", show = TRUE){
-  graphs <- getGraphList(...)
+rd3_multigraph <- function(..., mode = c("default","parallel"), dir = NULL){
+  graphs <- list(...)
 
-  mode <- substr(mode[1],1,1)
-  if(mode=="p"){
-    polyGraph(graphs,dir)
-  }else if(mode=="f"){
-    net <- evolvingWrapper(graphs,frame,speed,loop,lineplots)
-    netCreate(net,dir)
-  }else{
-    multiGraph(graphs,dir)
+  addGraph <- function(res,g,n){
+    if(is.null(n)){
+      n <- paste0("graph",length(res)+1)
+    }
+    res[[n]] <- g
+    return(res)
   }
 
-  if(identical(show,TRUE))
-    browseURL(normalizePath(paste(dir, "index.html", sep = "/")))
+  res <- list()
+  nam <- character()
+  for(i in seq_along(graphs)){
+    g <- graphs[[i]]
+    check <- FALSE
+    for(cls in c("network_rd3","timeline_rd3","barplot_rd3","gallery_rd3","pie_rd3","multi_rd3")){
+      if(inherits(g,cls)){
+        check <- TRUE
+        break
+      }
+    }
+    if(is.character(g) && file.exists(paste0(g,'/index.html'))){
+      check <- TRUE
+    }
+    if(check){
+      if(inherits(g,"multi_rd3")){
+        for(j in seq_along(g$graphs)){
+          gg <- g$graphs[[j]]
+          res <- addGraph(res,gg,names(g$graphs)[j])
+        }
+      }else{
+        res <- addGraph(res,g,names(graphs)[i])
+      }
+    }else{
+      warning('Not supported object found.')
+    }
+  }
+
+  options <- list()
+  mode <- substr(mode[1],1,1)
+  if(mode == "p"){
+    options$parallel <- TRUE
+  }
+
+  if (!is.null(dir)){
+    if(mode == "p"){
+      polyGraph(res,dir)
+    }else{
+      multiGraph(res,dir)
+    }
+  }
+
+  return(structure(list(graphs = res, options = options),class="multi_rd3"))
 }
 
 # Evolving network
 evolNetwork_rd3 <- function(..., frame = 0, speed = 50, loop = FALSE, lineplots = NULL, dir = NULL){
-  graphs <- getGraphList(...)
-  net <- evolvingWrapper(graphs,frame,speed,loop,lineplots)
+  net <- evolvingWrapper(list(...),frame,speed,loop,lineplots)
   if (!is.null(dir)) netCreate(net,dir)
   return(net)
 }

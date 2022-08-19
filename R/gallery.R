@@ -20,7 +20,7 @@ galleryCreate <- function(gallery, dir){
   if(!is.null(gallery$options$frequencies)){
     scripts <- c(scripts,"d3.layout.cloud.js")
   }
-  if(!is.null(gallery$options$tutorial) && gallery$options$tutorial){
+  if(!is.null(gallery$options$tutorial) && !identical(as.logical(gallery$options$tutorial),FALSE)){
     scripts <- c(scripts,"tutorial.js",paste0("tutorial_",language))
     styles <- c(styles,"tutorial.css")
   }
@@ -116,3 +116,29 @@ gallery_rd3 <- function(nodes, tree = NULL, name = NULL, label = NULL,
   return(gallery)
 }
 
+add_tutorial_rd3 <- function(x, image=NULL, description=NULL){
+  if(!inherits(x,"gallery_rd3")){
+    stop("x: a gallery must be provided")
+  }
+
+  x$options$tutorial <- list()
+  if(!is.null(image) && is.character(image) && file.exists(image)){
+    mime <- c("image/jpeg","image/jpeg","image/png","image/svg","image/gif")
+    names(mime) <- c("jpeg","jpg","png","svg","gif")
+    imgname <- sub("^.*/","",image)
+    extension <- sub("^.*\\.","",imgname)
+    if(extension %in% names(mime)){
+      src <- paste0("data:",mime[extension],";base64,",base64encode(image))
+      x$options$tutorial$image <- src
+    }else{
+      warning("image: image format not supported")
+    }
+  }
+  if(!is.null(description) && is.character(description)){
+    x$options$tutorial$description <- description
+  }
+  if(!length(x$options$tutorial)){
+    x$options$tutorial <- TRUE
+  }
+  return(x)
+}

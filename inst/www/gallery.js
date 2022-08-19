@@ -10,7 +10,7 @@ function gallery(Graph){
       currentGridHeight = gridHeight,
       colorScale,
       pagination = false,
-      treeParent = false;
+      treeParent = [];
 
   options.defaultColor = defaultColorManagement(options.defaultColor);
   options.colorScalenodeColor = "RdWhGn"; // default linear scale
@@ -434,7 +434,7 @@ function gallery(Graph){
 
     if(Graph.tree){
       galleryBox.select(".topbar > .breadcrumbs").remove();
-      if(treeParent){
+      if(treeParent.length){
         var breadcrumbs = galleryBox.select(".topbar").append("div")
           .attr("class","breadcrumbs")
           .style("padding","4px 12px")
@@ -443,29 +443,27 @@ function gallery(Graph){
           .style("cursor","pointer")
           .style("color",basicColors.mediumBlue)
           .on("click",function(){
-            treeParent = false;
+            treeParent = [];
             displayGraph();
           })
-        makePath(treeParent);
-
-        function makePath(parent){
-          var grandparent = Graph.tree[1].indexOf(parent);
-          if(grandparent!=-1){
-            makePath(Graph.tree[0][grandparent]);
-          }
+        treeParent.forEach(function(parent,i){
           breadcrumbs.append("span").text(" > ")
           breadcrumbs.append("span").text(parent)
             .style("cursor","pointer")
             .style("color",basicColors.mediumBlue)
+            .attr("index",i)
             .on("click",function(){
-              treeParent = parent;
+              var idx = +d3.select(this).attr("index");
+              treeParent = treeParent.filter(function(e,j){
+                return j<=idx;
+              });
               displayGraph();
             })
-        }
+        });
       }
 
       filteredData = filteredData.filter(function(d){
-        return treeParent ? Graph.tree[0][Graph.tree[1].indexOf(d[options.nodeName])]==treeParent : Graph.tree[1].indexOf(d[options.nodeName])==-1;
+        return treeParent.length ? Graph.tree[0][Graph.tree[1].indexOf(d[options.nodeName])]==treeParent[treeParent.length-1] : Graph.tree[1].indexOf(d[options.nodeName])==-1;
       });
     }
 
@@ -586,7 +584,7 @@ function gallery(Graph){
       .on("dblclick", Graph.tree ? function(d){
         if(Graph.tree[0].indexOf(d[options.nodeName])!=-1){
           nodes.forEach(function(node){ delete node.selected; });
-          treeParent = d[options.nodeName];
+          treeParent.push(d[options.nodeName]);
           displayGraph();
         }
       } : null)

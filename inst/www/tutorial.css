@@ -28,9 +28,6 @@ div.tutorial button.primary.prev {
 div.tutorial button.primary.next {
   float: right;
 }
-div.tutorial > .tutorial-content > div.mncars-logo > svg {
-  height: 60px;
-}
 div.tutorial span.highlight {
   color: #2f7bee;
 }

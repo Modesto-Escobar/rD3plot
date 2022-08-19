@@ -55,6 +55,11 @@ function tutorialTour(options){
 
   steps.push(function(){
     tutorialContent.selectAll("*").remove()
+    if(options.tutorial.image){
+      tutorialContent.append("img")
+        .attr("src",options.tutorial.image)
+        .style("height","60px")
+    }
     tutorialContent.append("h3").text(tutorial_texts['elementsgallery'])
     tutorialContent.append("p").text(tutorial_texts['beforestarting'])
   });
@@ -65,7 +70,7 @@ function tutorialTour(options){
     tutorialContent.selectAll("*").remove()
 
     tutorialContent.append("p").html(tutorial_texts['mainpage'])
-    tutorialContent.append("p").text(tutorial_texts['collectionofelements'])
+    tutorialContent.append("p").text(options.tutorial.description ? options.tutorial.description : tutorial_texts['collectionofelements'])
     tutorialContent.append("p").html(tutorial_texts['eachfigure'])
 
     tutorialArrow.style("display","none")

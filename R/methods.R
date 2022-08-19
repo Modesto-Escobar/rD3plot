@@ -22,6 +22,10 @@ print.pie_rd3 <- function(x, ...) {
   print(aux)
 }
 
+print.multi_rd3 <- function(x, ...) {
+  print(paste0("A collection of ",length(x$graphs)," graphs"))
+}
+
 printMain <- function(x){
   if(!is.null(x$options$main)){
     cat("Title:",x$options$main,"\n")
@@ -80,6 +84,14 @@ plot.gallery_rd3 <- function(x, dir = tempDir(), ...){
 
 plot.pie_rd3 <- function(x, dir = tempDir(), ...){
   plotObj(x, dir, pieCreate)
+}
+
+plot.multi_rd3 <- function(x, dir = tempDir(), ...){
+  if(length(x$options$parallel) && x$options$parallel){
+    plotObj(x$graphs, dir, polyGraph)
+  }else{
+    plotObj(x$graphs, dir, multiGraph)
+  }
 }
 
 plotObj <- function(x,dir,callback){
