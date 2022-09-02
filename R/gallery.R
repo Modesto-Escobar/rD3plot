@@ -105,8 +105,8 @@ gallery_rd3 <- function(nodes, tree = NULL, name = NULL, label = NULL,
     tree <- tree[tree[,1] %in% nodes[[name]] & tree[,2] %in% nodes[[name]] & as.character(tree[,2])!=as.character(tree[,1]),]
     if(nrow(tree)==0){
       warning("tree: no row (Source and Target) matches the name column of the nodes")
-    }else if(sum(duplicated(as.character(tree[,2])))){
-      warning("tree: there must be only one parent per node")
+    #}else if(sum(duplicated(as.character(tree[,2])))){
+    #  warning("tree: there must be only one parent per node")
     }else{
       gallery$tree <- data.frame(Source=tree[,1],Target=tree[,2])
     }

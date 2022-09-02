@@ -463,7 +463,10 @@ function gallery(Graph){
       }
 
       filteredData = filteredData.filter(function(d){
-        return treeParent.length ? Graph.tree[0][Graph.tree[1].indexOf(d[options.nodeName])]==treeParent[treeParent.length-1] : Graph.tree[1].indexOf(d[options.nodeName])==-1;
+        if(!treeParent.length){
+          return Graph.tree[1].indexOf(d[options.nodeName])==-1;
+        }
+        return Graph.tree[0].filter(function(e,i){ return treeParent[treeParent.length-1]==e && Graph.tree[1][i]==d[options.nodeName]; }).length;
       });
     }
 
