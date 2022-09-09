@@ -3119,11 +3119,19 @@ function drawNet(){
           uri = uri[0];
         }
         var img = images[uri],
-            imgHeight = img.height*2/img.width;
-        if(options.nodeShape){
-          var renderShape = function(){
-            d3.symbol().type(VisualHandlers.nodeShape(node)).size(nodeSize * nodeSize * Math.PI / 2.4).context(ctx)();
+            imgHeight = img.height*2/img.width,
+            renderShape;
+        if(options.roundedItems || options.nodeShape){
+          if(options.nodeShape){
+            renderShape = function(){
+              d3.symbol().type(VisualHandlers.nodeShape(node)).size(nodeSize * nodeSize * Math.PI / 2.4).context(ctx)();
+            }          
+          }else{
+            renderShape = function(){
+              d3.symbol().type(d3["symbolCircle"]).size(nodeSize * nodeSize * Math.PI / 2.4).context(ctx)();
+            }
           }
+
           ctx.save();
           renderShape();
           ctx.clip();
@@ -3131,7 +3139,7 @@ function drawNet(){
         try{
           ctx.drawImage(img, -nodeSize, -(imgHeight/2)*nodeSize, nodeSize * 2, nodeSize * imgHeight);
         }catch(e){}
-        if(options.nodeShape){
+        if(renderShape){
           ctx.restore();
         }
         if(!strokeStyle && (options.nodeColor || options.nodeShape)){
@@ -3145,7 +3153,7 @@ function drawNet(){
         }
         if(strokeStyle){
           ctx.beginPath();
-          if(options.nodeShape){
+          if(renderShape){
             renderShape();
           }else{
             ctx.arc(0, 0, nodeSize, 0, 2 * Math.PI);
@@ -3539,10 +3547,11 @@ function drawNet(){
 
 function showTooltip(node,fixed){
     if(options.nodeText && node[options.nodeText] && plot.select("div.tooltip").filter(function(d){ return node[options.nodeName]==d[options.nodeName]; }).empty()){
-        plot.append("div")
+        var tooltip = plot.append("div")
              .attr("class","tooltip"+(fixed?" fixed":""))
              .datum(node)
              .html(node[options.nodeText])
+        tooltip.select(".tooltip > .info-template > h2.auto-color").style("background-color",options.nodeColor ? VisualHandlers.nodeColor(node) : options.defaultColor);
     }
 }
 

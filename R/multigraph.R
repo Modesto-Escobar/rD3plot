@@ -61,7 +61,7 @@ multiGraph <- function(multi,dir){
     }
     if(inherits(graph,"gallery_rd3")){
       scripts <- c(scripts,"gallery.js")
-      if(!is.null(graph$options$tutorial) && graph$options$tutorial){
+      if(!is.null(graph$options$tutorial) && !identical(as.logical(graph$options$tutorial),FALSE)){
         scripts <- c(scripts,"tutorial.js",paste0("tutorial_",language))
         styles <- c(styles,"tutorial.css")
       }

@@ -25,8 +25,8 @@ network_rd3(nodes = NULL, links = NULL, tree = NULL,
         main = NULL, note = NULL, showCoordinates = FALSE, showArrows = FALSE,
         showLegend = TRUE, frequencies = FALSE, showAxes = FALSE,
         axesLabels = NULL, scenarios = NULL, help = NULL, helpOn = FALSE,
-        mode = c("network","heatmap"), controls = 1:4, cex = 1,
-        background = NULL, defaultColor = "#1f77b4",
+        mode = c("network","heatmap"), roundedItems = FALSE, controls = 1:4,
+        cex = 1, background = NULL, defaultColor = "#1f77b4",
         language = c("en","es","ca"), dir = NULL)
 }
 \arguments{
@@ -76,6 +76,7 @@ network_rd3(nodes = NULL, links = NULL, tree = NULL,
 drl("da"), circle("ci"), Force-Atlas-2("fo"), fruchterman.reingold("fr"), gem("ge"), grid("gr"), kamada.kawai("ka"), lgl("lg"), mds("md"), random("ra"), reingold.tilford("re"), star("sta"), sugiyama("sug")}
 \item{limits}{vector indicating the layout limits, must be a numeric vector of length 4 on this order: x_min, y_min, x_max, y_max.}
 \item{cex}{number indicating the amount by which plotting text should be scaled relative to the default.}
+\item{roundedItems}{Display images with rounded borders.}
 \item{controls}{a numeric vector indicating which controls will be shown. 1 = sidebar, 2 = selection buttons, 3 = export buttons, 4 = nodes table, 5 = links table. NULL hide all controls, negative values deny each control and 0 deny all.}
 \item{mode}{a character vector indicating the graph mode allowed: network, heatmap or both (both by default).}
 \item{showCoordinates}{a logical value true if the coordinates are to be shown in tables and axes. Default = FALSE.}

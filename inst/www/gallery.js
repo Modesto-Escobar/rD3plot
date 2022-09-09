@@ -670,6 +670,13 @@ function gallery(Graph){
       })
     }
 
+    itemsUpdate.select(".tooltip > .info-template > h2.auto-color").style("background-color",function(d){
+        if(options.nodeColor){
+            return applyColorScale(colorScale,d[options.nodeColor]);
+        }
+        return options.defaultColor;
+    })
+
     if(descriptionPanel && frequencyBars && options.frequencies){
       frequencyBars
             .nodes(filteredData)

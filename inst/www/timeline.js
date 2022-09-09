@@ -742,7 +742,7 @@ function timeline(json){
 
           rectsEnter.selectAll("rect, text").on("click.infopanel",function(d){ infoPanel.changeInfo(d[options.info]); });
 
-          tooltipActions(rectsEnter.selectAll("rect, text"),options.text);
+          tooltipActions(rectsEnter.selectAll("rect, text"),options.text,color(d));
 
           rects.exit().remove();
 
@@ -874,7 +874,7 @@ function timeline(json){
     }
   }
 
-  function tooltipActions(sel,text){
+  function tooltipActions(sel,text,color){
     sel
       .on("click.tooltip",function(d){
         d3.event.stopPropagation();
@@ -935,8 +935,12 @@ function timeline(json){
         }else if(typeof text == 'function'){
           html = text(d);
         }
-        if(html)
+        if(html){
           tip.style("display","block").html(html);
+          if(color){
+            tooltip.select(".tooltip > .info-template > h2.auto-color").style("background-color",color);
+          }
+        }
     }
 
     function tooltipCoords(tip){

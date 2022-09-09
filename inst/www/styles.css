@@ -1042,8 +1042,8 @@ div.tooltip {
   z-index: 11;
   background-color: #777777;
   color: #ffffff;
-  padding: 6px 12px;
-  border-radius: 3px;
+  padding: 13px 19px;
+  border-radius: 12px;
   line-height: 1.5;
 }
 div.tooltip.fixed{
