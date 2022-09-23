@@ -959,8 +959,8 @@ function gallery(Graph){
       // linear scale
       if(scale.name=="h"){
         parent.select("div.legends").remove();
-        
-        displayLinearScale(parent,
+        parent.select("div.linear-scale").remove();
+        displayLinearScale(parent.append("div").attr("class","linear-scale"),
           value,
           scale.range(),
           scale.domain(),

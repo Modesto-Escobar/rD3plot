@@ -451,28 +451,28 @@ div.poweredby img {
   left: 0;
   z-index: 1;
 }
-.legend-panel > .scale {
+.legend-panel > .linear-scale > .scale {
   position: relative;
   top: 0;
   right: 0;
 }
-.legend-panel > .scale > img {
+.legend-panel > .linear-scale > .scale > img {
   float: right;
   padding: 2em 6px;
   cursor: pointer;
 }
-.legend-panel > .scale > .scale-content > .title {
+.legend-panel > .linear-scale > .scale > .scale-content > .title {
   text-align: center;
   font-size: 1.4em;
   margin-bottom: 6px;
 }
-.legend-panel > .scale > .scale-content > .domain1,
-.legend-panel > .scale > .scale-content > .domain2 {
+.legend-panel > .linear-scale > .scale > .scale-content > .domain1,
+.legend-panel > .linear-scale > .scale > .scale-content > .domain2 {
   display: inline-block;
   width: 50%;
   font-size: 1.2em;
 }
-.legend-panel > .scale > .scale-content > .domain2 {
+.legend-panel > .linear-scale > .scale > .scale-content > .domain2 {
   text-align: right;
 }
 .legend-panel > .legends > div.legends-content {
@@ -495,7 +495,7 @@ div.poweredby img {
 }
 .sidebar > .subSearch,
 .sidebar > .subSidebar,
-.legend-panel > .scale,
+.legend-panel > .linear-scale > .scale,
 .legend-panel > .legends,
 div.infopanel {
   margin: 10px;
@@ -525,7 +525,7 @@ div.goback:after {
   height: 16px;
 }
 .sidebar > .subSearch,
-.legend-panel > .scale > .scale-content {
+.legend-panel > .linear-scale > .scale > .scale-content {
   padding: 12px;
 }
 .legend-panel > .show-panel-button {

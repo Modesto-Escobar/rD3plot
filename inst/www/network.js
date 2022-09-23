@@ -39,6 +39,7 @@ function network(Graph){
       sidebarWidth = 240, // sidebar width (will increase with cex)
       nodeRadius = 4.514, // base node radius
       findNodeRadius = 20, // radius in which to find a node in the canvas
+      legendKeys = ["legend","color","shape","image","lcolor"],
       hiddenFields = d3.set(["x","y","source","target","fx","fy","hidden","childNodes","parentNode","_frame_"]); // not to show in sidebar controllers or tables
 
   var simulation = d3.forceSimulation()
@@ -1709,30 +1710,34 @@ function addFilterController(){
                 values.push(this.value);
               })
             if(items=="nodes"){
-              Graph.nodes.forEach(function(d){
-                delete d.selected;
-                if(checkSelectableNode(d)){
-                  if(typeof d[val] == "object"){
-                    if(intersection(values,d[val]).length){
-                      d.selected = true;
-                    }
-                  }else{
-                    if(values.indexOf(String(d[val]))!=-1){
-                      d.selected = true;
-                    }
-                  }
-                }
-              });
+              manageSelection(Graph.nodes,checkSelectableNode);
             }
             if(items=="links"){
-              Graph.links.forEach(function(d){
+              manageSelection(Graph.links,checkSelectableLink);
+            }
+            showTables();
+
+            function manageSelection(items,checkSelectable){
+              items.forEach(function(d){
                 delete d.selected;
-                if(checkSelectableLink(d) && values.indexOf(String(d[val]))!=-1){
+                if(checkSelectable(d) && isSelected(values,d[val])){
                   d.selected = true;
                 }
               });
+
+              function isSelected(values,dval){
+                if(typeof dval == "object"){
+                  if(intersection(values,dval).length){
+                    return true;
+                  }
+                }else{
+                  if(values.indexOf(String(dval))!=-1){
+                    return true;
+                  }
+                }
+                return false;
+              }
             }
-            showTables();
           })
         selectMultiple.selectAll("option")
         .data(d3.set(dat).values().sort(sortAsc))
@@ -2850,13 +2855,15 @@ function drawNet(){
       VisualHandlers.linkIntensity.displayScale();
     }else{
       VisualHandlers.nodeColor.displayScale();
+      VisualHandlers.linkColor.displayScale();
     }
 
     // display legends
     var legendLegend = options.nodeLegend ? true : false,
         legendColor = options.nodeColor && dataType(nodes,options.nodeColor)!='number',
         legendShape = options.nodeShape ? true : false,
-        legendImage = (!options.heatmap && options.imageItem) && (options.imageItems && options.imageNames);
+        legendImage = (!options.heatmap && options.imageItem) && (options.imageItems && options.imageNames),
+        legendLcolor = options.linkColor && dataType(links,options.linkColor)!='number';
 
     Legends = {};
     var data;
@@ -2924,6 +2931,18 @@ function drawNet(){
         .color("image")
     }
 
+    if(legendLcolor){
+      data = getColumnValues(links,options.linkColor);
+      Legends.lcolor = displayLegend()
+        .item("link")
+        .type("Color")
+        .key(options.linkColor)
+        .data(data.sort(sortAsc))
+        .title(options.linkColor)
+        .text(stripTags)
+        .color(VisualHandlers.linkColor.getScale());
+    }
+
     if(d3.keys(Legends).length){
       var legendsHeight = height - 240;
       if(!legendPanel.select(".legend-panel > .scale").empty()){
@@ -2963,7 +2982,7 @@ function drawNet(){
       var div = divLegends.append("div")
         .attr("class","legends-content");
 
-      ["legend","color","shape","image"].forEach(function(k){
+      legendKeys.forEach(function(k){
         if(Legends.hasOwnProperty(k)){
           div.call(Legends[k]);
         }
@@ -2981,6 +3000,13 @@ function drawNet(){
       displaycheck(gSelectAll,function(self){
         Graph.nodes.forEach(function(d){
             if(self.selected && checkSelectableNode(d)){
+              d.selected = true;
+            }else{
+              delete d.selected;
+            }
+        });
+        Graph.links.forEach(function(d){
+            if(self.selected && checkSelectableLink(d)){
               d.selected = true;
             }else{
               delete d.selected;
@@ -3445,7 +3471,7 @@ function drawNet(){
       if(!legendPanel.select(".legends").empty()) {
         var y = legendPanel.select(".scale").empty() ? 20 : 100;
         doc.setDrawColor(198, 198, 198);
-        ["legend","color","shape","image"].forEach(function(k){
+        legendKeys.forEach(function(k){
           if(Legends.hasOwnProperty(k)){
             var data = Legends[k].data(),
                 title = Legends[k].title(),
@@ -3961,7 +3987,15 @@ function setShapeScale(){
 function setColorScale(){
   var config = setSomeScale(function(obj){
     if(config.scale){
-      return (obj[config.key] === null)? (config.item == "node"? basicColors.white : basicColors.black) : config.scale(obj[config.key]);
+      if(obj[config.key] === null){
+        return config.item == "node"? basicColors.white : basicColors.black;
+      }else{
+        if(config.item == "link" && typeof obj[config.key] == "object"){
+          return basicColors.mediumGrey;
+        }else{
+          return config.scale(obj[config.key]);
+        }
+      }
     }else{
       return config.item == "link" && !options.heatmap ? defaultLinkColor : options.defaultColor;
     }
@@ -4028,8 +4062,9 @@ function setColorScale(){
             .clickAction(function(val){
               applyAuto("nodeColor",val);
             });
-      displayLinearScale(legendPanel,
-        config.key,
+      var panel = legendPanel.append("div").attr("class","linear-scale "+config.item+"s");
+      displayLinearScale(panel,
+        config.key + (config.item=="link" ? " (links)" : ""),
         config.scale.range(),
         config.scale.domain(),
         function(){
@@ -4305,7 +4340,9 @@ function displayLegend(){
       text = String,
       color = basicColors.black,
       shape = defaultShape,
-      data = [];
+      data = [],
+      item = "node",
+      checkSelectable = checkSelectableNode;
 
   function exports(parent){
 
@@ -4313,20 +4350,20 @@ function displayLegend(){
       return 0;
 
     legend = parent.append("div")
-    .attr("class","legend")
+    .attr("class","legend "+item+"s")
     .property("key",key)
 
     var selectionWindow = attrSelectionWindow()
             .visual(type)
-            .active(options["node"+type])
-            .list(Graph.nodenames.filter(function(d){ return !hiddenFields.has(d); }))
+            .active(options[item+type])
+            .list(Graph[item+"names"].filter(function(d){ return !hiddenFields.has(d); }))
             .clickAction(function(val){
-              applyAuto("node"+type,val);
+              applyAuto(item+type,val);
             });
 
     legend.append("div")
         .attr("class","title")
-        .text(texts[type] + " / " + (typeof title == "undefined" ? key : title))
+        .text(texts[type] + " / " + (typeof title == "undefined" ? key : title) + (item=="link" ? " (links)" : ""))
         .style("cursor","pointer")
         .on("click",selectionWindow)
 
@@ -4341,19 +4378,21 @@ function displayLegend(){
     displaycheck(row,function(self){
       var compare = function(value){
         value = String(value);
-        Graph.nodes.forEach(function(d){
+        Graph[item+"s"].forEach(function(d){
           if((d3.event.ctrlKey || d3.event.metaKey) && !d3.event.shiftKey){
             delete d.selected;
           }
           if(checkLegendKeyValue(d,key,value)){
-            if(self.selected && checkSelectableNode(d)){
+            if(self.selected && checkSelectable(d)){
               d.selected = true;
             }else{
               delete d.selected;
             }
           }
         });
-        autoSelectLinks();
+        if(item=="node"){
+          autoSelectLinks();
+        }
       }
       if(d3.event.shiftKey && row.filter(function(d){ return this.selected; }).size()>1){
         var first = false,
@@ -4461,6 +4500,20 @@ function displayLegend(){
   exports.shape = function(x) {
       if (!arguments.length) return shape;
       shape = x;
+      return exports;
+  };
+
+  exports.item = function(x) {
+      if (!arguments.length) return item;
+      if(item=="node" || item=="link"){
+        item = x;
+        if(item=="node"){
+          checkSelectable = checkSelectableNode;
+        }
+        if(item=="link"){
+          checkSelectable = checkSelectableLink;
+        }
+      }
       return exports;
   };
 
@@ -4861,25 +4914,33 @@ function checkLegendItemsChecked() {
     var parent = legendPanel.select(".legends > div.legends-content"),
         legendSelectAll = legendPanel.select(".legend-selectall");
     if(!legendSelectAll.empty()){
+      checkItems("nodes",checkSelectableNode);
+      checkItems("links",checkSelectableLink);
+
       var items = parent.selectAll(".legend-item");
       if(!items.empty()){
-        var unselectedNodes = Graph.nodes.filter(checkSelectableNode).filter(function(d){ return !d.selected; });
+        var size = items.filter(function(){ return this.selected; }).size();
+        checkInBox(legendSelectAll.node(), size ? true : false);
+        legendPanel.selectAll("button.legend-bottom-button").classed("disabled",!size || size==items.size());
+      }
+    }
 
+    function checkItems(itemsname,checkSelectable){
+      var items = parent.selectAll(".legend."+itemsname+" > .legend-item"),
+          unselected, key, i, d;
+      if(!items.empty()){
+        unselected = Graph[itemsname].filter(checkSelectable).filter(function(d){ return !d.selected; });
         items.each(function(value){
           checkInBox(this,true);
-          var key = this.parentNode.key;
-          for(var i = 0; i<unselectedNodes.length; i++){
-            var d = unselectedNodes[i];
+          key = this.parentNode.key;
+          for(i = 0; i<unselected.length; i++){
+            d = unselected[i];
             if(checkLegendKeyValue(d,key,value)){
               checkInBox(this,false);
               break;
             }
           }
         })
-
-        var size = items.filter(function(){ return this.selected; }).size();
-        checkInBox(legendSelectAll.node(), size ? true : false);
-        legendPanel.selectAll("button.legend-bottom-button").classed("disabled",!size || size==items.size());
       }
     }
 
