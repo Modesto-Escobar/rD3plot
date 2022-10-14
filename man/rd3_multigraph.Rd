@@ -9,11 +9,11 @@ This function returns a \code{multi_rd3} object.
 }
 
 \usage{
-rd3_multigraph(..., mode = c("default","parallel"), dir = NULL)
+rd3_multigraph(..., mfrow = NULL, dir = NULL)
 }
 \arguments{
 \item{...}{rD3plot graphs (network_rd3, barplot_rd3, timeplot_rd3) objects or string paths to html "directories".}
-\item{mode}{a string specifying the displaying mode. The "default" displays graphs one by one and "parallel" splits screen.}
+\item{mfrow}{a vector of the form 'c(nr, nc)'. Subsequent graphs will be drawn in an 'nr'-by-'nc' array on the device by rows.}
 \item{dir}{a "character" string representing the directory where the graph will be saved.}
 }
 \description{

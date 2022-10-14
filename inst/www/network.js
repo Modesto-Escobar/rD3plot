@@ -3031,8 +3031,8 @@ function drawNet(){
       gHighNeigh.append("span")
         .text(texts["highlightneighbors"])
 
-      displayBottomButton(legendBottomControls,"filter",texts.filterInfo+" (ctrl + e)",switchEgoNet);
-      displayBottomButton(legendBottomControls,"isolate",texts.isolateInfo+" (ctrl + f)",filterSelection);
+      displayBottomButton(legendBottomControls,"filter",texts.filterInfo+" (ctrl + e)",switchEgoNet,filterLinkSelection);
+      displayBottomButton(legendBottomControls,"isolate",texts.isolateInfo+" (ctrl + f)",filterSelection,isolateLinkSelection);
     }
     // end legends
 
@@ -4158,6 +4158,15 @@ function filterLinkSelection(){
     drawNet();
 }
 
+function isolateLinkSelection(){
+    filterLinkSelection();
+    Graph.nodes.forEach(function(d){
+      if(!d.degree)
+        d._hidden = true;
+    });
+    drawNet();
+}
+
 function showHidden(){
   egoNet = false;
   Graph.nodes.forEach(function(d){
@@ -4542,27 +4551,34 @@ function checkLegendKeyValue(d,key,value){
   return String(d[key])==value || (d[key] && (typeof d[key] == "object" && (d[key].indexOf(value)!=-1 || d[key].join(",")==value)));
 }
 
-function displayBottomButton(sel,text,tooltip,callback){
+function displayBottomButton(sel,text,tooltip,nodesCallback,linksCallback){
       sel.append("button")
         .attr("class","legend-bottom-button primary disabled")
         .text(texts[text])
         .on("click",function(){
-          var selected = legendPanel.selectAll("div.legend-item").filter(function(){ return this.selected; });
-          Graph.nodes.forEach(function(d){
-            delete d.selected;
-            if(checkSelectableNode(d)){
-              selected.each(function(value){
-                if(!d.selected){
-                  var key = this.parentNode.key;
-                  if(checkLegendKeyValue(d,key,value)){
-                    d.selected = true;
-                  }
-                }
-              })
-            }
-          });
+          selectItems("nodes",checkSelectableNode,nodesCallback);
+          selectItems("links",checkSelectableLink,linksCallback);
           showTables();
-          callback();
+
+          function selectItems(items,checkSelectable,callback){
+            var selected = legendPanel.selectAll(".legend."+items+" > div.legend-item").filter(function(){ return this.selected; });
+            if(!selected.empty()){
+              Graph[items].forEach(function(d){
+                delete d.selected;
+                if(checkSelectable(d)){
+                  selected.each(function(value){
+                    if(!d.selected){
+                      var key = this.parentNode.key;
+                      if(checkLegendKeyValue(d,key,value)){
+                        d.selected = true;
+                      }
+                    }
+                  })
+                }
+              });
+              callback();
+            }
+          }
         })
         .attr("title",tooltip)
 }

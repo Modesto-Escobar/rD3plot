@@ -87,16 +87,17 @@ plot.pie_rd3 <- function(x, dir = tempDir(), ...){
 }
 
 plot.multi_rd3 <- function(x, dir = tempDir(), ...){
-  if(length(x$options$parallel) && x$options$parallel){
-    plotObj(x$graphs, dir, polyGraph)
+  if(length(x$options$mfrow)){
+    polyGraph(x$graphs, x$options$mfrow, dir)
   }else{
-    plotObj(x$graphs, dir, multiGraph)
+    multiGraph(x$graphs, dir)
   }
+  browseURL(normalizePath(paste(dir, "index.html", sep = "/")))
 }
 
 plotObj <- function(x,dir,callback){
-     callback(x,dir)
-     browseURL(normalizePath(paste(dir, "index.html", sep = "/")))
+  callback(x,dir)
+  browseURL(normalizePath(paste(dir, "index.html", sep = "/")))
 }
 
 shiny_rd3 <- function(x) UseMethod("shiny_rd3", x)

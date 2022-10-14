@@ -75,8 +75,13 @@ multiGraph <- function(multi,dir){
   createHTML(dir, styles, scripts, function(){ return(multigraphJSON(multi,dir)) })
 }
 
-polyGraph <- function(multi,dir){
-  createHTML(dir, NULL, "polygraph.js", NULL)
+polyGraph <- function(multi,mfrow,dir){
+  createHTML(dir, NULL, "polygraph.js", toJSON(list(options=list(mfrow=mfrow,n=length(multi)))))
+  if(mfrow[1]*mfrow[2]>2){
+    for(i in seq_along(multi)){
+      multi[[i]]$options$controls <- NULL
+    }
+  }
   multiGraph(multi,paste0(dir,"/multiGraph"))
 }
 
@@ -190,7 +195,7 @@ evolvingWrapper <- function(multi,frame,speed,loop=FALSE,lineplots=NULL){
 }
 
 #create html wrapper for multigraph
-rd3_multigraph <- function(..., mode = c("default","parallel"), dir = NULL){
+rd3_multigraph <- function(..., mfrow = NULL, dir = NULL){
   graphs <- list(...)
 
   addGraph <- function(res,g,n){
@@ -230,14 +235,17 @@ rd3_multigraph <- function(..., mode = c("default","parallel"), dir = NULL){
   }
 
   options <- list()
-  mode <- substr(mode[1],1,1)
-  if(mode == "p"){
-    options$parallel <- TRUE
+  if(!is.null(mfrow)){
+    if(is.numeric(mfrow) && length(mfrow)==2){
+      options$mfrow <- as.numeric(mfrow)
+    }else{
+      warning("mfrow: must be a numeric vector of two values")
+    }
   }
 
   if (!is.null(dir)){
-    if(mode == "p"){
-      polyGraph(res,dir)
+    if(length(options$mfrow)){
+      polyGraph(res,options$mfrow,dir)
     }else{
       multiGraph(res,dir)
     }
