@@ -226,6 +226,9 @@ function gallery(Graph){
         .property("selected",function(d){ return d[0]==options.nodeColor ? true : null; })
   });
 
+  // node filter in topBar
+  topBar.addBox(topFilterInst);
+
   // Select all / none
   topBar.addBox(function(box){
     box.append("button")
@@ -247,10 +250,6 @@ function gallery(Graph){
       .text(texts.filterselection)
       .on("click",filterSelection)
   });
-
-  // node filter in topBar
-  topBar.addBox(topFilterInst);
-
 
   var content = galleryBox.append("div")
         .attr("class","gallery-content");
@@ -472,18 +471,19 @@ function gallery(Graph){
 
     elementsCount.text(filteredData.length);
 
+    var orderedData = filteredData.slice();
     if(options.order){
-      filteredData.sort(function(a,b){
+      orderedData.sort(function(a,b){
         var aa = a[options.order],
             bb = b[options.order];
         return compareFunction(aa,bb,options.rev);
       })
     }
 
-    var displayData = filteredData;
+    var displayData = orderedData;
     if(pagination){
       var limit  = Math.max(1000,(width/(currentGridHeight+12) * height/(currentGridHeight+12)));
-      displayData = filteredData.filter(function(d,i){ return i<pagination*limit; });
+      displayData = orderedData.filter(function(d,i){ return i<pagination*limit; });
     }
 
     var items = galleryItems.selectAll(".item").data(displayData, function(d){ return d[options.nodeName]; });
@@ -516,20 +516,11 @@ function gallery(Graph){
             .attr("class","tooltip")
             .style("display","none")
             .html(d[options.nodeText])
-            
-          d3.select(this)
-              .on("mouseenter",function(){
-                tooltip.style("display","block");
-                if(d3.mouse(gallery.node())[0]>(gallery.node().offsetWidth/2)){
-                  tooltip
-                    .style("left","unset")
-                    .style("right",0);
-                }
-              })
-              .on("mouseleave",function(){
-                tooltip.style("display","none")
-                  .style("left",null)
-                  .style("right",null);
+          tooltip.append("div")
+              .attr("class","close-button")
+              .on("click",function(){
+                d3.event.stopPropagation();
+                tooltip.style("display","none");
               })
         }
       });
@@ -537,10 +528,10 @@ function gallery(Graph){
 
     items.exit().remove();
 
-    items.order();
-
     var itemsUpdate = itemsEnter.merge(items);
     itemsUpdate.classed("selected",function(n){ return n.selected; });
+
+    itemsUpdate.order();
 
     itemsUpdate
       .select(".img-wrapper")
@@ -575,14 +566,38 @@ function gallery(Graph){
             displayData.forEach(function(n){ delete n.selected; });
             n.selected = true;
           }
-          displayGraph();
           if(options.nodeInfo){
             if(descriptionPanel && !options.frequencies){
               displayInDescription(n[options.nodeInfo]);
             }else{
               infoPanel.changeInfo(n[options.nodeInfo]);
             }
+            body.select(".panel-template.auto-color").datum(n);
           }
+          if(options.nodeText){
+            galleryItems.selectAll(".item > .tooltip").style("display","none");
+            var tooltip = d3.select(this).select(".tooltip");
+            tooltip.style("display","block");
+            if(d3.mouse(gallery.node())[0]>(gallery.node().offsetWidth/2)){
+              tooltip
+                .style("left","unset")
+                .style("right",0);
+            }else{
+              tooltip
+                .style("left",null)
+                .style("right",null);
+            }
+            if(d3.mouse(gallery.node())[1]>(gallery.node().offsetHeight/2)){
+              tooltip
+                .style("top","unset")
+                .style("bottom",0);
+            }else{
+              tooltip
+                .style("top",null)
+                .style("bottom",null);
+            }
+          }
+          displayGraph();
       })
       .on("dblclick", Graph.tree ? function(d){
         if(Graph.tree[0].indexOf(d[options.nodeName])!=-1){
@@ -649,7 +664,7 @@ function gallery(Graph){
       }
     }
     legend
-      .data(filteredData)
+      .data(orderedData)
       .value(options.nodeColor)
       .scale(colorScale)
     legendPanel.call(legend);
@@ -677,9 +692,14 @@ function gallery(Graph){
         return options.defaultColor;
     })
 
+    var panelTemplate = body.select(".panel-template.auto-color");
+    if(!panelTemplate.empty()){
+      panelTemplate.style("background-color",options.nodeColor && panelTemplate.datum() ? applyColorScale(colorScale,panelTemplate.datum()[options.nodeColor]) : options.defaultColor);
+    }
+
     if(descriptionPanel && frequencyBars && options.frequencies){
       frequencyBars
-            .nodes(filteredData)
+            .nodes(orderedData)
             .nodeColor(options.nodeColor)
             .colorScale(colorScale);
       content.classed("hide-description",false);
@@ -935,13 +955,7 @@ function gallery(Graph){
           legendBottomControls.append("button")
           .attr("class","legend-bottom-button primary")
           .text(texts["filter"])
-          .on("click",function(){
-            var values = [];
-            legend.selectAll(".legend-item > .checked").each(function(d){
-              values.push(d);
-            });
-            filterHandler.addFilter(value,values);
-          })
+          .on("click",filterSelection)
           .attr("title",texts.filterInfo)
         }
 
@@ -1061,7 +1075,13 @@ function gallery(Graph){
   }
 
   function displayTable(){
+    if(!body.select("body > .tables").empty()){
+      alert("Tables are already displayed");
+      return;
+    }
+
     body.classed("maximize-table",true);
+
     var tables = body.append("div")
             .attr("class","tables")
             .style("height",(docSize.height-20)+"px")

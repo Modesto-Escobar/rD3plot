@@ -1063,6 +1063,9 @@ div.tooltip.fixed:hover > span:last-child {
 div.tooltip a{
   color: #ffffff;
 }
+div.tooltip > .close-button {
+  margin: 5px 8px 0 0;
+}
 
 div.showHideTable {
   border-radius: 5px;

@@ -1510,11 +1510,13 @@ function displayInfoPanel(){
 
   function openPanel(callback){
     if(infopanel.style("display")=="none"){
+      contentDiv.style("display","none");
       infopanel.style("display",null);
       infopanel.transition().duration(transitionDuration)
         .style("left",(viewport().width-infoWidth)+"px")
-        .on("end",callback ? function(){ callback(contentDiv); } : null)
-    }else if(callback){
+        .on("end",callback ? function(){ contentDiv.style("display",null); } : null)
+    }
+    if(callback){
       callback(contentDiv);
     }
   }
