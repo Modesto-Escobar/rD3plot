@@ -853,6 +853,12 @@ function compareFunction(a,b,rev){
     b = a;
     a = aux;
   }
+  if(a===null){
+    return 1;
+  }
+  if(b===null){
+    return -1;
+  }
   if(!isNaN(+a) && !isNaN(+b)){
     a = +a;
     b = +b;

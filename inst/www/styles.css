@@ -1556,7 +1556,6 @@ div.description-panel {
   width: 25%;
   height: calc(100% - 20px);
   padding-top: 20px;
-  overflow: auto;
   position: relative;
 }
 div.gallery-content.hide-description > .description-panel {
@@ -1567,6 +1566,7 @@ div.description-panel > div.close-button {
 }
 div.description-content{
   height: 100%;
+  overflow: auto;
 }
 div.grid-gallery {
   width: 100%;

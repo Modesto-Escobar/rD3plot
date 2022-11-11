@@ -17,7 +17,7 @@ function gallery(Graph){
 
   var splitMultiVariable = function(d){
       for(var p in d) {
-        if(p!=options.nodeName){
+        if(p!=options.nodeName && p!=options.nodeText && p!=options.nodeInfo){
           if(typeof d[p] == "string" && d[p].indexOf("|")!=-1){
             var aux = d[p].split("|");
             d[p] = aux.map(function(d){ return d=="" ? null : (isNaN(parseInt(d)) ? d : +d); });
