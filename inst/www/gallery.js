@@ -694,7 +694,12 @@ function gallery(Graph){
 
     var panelTemplate = body.select(".panel-template.auto-color");
     if(!panelTemplate.empty()){
-      panelTemplate.style("background-color",options.nodeColor && panelTemplate.datum() ? applyColorScale(colorScale,panelTemplate.datum()[options.nodeColor]) : options.defaultColor);
+      var color = options.nodeColor && panelTemplate.datum() ? applyColorScale(colorScale,panelTemplate.datum()[options.nodeColor]) : options.defaultColor;
+      if(panelTemplate.classed("mode-1")){
+        panelTemplate.style("background-color",color);
+      }else if(panelTemplate.classed("mode-2")){
+        panelTemplate.select(".panel-template > h2").style("background-color",color);
+      }
     }
 
     if(descriptionPanel && frequencyBars && options.frequencies){
@@ -791,8 +796,7 @@ function gallery(Graph){
   }
 
   function displayLegend(){
-    var parent,
-        value,
+    var value,
         type,
         data,
         scale,
@@ -812,6 +816,7 @@ function gallery(Graph){
 
       displayShowPanelButton(parent,function(){
         parent.classed("hide-legend",false);
+        contentHeight(parent);
       })
 
       // ordinal scale
@@ -930,8 +935,7 @@ function gallery(Graph){
           return false;
         })
 
-        var legendsHeight = parent.node().parentNode.offsetHeight-250;
-        content.style("height",legend.node().offsetHeight>legendsHeight ? legendsHeight+"px" : null)
+        contentHeight(parent);
 
         if(initialize){
           var legendBottomControls = legends.append("div")
@@ -955,7 +959,13 @@ function gallery(Graph){
           legendBottomControls.append("button")
           .attr("class","legend-bottom-button primary")
           .text(texts["filter"])
-          .on("click",filterSelection)
+          .on("click",function(){
+            var values = [];
+            legend.selectAll(".legend-item > .checked").each(function(d){
+              values.push(d);
+            });
+            filterHandler.addFilter(value,values);
+          })
           .attr("title",texts.filterInfo)
         }
 
@@ -986,6 +996,14 @@ function gallery(Graph){
             displayGraph();
           }
         );
+      }
+    }
+    
+    function contentHeight(parent){
+      if(!parent.classed("hide-legend")){
+        var legends = parent.select(".legends");
+        var legendsHeight = parent.node().parentNode.offsetHeight-250;
+        legends.select(".legends-content").style("height",legends.select(".legend").node().offsetHeight>legendsHeight ? legendsHeight+"px" : null)
       }
     }
 

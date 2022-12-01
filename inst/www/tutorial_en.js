@@ -8,7 +8,7 @@ var tutorial_texts = {
   eachfigure: 'Each <span class="highlight">shape</span> represents an element.',
 
   hoveringthemouse: '<span class="highlight">Hovering the mouse</span> over any figure will open a box with basic information.',
-  whenclicking: 'And <span class="highlight">clicking</span> on the figure will open its Wikipedia page in the box on the left of the screen.',
+  whenclicking: 'And <span class="highlight">clicking</span> on the figure will open information about it in the panel on the left of the screen.',
 
   tofindaspecificelement: 'To find a specific element, you can type its name in the <span class="highlight">search engine.</span>',
   todomultiplesearches: 'To do <span class="highlight">multiple searches</span>, you have to write each name on a different line and submit the query by pressing the Shift and Enter keys at the same time.',

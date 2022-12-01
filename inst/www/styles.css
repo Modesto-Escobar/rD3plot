@@ -1643,7 +1643,8 @@ div.gallery-content > .legend-panel.hide-legend > .show-panel-button  {
   display: inline-block;
 }
 div.gallery-content > .legend-panel.hide-legend > .legends,
-div.gallery-content > .legend-panel.hide-legend > .scale {
+div.gallery-content > .legend-panel.hide-legend > .scale,
+div.gallery-content > .legend-panel.hide-legend > .linear-scale {
   display: none;
 }
 .legend-bullet {

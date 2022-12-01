@@ -8,7 +8,7 @@ var tutorial_texts = {
   eachfigure: 'Cada <span class="highlight">figura</span> representa un element.',
 
   hoveringthemouse: '<span class="highlight">En passar el ratolí</span> per sobre de qualsevol figura s&apos;obrirà un requadre amb informació bàsica.',
-  whenclicking: 'I <span class="highlight">en fer clic</span> sobre la figura, s&apos;obrirà la seva pàgina a Wikipedia al requadre de l&apos;esquerra de la pantalla.',
+  whenclicking: 'I <span class="highlight">en fer clic</span> sobre la figura, se n&apos;obrirà informació al panell de l&apos;esquerra de la pantalla.',
 
   tofindaspecificelement: 'Per trobar un element concret, podeu escriure el vostre nom al <span class="highlight">cercador.</span>',
   todomultiplesearches: 'Per fer <span class="highlight">cerques múltiples</span>, cal escriure cada nom en una línia diferent i enviar la consulta prement al mateix temps les tecles majúscula i intro.',

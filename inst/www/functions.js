@@ -764,6 +764,9 @@ function topFilter(){
     var keys = d3.keys(selectedValues);
     if(keys.length){
       return data.filter(function(d){
+        if(d._filtered){
+          return false;
+        }
         for(var i = 0; i<keys.length; i++){
           var value = false,
               k = keys[i],
@@ -790,9 +793,11 @@ function topFilter(){
             }
           }
           if(!value){
+            d._filtered = true;
             return false;
           }
         }
+        delete d._filtered;
         return true;
       });
     }
@@ -801,6 +806,9 @@ function topFilter(){
 
   exports.removeFilter = function(){
       selectedValues = {};
+      data.forEach(function(d){
+        delete d._filtered;
+      });
       displayGraph(false);
       displayTags();
   }
