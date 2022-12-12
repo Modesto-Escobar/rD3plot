@@ -216,37 +216,20 @@ th {
   flex-grow: 1;
   overflow-y: auto;
 }
-.tables > .table-container > table {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
 .tables > .table-container > table > tbody > tr.selected {
   background-color: #cbdefb !important;
 }
 .tables > .table-container > table > tbody > tr:nth-child(odd) {
   background-color: #ffffff;
 }
-.tables > .table-container > table > thead,
-.tables > .table-container > table > tbody {
-  display: block;
-}
-.tables > .table-container > table > tbody {
-    overflow-y: auto;
-    overflow-x: hidden;
-    flex-grow: 1;
-}
 .tables > .table-container > table > thead > tr,
 .tables > .table-container > table > tbody > tr {
-  display: block;
   white-space: nowrap;
 }
 .tables > .table-container > table > thead > tr > th,
 .tables > .table-container > table > tbody > tr > td {
   overflow: hidden;
   white-space: nowrap;
-  display: inline-block;
   padding: 0;
   position: relative;
 }

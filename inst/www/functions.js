@@ -2743,7 +2743,10 @@ function tableWrapper(){
       table,
       rightAlign,
       last = -1,
-      pagination = false;
+      pagination = false,
+      pagelength = 25,
+      paginationDiv,
+      columnwidths = [];
 
   function exports(tables){
     tableContainer = tables.select("div.table-container");
@@ -2771,27 +2774,42 @@ function tableWrapper(){
     if(onlySelectedData){
       tableTitle.append("span").text(" ("+selectedData.length+" "+texts.outof+" "+currentData.length+")")
     }
+    tables.select("div.table-pagination").remove();
     tableContainer.selectAll("table, p").remove();
     if(selectedData.length==0){
       tableContainer.append("p").text(texts["no"+item+"selected"]);
     }else{
-      if(selectedData.length>100){
+      // TODO: calc pagelength
+      var cellheight = parseInt(tables.style("font-size")) * 1.2 + 9;
+      pagelength = Math.floor(tableContainer.node().offsetHeight / cellheight) - 2;
+      if(selectedData.length>pagelength){
         pagination = 1;
+        paginationDiv = tables.append("center").attr("class","table-pagination");
+        paginationDiv.append("button").text("<<").on("click",function(){
+          pagination = 1;
+          drawTable();
+        });
+        paginationDiv.append("button").text("<").on("click",function(){
+          if(pagination > 1){
+            pagination = pagination - 1;
+            drawTable();
+          }
+        });
+        paginationDiv.append("button").text(">").on("click",function(){
+          if(pagelength * pagination-1 < selectedData.length){
+            pagination = pagination + 1;
+            drawTable();
+          }
+        });
+        paginationDiv.append("button").text(">>").on("click",function(){
+          pagination = Math.ceil(selectedData.length / pagelength);
+          drawTable();
+        });
       }
       table = tableContainer.append("table");
       table.on("mousedown", function(){ d3.event.stopPropagation(); })
       drawHeader();
       var tbody = table.append("tbody");
-      if(pagination){
-        tbody.on("scroll",function(){
-          if(this.scrollTop==0){
-            pagination = 1;
-          }else if((this.scrollTop + this.clientHeight >= this.scrollHeight) && (tbody.selectAll("tr").size() < selectedData.length)){
-            pagination++;
-          }
-          drawTable();
-        })
-      }
       drawTable();
     }
 
@@ -2803,14 +2821,16 @@ function tableWrapper(){
   function drawTable(){
     var tbody = table.select("tbody");
     tbody.selectAll("tr").remove();
-    var stop = selectedData.length;
+    var start = 0,
+        stop = selectedData.length;
     if(pagination){
-      stop = 100*pagination;
+      stop = pagelength * pagination;
+      start = pagelength * (pagination-1);
       if(stop>selectedData.length){
         stop = selectedData.length
       }
     }
-    for(var i=0; i<stop; i++){
+    for(var i=start; i<stop; i++){
       var d = selectedData[i],
           tr = tbody.append("tr")
         .datum(d.index)
@@ -2898,32 +2918,29 @@ function tableWrapper(){
   function computeColumnWidth(){
     var thead = table.select("thead"),
         tbody = table.select("tbody");
-        widths = [];
 
-    thead.selectAll("tr > th").each(function(d,i){
-      widths[i] = Math.min(this.offsetWidth,300);
-    });
-    tbody.selectAll("tr").filter(function(d,i){
-      return i<50;
-    }).each(function(){
-      d3.select(this).selectAll("td").each(function(d,i){
-        var w = Math.min(this.offsetWidth+10,300);
-        if(w > widths[i]){
-          widths[i] = w;
-        }
+    if(!columnwidths.length){
+      thead.selectAll("tr > th").each(function(d,i){
+        columnwidths[i] = Math.min(this.offsetWidth,300);
       });
-    })
+      tbody.selectAll("tr").each(function(){
+        d3.select(this).selectAll("td").each(function(d,i){
+          var w = Math.min(this.offsetWidth+10,300);
+          if(w > columnwidths[i]){
+            columnwidths[i] = w;
+          }
+        });
+      })
+    }
 
-    thead.selectAll("tr > th").style("width",function(d,i){
-      return widths[i]+"px";
+    thead.selectAll("tr > th > div").style("width",function(d,i){
+      return columnwidths[i]+"px";
     });
     tbody.selectAll("tr").each(function(){
-      d3.select(this).selectAll("td").style("width",function(d,i){
-        return widths[i]+"px";
+      d3.select(this).selectAll("td > div").style("width",function(d,i){
+        return columnwidths[i]+"px";
       });
     })
-
-    tbody.style("width",widths.reduce(function(p,c){ return p+c; },10)+"px");
   }
 
   exports.data = function(x){
