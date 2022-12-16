@@ -67,23 +67,23 @@ printTimeline <- function(x){
 }
 
 plot.network_rd3 <- function(x, dir = tempDir(), ...){
-  plotObj(x, dir, netCreate)
+  plotObj(x, dir)
 }
 
 plot.barplot_rd3 <- function(x, dir = tempDir(), ...){
-  plotObj(x, dir, barCreate)
+  plotObj(x, dir)
 }
 
 plot.timeline_rd3 <- function(x, dir = tempDir(), ...){
-  plotObj(x, dir, timeCreate)
+  plotObj(x, dir)
 }
 
 plot.gallery_rd3 <- function(x, dir = tempDir(), ...){
-  plotObj(x, dir, galleryCreate)
+  plotObj(x, dir)
 }
 
 plot.pie_rd3 <- function(x, dir = tempDir(), ...){
-  plotObj(x, dir, pieCreate)
+  plotObj(x, dir)
 }
 
 plot.multi_rd3 <- function(x, dir = tempDir(), ...){
@@ -95,8 +95,22 @@ plot.multi_rd3 <- function(x, dir = tempDir(), ...){
   browseURL(normalizePath(paste(dir, "index.html", sep = "/")))
 }
 
-plotObj <- function(x,dir,callback){
-  callback(x,dir)
+objCreate <- function(x,dir){
+  if(inherits(x,"network_rd3")){
+    netCreate(x,dir)
+  }else if(inherits(x,"timeline_rd3")){
+    timeCreate(x,dir)
+  }else if(inherits(x,"barplot_rd3")){
+    barCreate(x,dir)
+  }else if(inherits(x,"gallery_rd3")){
+    galleryCreate(x,dir)
+  }else if(inherits(x,"pie_rd3")){
+    pieCreate(x,dir)
+  }
+}
+
+plotObj <- function(x,dir){
+  objCreate(x,dir)
   browseURL(normalizePath(paste(dir, "index.html", sep = "/")))
 }
 

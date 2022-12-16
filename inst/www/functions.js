@@ -2173,7 +2173,8 @@ function displayTopBar(){
       topBoxes,
       netCoinIcon,
       fixed = false,
-      title = false;
+      title = false,
+      goback = false;
 
   function exports(sel){
     topbar = sel.append("div")
@@ -2185,6 +2186,15 @@ function displayTopBar(){
       .attr("class","topbar-boxes")
 
     display_netCoinIcon();
+
+    if(goback){
+      exports.addBox(function(box){
+        box.append("button").attr("class","primary").text("< "+texts.goback).on("click",function(){
+          window.location.href = "../../index.html";
+        })
+      })
+    }
+
     if(typeof multiGraph != 'undefined'){
       exports.addBox(function(box){
         multiGraph.graphSelect(box);
@@ -2290,6 +2300,12 @@ function displayTopBar(){
   exports.title = function(x){
     if (!arguments.length) return title;
     title = x;
+    return exports;
+  }
+
+  exports.goback = function(x){
+    if (!arguments.length) return goback;
+    goback = x ? true : false;
     return exports;
   }
 
@@ -2774,12 +2790,11 @@ function tableWrapper(){
     if(onlySelectedData){
       tableTitle.append("span").text(" ("+selectedData.length+" "+texts.outof+" "+currentData.length+")")
     }
-    tables.select("div.table-pagination").remove();
+    tables.select(".table-pagination").remove();
     tableContainer.selectAll("table, p").remove();
     if(selectedData.length==0){
       tableContainer.append("p").text(texts["no"+item+"selected"]);
     }else{
-      // TODO: calc pagelength
       var cellheight = parseInt(tables.style("font-size")) * 1.2 + 9;
       pagelength = Math.floor(tableContainer.node().offsetHeight / cellheight) - 2;
       if(selectedData.length>pagelength){

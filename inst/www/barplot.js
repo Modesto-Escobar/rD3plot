@@ -89,6 +89,9 @@ function barplot(json){
 
   // top bar
   var topBar = displayTopBar();
+  if(options.multipages){
+    topBar.goback(true);
+  }
   body.call(topBar);
 
   topBar.addIcon(iconButton()

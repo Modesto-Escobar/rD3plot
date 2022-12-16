@@ -37,7 +37,7 @@ var texts = {
     selectneighbors: "Añadir vecinos",
     expand: "Expandir",
     collapse: "Contraer",
-    Reverse: "Reverse",
+    Reverse: "Invertir",
     tableselection: "Marcados en la tabla",
     reset: "Reiniciar",
     directional: "Flechas",

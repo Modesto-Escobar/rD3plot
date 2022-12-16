@@ -61,7 +61,7 @@ function tutorialTour(options){
         .style("height","60px")
     }
     tutorialContent.append("h3").text(tutorial_texts['elementsgallery'])
-    tutorialContent.append("p").text(tutorial_texts['beforestarting'])
+    tutorialContent.append("p").html(tutorial_texts['beforestarting'])
   });
 
   steps.push(function(){
@@ -70,7 +70,7 @@ function tutorialTour(options){
     tutorialContent.selectAll("*").remove()
 
     tutorialContent.append("p").html(tutorial_texts['mainpage'])
-    tutorialContent.append("p").text(options.tutorial.description ? options.tutorial.description : tutorial_texts['collectionofelements'])
+    tutorialContent.append("p").html(options.tutorial.description ? options.tutorial.description : tutorial_texts['collectionofelements'])
     tutorialContent.append("p").html(tutorial_texts['eachfigure'])
 
     tutorialArrow.style("display","none")
@@ -141,7 +141,7 @@ function tutorialTour(options){
         item.append("span").text(texts.Value + " " + d);
       });
       img.append("center").append("button").attr("class","primary").text("Apply");
-      div.append("p").text(tutorial_texts['checkingtheboxes'])
+      div.append("p").html(tutorial_texts['checkingtheboxes'])
       div.append("p").html(tutorial_texts['toremovethefilter'])
       div.append("center")
         .style("pointer-events","none")
@@ -167,7 +167,9 @@ function tutorialTour(options){
       ul.append("li").html('<span>'+tutorial_texts['statisticalgraphs']+'</span><span><img src="'+b64Icons.chart+'"/></span>')
     }
     ul.append("li").html('<span>'+tutorial_texts['informativetables']+'</span><span><img src="'+b64Icons.table+'"/></span>')
-    ul.append("li").html('<span>'+tutorial_texts['graphexport']+'</span><span><img src="'+b64Icons.pdf+'"/></span>')
+    if(!topbar.select(".topbar-icons > img.icon[alt=pdf]").empty()){
+      ul.append("li").html('<span>'+tutorial_texts['graphexport']+'</span><span><img src="'+b64Icons.pdf+'"/></span>')
+    }
 
     tutorialArrow.style("display",null)
       .style("left",left+"px")
@@ -175,7 +177,7 @@ function tutorialTour(options){
 
     tutorial2.selectAll("*").remove()
     tutorial2.style("display",null)
-    tutorial2.append("span").text(tutorial_texts['zoomcontrol'])
+    tutorial2.append("span").html(tutorial_texts['zoomcontrol'])
     var tutorial2Dim = tutorial2.node().getBoundingClientRect();
     tutorial2.style("top",(dim.height-tutorial2Dim.height-43)+"px")
     tutorial2.style("left",(dim.width-tutorial2Dim.width-120)+"px")
@@ -193,7 +195,7 @@ function tutorialTour(options){
       var multigraphDim = topbar.select(".multi-select").node().getBoundingClientRect();
       tutorial.style("top",(maxtop+30)+"px")
       tutorial.style("left",multigraphDim.left+"px")
-      tutorialContent.append("p").text(tutorial_texts['inadditiontothismainpage'])
+      tutorialContent.append("p").html(tutorial_texts['inadditiontothismainpage'])
       tutorialContent.append("p").html(tutorial_texts['tonavigatefromonetabtoanother'])
 
       tutorialArrow.style("display",null)
@@ -214,8 +216,8 @@ function tutorialTour(options){
       [1,2,3].forEach(function(d){
         var option = dropdown.append("div").text(texts.graph + " " + d);
       });
-      div.append("p").text(tutorial_texts['inthismenuyoucanselect'])
-      div.append("p").text(tutorial_texts['movefromonetoanother'])
+      div.append("p").html(tutorial_texts['inthismenuyoucanselect'])
+      div.append("p").html(tutorial_texts['movefromonetoanother'])
     });
   }
 

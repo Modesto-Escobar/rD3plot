@@ -53,6 +53,9 @@ function piechart(json){
   // top bar
   var topBar = displayTopBar()
     .title(options.main);
+  if(options.multipages){
+    topBar.goback(true);
+  }
   body.call(topBar);
 
   if(options.help){

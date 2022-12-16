@@ -84,6 +84,9 @@ function timeline(json){
 
   // top bar
   var topBar = displayTopBar().fixed(true);
+  if(options.multipages){
+    topBar.goback(true);
+  }
   body.call(topBar);
 
   topBar.addIcon(iconButton()

@@ -44,6 +44,7 @@ function gallery(Graph){
 
   options.showTopbar = showControls(options,1);
   options.showExport = showControls(options,2);
+  options.showExport2 = showControls(options,3);
 
   var topFilterInst = topFilter()
     .data(nodes)
@@ -137,6 +138,9 @@ function gallery(Graph){
   // top bar
   var topBar = displayTopBar()
     .title(options.main);
+  if(options.multipages){
+    topBar.goback(true);
+  }
   galleryBox.call(topBar);
 
   if(options.help){
@@ -1129,7 +1133,8 @@ function gallery(Graph){
     header.append("div")
           .attr("class","table-title");
 
-    header.call(iconButton()
+    if(options.showExport2){
+      header.call(iconButton()
             .alt("xlsx")
             .float("none")
             .src(b64Icons.xlsx)
@@ -1138,6 +1143,7 @@ function gallery(Graph){
             .select("img")
               .style("margin-right","24px")
               .style("margin-bottom","-2px")
+    }
 
     header.append("input")
       .attr("type", "text")

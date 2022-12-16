@@ -260,3 +260,54 @@ evolNetwork_rd3 <- function(..., frame = 0, speed = 50, loop = FALSE, lineplots 
   if (!is.null(dir)) netCreate(net,dir)
   return(net)
 }
+
+# display multigraph with an index page
+rd3_multiPages <- function(x, title = NULL, dir = tempDir(), show = FALSE){
+  if(inherits(x,"multi_rd3")){
+    multi <- x$graphs
+    options <- list(names=names(multi))
+    if(!is.null(title)){
+      options$title <- title
+    }
+    images <- rep(NA,length(multi))
+    img2copy <- character()
+    for(i in seq_along(multi)){
+      if(is.character(multi[[i]]$image) && file.exists(multi[[i]]$image)){
+        images[[i]] <- paste0("images/",basename(multi[[i]]$image))
+        img2copy <- c(img2copy,multi[[i]]$image)
+      }
+    }
+    if(!all(is.na(images))){
+      options$images <- images
+    }
+    createHTML(dir, c("bootstrap.scrolling.nav.css","multipages.css"), "multipages.js", toJSON(list(options=options)))
+    dir.create(paste0(dir,"/pages"))
+    for(n in names(multi)){
+      multi[[n]]$options$multipages <- TRUE
+      objCreate(multi[[n]],paste0(dir,"/pages/",n))
+    }
+    if(length(img2copy)){
+      dir.create(paste0(dir,"/images"))
+      for(img in img2copy){
+        file.copy(img,paste0(dir,"/images"))
+      }
+    }
+    if(identical(show,TRUE)){
+      browseURL(normalizePath(paste(dir, "index.html", sep = "/")))
+    }else{
+      message(paste0("The graph has been generated in the \"",normalizePath(dir),"\" path."))
+    }
+  }
+}
+
+rd3_addImage <- function(x,img){
+  if(!is.character(img) || !file.exists(img)){
+    stop('img: file not found.')
+  }
+  if(inherits(x,c("network_rd3","timeline_rd3","barplot_rd3","gallery_rd3","pie_rd3"))){
+    x$image <- img
+    return(x)
+  }else{
+    stop('x: not supported object.')
+  }
+}
