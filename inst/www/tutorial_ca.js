@@ -28,6 +28,9 @@ var tutorial_texts = {
   inthismenuyoucanselect: 'En aquest menú podreu seleccionar diferents galeries amb diferents temàtiques i característiques.',
   movefromonetoanother: 'Mou-te d&apos;una a l&apos;altra al teu gust.',
 
+  inadditiontothispage: 'A més d&apos;aquesta pàgina, hi ha altres pàgines amb informació diferent.',
+  tonavigatefromonetoanother: 'Per navegar <span class="highlight">d&apos;una pàgina a una altra</span>, torneu al menú principal utilitzant la icona <img src="'+b64Icons.home+'"/> disponible a la part superior esquerra de la pantalla.',
+
   hello: "Hola!",
   doyouneedhelp: "Necessites ajuda amb netCoin?",
   seethetutorials: "Veure els tutorials",

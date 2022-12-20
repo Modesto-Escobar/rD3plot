@@ -800,6 +800,10 @@ function topFilter(){
         delete d._filtered;
         return true;
       });
+    }else{
+      data.forEach(function(d){
+        delete d._filtered;
+      });
     }
     return false;
   }
@@ -2189,7 +2193,7 @@ function displayTopBar(){
 
     if(goback){
       exports.addBox(function(box){
-        box.append("button").attr("class","primary").text("< "+texts.goback).on("click",function(){
+        box.append("button").attr("class","primary home").text(texts.goback).attr("title",texts.goback).on("click",function(){
           window.location.href = "../../index.html";
         })
       })

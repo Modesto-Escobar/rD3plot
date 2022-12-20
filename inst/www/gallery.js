@@ -513,23 +513,6 @@ function gallery(Graph){
         .attr("title",function(d){ return d[options.nodeLabel]; })
         .text(function(d){ return d[options.nodeLabel]; })
 
-    if(options.nodeText){
-      itemsEnter.each(function(d){
-        if(d[options.nodeText]){
-          var tooltip = d3.select(this).append("div")
-            .attr("class","tooltip")
-            .style("display","none")
-            .html(d[options.nodeText])
-          tooltip.append("div")
-              .attr("class","close-button")
-              .on("click",function(){
-                d3.event.stopPropagation();
-                tooltip.style("display","none");
-              })
-        }
-      });
-    }
-
     items.exit().remove();
 
     var itemsUpdate = itemsEnter.merge(items);
@@ -578,28 +561,58 @@ function gallery(Graph){
             }
             body.select(".panel-template.auto-color").datum(n);
           }
-          if(options.nodeText){
-            galleryItems.selectAll(".item > .tooltip").style("display","none");
-            var tooltip = d3.select(this).select(".tooltip");
-            tooltip.style("display","block");
-            if(d3.mouse(gallery.node())[0]>(gallery.node().offsetWidth/2)){
+          if(options.nodeText && n[options.nodeText]){
+            var tooltip = body.append("div")
+              .attr("class","tooltip")
+              .style("cursor","grab")
+              .style("display","block")
+              .html(n[options.nodeText])
+            tooltip.append("div")
+              .attr("class","close-button")
+              .on("click",function(){
+                d3.event.stopPropagation();
+                tooltip.remove();
+              })
+            tooltip.call(d3.drag()
+            .on("start",function(){
+              tooltip.style("cursor","grabbing");
+              tooltip.datum(d3.mouse(tooltip.node()));
+            })
+            .on("drag",function(){
+              var coor = d3.mouse(body.node().parentNode),
+                  coor2 = tooltip.datum();
+              coor[0] = coor[0]-coor2[0];
+              coor[1] = coor[1]-coor2[1];
               tooltip
-                .style("left","unset")
-                .style("right",0);
+               .style("top",(coor[1])+"px")
+               .style("left",(coor[0])+"px")
+            })
+            .on("end",function(){
+              tooltip.style("cursor","grab");
+              tooltip.datum(null);
+            })
+              );
+            var coor = d3.mouse(body.node());
+            if(coor[0]>(body.node().offsetWidth/2)){
+              tooltip
+                .style("left",(coor[0]-tooltip.node().offsetWidth-10)+"px")
             }else{
               tooltip
-                .style("left",null)
-                .style("right",null);
+                .style("left",(coor[0]+10)+"px")
             }
-            if(d3.mouse(gallery.node())[1]>(gallery.node().offsetHeight/2)){
+            if(coor[1]>(body.node().offsetHeight/2)){
               tooltip
-                .style("top","unset")
-                .style("bottom",0);
+                .style("top",(coor[1]-tooltip.node().offsetHeight-10)+"px")
             }else{
               tooltip
-                .style("top",null)
-                .style("bottom",null);
+                .style("top",(coor[1]+10)+"px")
             }
+            tooltip.select(".tooltip > .info-template > h2.auto-color").style("background-color",function(d){
+              if(options.nodeColor){
+                return applyColorScale(colorScale,n[options.nodeColor]);
+              }
+              return options.defaultColor;
+            })
           }
           displayGraph();
       })
@@ -688,13 +701,6 @@ function gallery(Graph){
         return options.defaultColor;
       })
     }
-
-    itemsUpdate.select(".tooltip > .info-template > h2.auto-color").style("background-color",function(d){
-        if(options.nodeColor){
-            return applyColorScale(colorScale,d[options.nodeColor]);
-        }
-        return options.defaultColor;
-    })
 
     var panelTemplate = body.select(".panel-template.auto-color");
     if(!panelTemplate.empty()){

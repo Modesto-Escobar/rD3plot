@@ -28,6 +28,9 @@ var tutorial_texts = {
   inthismenuyoucanselect: 'In this menu you can select different galleries with different themes and characteristics.',
   movefromonetoanother: 'Move from one to another as you like.',
 
+  inadditiontothispage: 'In addition to this page, there are other pages with different information.',
+  tonavigatefromonetoanother: 'To <span class="highlight">navigate from one page to another</span>, return to the main menu clicking the <img src="'+b64Icons.home+'"/> icon available at the top left of the screen.',
+
   hello: "Hello!",
   doyouneedhelp: "Do you need help?",
   seethetutorials: "See the tutorials",

@@ -221,6 +221,22 @@ function tutorialTour(options){
     });
   }
 
+  if(options.multipages){
+    steps.push(function(){
+      tutorialContent.selectAll("*").remove()
+      var multigraphDim = topbar.select(".primary.home").node().getBoundingClientRect();
+      tutorial.style("top",(maxtop+30)+"px")
+      tutorial.style("left",multigraphDim.left+"px")
+      tutorialContent.append("p").html(tutorial_texts['inadditiontothispage'])
+      tutorialContent.append("p").html(tutorial_texts['tonavigatefromonetoanother'])
+
+      tutorialArrow.style("display",null)
+        .style("left",(multigraphDim.left+(multigraphDim.width/2))+"px")
+        .style("top",(maxtop-10)+"px")
+      tutorial2.style("display","none")
+    });
+  }
+
   go2step(0);
 
   function tutorial_menu(){

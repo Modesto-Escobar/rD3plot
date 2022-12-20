@@ -8,6 +8,8 @@ window.onload = function(){
     }
   }
 
+  document.body.style.fontSize = (10*data.options.cex)+"px";
+
   var section = document.createElement("section");
   document.body.appendChild(section);
   
@@ -26,12 +28,18 @@ window.onload = function(){
   row.appendChild(col);
 
   var h2 = document.createElement("h2");
-  h2.textContent = data.options.title;
   col.appendChild(h2);
+
+  var center = document.createElement("center");
+  center.textContent = data.options.title;
+  h2.appendChild(center);
 
   var boxcontainer = document.createElement("div");
   boxcontainer.classList.add("s-box-container");
   boxcontainer.classList.add("justify-content-center");
+  if(data.options.columns){
+    boxcontainer.style.gridTemplateColumns = "repeat("+parseInt(data.options.columns)+", auto)";
+  }
   col.appendChild(boxcontainer);
 
   data.options.names.forEach(function(n,i){
@@ -39,29 +47,21 @@ window.onload = function(){
     box.classList.add("s-box");
     boxcontainer.appendChild(box);
 
+    var a = document.createElement("a");
+    a.href = "pages/"+n+"/index.html";
+    box.appendChild(a);
+
     var bar = document.createElement("div");
     bar.classList.add("bar");
-    box.appendChild(bar);
+    a.appendChild(bar);
 
     var img = document.createElement("img");
     img.alt = n;
     img.src = (data.options.images && data.options.images[i]) ? data.options.images[i] : "data:image/svg+xml;base64,"+btoa('<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" height="75" width="75" version="1.1" viewBox="0 0 75 75"><rect width="75" height="75" fill="#777777" /></svg>');
-    box.appendChild(img);
-
-    var br = document.createElement("br");
-    box.appendChild(br);
+    a.appendChild(img);
 
     var h1 = document.createElement("h1");
     h1.textContent = n;
-    box.appendChild(h1);
-
-    var br = document.createElement("br");
-    box.appendChild(br);
-
-    var a = document.createElement("a");
-    a.classList.add("s-btn");
-    a.textContent = "Go";
-    a.href = "pages/"+n+"/index.html";
-    box.appendChild(a);
+    a.appendChild(h1);
   });
 }
