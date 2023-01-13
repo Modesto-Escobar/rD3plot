@@ -45,6 +45,7 @@ function gallery(Graph){
   options.showTopbar = showControls(options,1);
   options.showExport = showControls(options,2);
   options.showExport2 = showControls(options,3);
+  options.showTable = showControls(options,4);
 
   var topFilterInst = topFilter()
     .data(nodes)
@@ -163,13 +164,15 @@ function gallery(Graph){
         .job(gallery2pdf));
   }
 
-  topBar.addIcon(iconButton()
+  if(options.showTable){
+    topBar.addIcon(iconButton()
         .alt("table")
         .width(24)
         .height(24)
         .src(b64Icons.table)
         .title(texts.Table)
         .job(displayTable));
+  }
 
   if(frequencyBars){
       topBar.addIcon(iconButton()
@@ -562,57 +565,62 @@ function gallery(Graph){
             body.select(".panel-template.auto-color").datum(n);
           }
           if(options.nodeText && n[options.nodeText]){
-            var tooltip = body.append("div")
+            if(body.selectAll(".tooltip").filter(function(d){
+              return d==n[options.nodeName];
+            }).empty()){
+              var tooltip = body.append("div")
               .attr("class","tooltip")
+              .datum(n[options.nodeName])
               .style("cursor","grab")
               .style("display","block")
               .html(n[options.nodeText])
-            tooltip.append("div")
+              tooltip.append("div")
               .attr("class","close-button")
               .on("click",function(){
                 d3.event.stopPropagation();
                 tooltip.remove();
               })
-            tooltip.call(d3.drag()
-            .on("start",function(){
-              tooltip.style("cursor","grabbing");
-              tooltip.datum(d3.mouse(tooltip.node()));
-            })
-            .on("drag",function(){
-              var coor = d3.mouse(body.node().parentNode),
-                  coor2 = tooltip.datum();
-              coor[0] = coor[0]-coor2[0];
-              coor[1] = coor[1]-coor2[1];
-              tooltip
-               .style("top",(coor[1])+"px")
-               .style("left",(coor[0])+"px")
-            })
-            .on("end",function(){
-              tooltip.style("cursor","grab");
-              tooltip.datum(null);
-            })
+              tooltip.call(d3.drag()
+              .on("start",function(){
+                tooltip.style("cursor","grabbing");
+                tooltip.datum(d3.mouse(tooltip.node()));
+              })
+              .on("drag",function(){
+                var coor = d3.mouse(body.node().parentNode),
+                    coor2 = tooltip.datum();
+                coor[0] = coor[0]-coor2[0];
+                coor[1] = coor[1]-coor2[1];
+                tooltip
+                 .style("top",(coor[1])+"px")
+                 .style("left",(coor[0])+"px")
+              })
+              .on("end",function(){
+                tooltip.style("cursor","grab");
+                tooltip.datum(null);
+              })
               );
-            var coor = d3.mouse(body.node());
-            if(coor[0]>(body.node().offsetWidth/2)){
-              tooltip
-                .style("left",(coor[0]-tooltip.node().offsetWidth-10)+"px")
-            }else{
-              tooltip
-                .style("left",(coor[0]+10)+"px")
-            }
-            if(coor[1]>(body.node().offsetHeight/2)){
-              tooltip
-                .style("top",(coor[1]-tooltip.node().offsetHeight-10)+"px")
-            }else{
-              tooltip
-                .style("top",(coor[1]+10)+"px")
-            }
-            tooltip.select(".tooltip > .info-template > h2.auto-color").style("background-color",function(d){
-              if(options.nodeColor){
-                return applyColorScale(colorScale,n[options.nodeColor]);
+              var coor = d3.mouse(body.node());
+              if(coor[0]>(body.node().offsetWidth/2)){
+                tooltip
+                  .style("left",(coor[0]-tooltip.node().offsetWidth-10)+"px")
+              }else{
+                tooltip
+                  .style("left",(coor[0]+10)+"px")
               }
-              return options.defaultColor;
-            })
+              if(coor[1]>(body.node().offsetHeight/2)){
+                tooltip
+                  .style("top",(coor[1]-tooltip.node().offsetHeight-10)+"px")
+              }else{
+                tooltip
+                  .style("top",(coor[1]+10)+"px")
+              }
+              tooltip.select(".tooltip > .info-template > h2.auto-color").style("background-color",function(d){
+                if(options.nodeColor){
+                  return applyColorScale(colorScale,n[options.nodeColor]);
+                }
+                return options.defaultColor;
+              })
+            }
           }
           displayGraph();
       })
@@ -746,6 +754,7 @@ function gallery(Graph){
     if(descriptionPanel && options.description && !options.frequencies){
       displayInDescription();
     }
+    body.selectAll(".tooltip").remove();
   }
 
   function filterSelection(){

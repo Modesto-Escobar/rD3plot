@@ -1059,6 +1059,17 @@ div.tooltip a{
 div.tooltip > .close-button {
   margin: 5px 8px 0 0;
 }
+div.tooltip > div.info-template + div.close-button {
+  border: solid 2px black;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+}
+div.tooltip > div.info-template + div.close-button:before,
+div.tooltip > div.info-template + div.close-button:after {
+  top: 4px;
+  left: 11px;
+}
 
 div.showHideTable {
   border-radius: 5px;

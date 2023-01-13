@@ -63,5 +63,13 @@ window.onload = function(){
     var h1 = document.createElement("h1");
     h1.textContent = n;
     a.appendChild(h1);
+
+    if(data.options.imgsize){
+      img.style.height = data.options.imgsize+"px";
+      if(data.options.imgsize>200){
+        box.style.width = (data.options.imgsize+100)+"px";
+        box.style.height = (data.options.imgsize+100)+"px";
+      }
+    }
   });
 }

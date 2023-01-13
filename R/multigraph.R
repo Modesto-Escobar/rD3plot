@@ -262,7 +262,7 @@ evolNetwork_rd3 <- function(..., frame = 0, speed = 50, loop = FALSE, lineplots 
 }
 
 # display multigraph with an index page
-rd3_multiPages <- function(x, title = NULL, columns = NULL, cex = 1, dir = tempDir(), show = FALSE){
+rd3_multiPages <- function(x, title = NULL, columns = NULL, imageSize = NULL, cex = 1, dir = tempDir(), show = FALSE){
   if(inherits(x,"multi_rd3")){
     multi <- x$graphs
     options <- list(names=names(multi))
@@ -286,6 +286,13 @@ rd3_multiPages <- function(x, title = NULL, columns = NULL, cex = 1, dir = tempD
         options$columns <- as.numeric(columns[1])
       }else{
         warning("columns: must be a numeric vector")
+      }
+    }
+    if(!is.null(imageSize)){
+      if(is.numeric(imageSize)){
+        options$imgsize <- as.numeric(imageSize)
+      }else{
+        warning("imageSize: must be a numeric vector")
       }
     }
     createHTML(dir, c("bootstrap.scrolling.nav.css","multipages.css"), "multipages.js", toJSON(list(options=options)))

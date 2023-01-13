@@ -53,6 +53,7 @@ function tutorialTour(options){
     .style("display","none")
     .style("width",(dim.width/3-panelOffset)+"px")
 
+  // intro
   steps.push(function(){
     tutorialContent.selectAll("*").remove()
     if(options.tutorial.image){
@@ -64,6 +65,7 @@ function tutorialTour(options){
     tutorialContent.append("p").html(tutorial_texts['beforestarting'])
   });
 
+  // description
   steps.push(function(){
     tutorial.style("top",(dim.height/4)+"px")
     tutorial.style("left",(dim.width/4)+"px")
@@ -77,6 +79,7 @@ function tutorialTour(options){
     tutorial2.style("display","none")
   });
 
+  // actions
   if(options.nodeText || options.nodeInfo){
     steps.push(function(){
       tutorial.style("top",(dim.height/4)+"px")
@@ -94,6 +97,7 @@ function tutorialTour(options){
     });
   }
 
+  // search
   if(topbar.select(".multi-search > .search-box").node().offsetWidth){
     steps.push(function(){
       var searchDim = topbar.select(".multi-search > .search-box").node().getBoundingClientRect();
@@ -111,11 +115,14 @@ function tutorialTour(options){
     });
   }
 
+  // filter
   if(topbar.select("h3.top-filter").node().offsetWidth){
     steps.push(function(){
       var filterDim = topbar.select("h3.top-filter").node().getBoundingClientRect();
       tutorialContent.selectAll("*").remove()
       tutorialArrow.style("display",null)
+        .style("transform",null)
+        .style("margin-left",null)
         .style("left",(filterDim.left+(filterDim.width/2))+"px")
         .style("top",(maxtop-10)+"px")
       var left = Math.max(60,filterDim.left);
@@ -149,7 +156,30 @@ function tutorialTour(options){
     });
   }
 
-  steps.push(function(){
+  // legend
+  if(body.select(".legend-panel > .legends").node().offsetWidth){
+    steps.push(function(){
+      var legendDim = body.select(".legend-panel > .legends").node().getBoundingClientRect();
+      tutorialContent.selectAll("*").remove()
+      tutorialContent.append("p").html(tutorial_texts['legend_p1'])
+
+      var tutorialDim = tutorial.node().getBoundingClientRect();
+      tutorial.style("left",(dim.width-tutorialDim.width-legendDim.width-80)+"px")
+      tutorial.style("top",(maxtop+30)+"px")
+
+      tutorialArrow.style("display",null)
+        .style("transform","rotate(90deg)")
+        .style("margin-left",0)
+        .style("left",(dim.width-legendDim.width-80)+"px")
+        .style("top",(maxtop+60)+"px")
+
+      tutorial2.style("display","none")
+    });
+  }
+
+  // topbar icons
+  if(!topbar.selectAll(".topbar-icons > img.icon").empty()){
+    steps.push(function(){
     var min = Infinity, max = -Infinity;
     topbar.selectAll(".topbar-icons > img").each(function(){
       min = Math.min(min,this.getBoundingClientRect().left);
@@ -166,12 +196,16 @@ function tutorialTour(options){
     if(!topbar.select(".topbar-icons > img.icon[alt=freq]").empty()){
       ul.append("li").html('<span>'+tutorial_texts['statisticalgraphs']+'</span><span><img src="'+b64Icons.chart+'"/></span>')
     }
-    ul.append("li").html('<span>'+tutorial_texts['informativetables']+'</span><span><img src="'+b64Icons.table+'"/></span>')
+    if(!topbar.select(".topbar-icons > img.icon[alt=table]").empty()){
+      ul.append("li").html('<span>'+tutorial_texts['informativetables']+'</span><span><img src="'+b64Icons.table+'"/></span>')
+    }
     if(!topbar.select(".topbar-icons > img.icon[alt=pdf]").empty()){
       ul.append("li").html('<span>'+tutorial_texts['graphexport']+'</span><span><img src="'+b64Icons.pdf+'"/></span>')
     }
 
     tutorialArrow.style("display",null)
+      .style("transform",null)
+      .style("margin-left",null)
       .style("left",left+"px")
       .style("top",(maxtop-10)+"px")
 
@@ -187,8 +221,10 @@ function tutorialTour(options){
       .style("margin-left",0)
       .style("left",tutorial2Dim.width+"px")
       .style("top",((tutorial2Dim.height/2)-30)+"px")
-  });
+    });
+  }
 
+  // multigraph
   if(typeof multiGraph != 'undefined'){
     steps.push(function(){
       tutorialContent.selectAll("*").remove()
@@ -221,6 +257,7 @@ function tutorialTour(options){
     });
   }
 
+  // multipages
   if(options.multipages){
     steps.push(function(){
       tutorialContent.selectAll("*").remove()

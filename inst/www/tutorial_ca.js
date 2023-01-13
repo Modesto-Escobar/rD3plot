@@ -31,6 +31,8 @@ var tutorial_texts = {
   inadditiontothispage: 'A més d&apos;aquesta pàgina, hi ha altres pàgines amb informació diferent.',
   tonavigatefromonetoanother: 'Per navegar <span class="highlight">d&apos;una pàgina a una altra</span>, torneu al menú principal utilitzant la icona <img src="'+b64Icons.home+'"/> disponible a la part superior esquerra de la pantalla.',
 
+  legend_p1: 'A la llegenda pots seleccionar els atributs desitjats i filtrar.',
+
   hello: "Hola!",
   doyouneedhelp: "Necessites ajuda amb netCoin?",
   seethetutorials: "Veure els tutorials",
