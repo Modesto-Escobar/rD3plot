@@ -646,4 +646,3 @@ if(typeof multiGraph == 'undefined'){
     piechart(JSON.parse(d3.select("#data").text()));
   };
 }
-

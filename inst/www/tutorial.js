@@ -225,7 +225,7 @@ function tutorialTour(options){
   }
 
   // multigraph
-  if(typeof multiGraph != 'undefined'){
+  if(!topbar.select(".multi-select").empty()){
     steps.push(function(){
       tutorialContent.selectAll("*").remove()
       var multigraphDim = topbar.select(".multi-select").node().getBoundingClientRect();

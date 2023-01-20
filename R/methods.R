@@ -106,6 +106,12 @@ objCreate <- function(x,dir){
     galleryCreate(x,dir)
   }else if(inherits(x,"pie_rd3")){
     pieCreate(x,dir)
+  }else if(inherits(x,"evolMap")){
+    if(system.file(package='evolMap')!=""){
+      evolMap:::map_html(x,dir)
+    }else{
+      stop("'evolMap' package not installed")
+    }
   }
 }
 

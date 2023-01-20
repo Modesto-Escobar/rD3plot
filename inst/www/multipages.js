@@ -6,9 +6,70 @@ window.onload = function(){
     if(data.options.images){
       data.options.images = [data.options.images];
     }
+    if(data.options.external){
+      data.options.external = [data.options.external];
+    }
   }
 
   document.body.style.fontSize = (10*data.options.cex)+"px";
+
+  var idx = window.location.search;
+  if(idx){
+    idx = idx.substring(1);
+    if(!isNaN(idx)){
+      idx = parseInt(idx);
+
+      document.body.parentNode.style.height = "100%";
+      document.body.style.display = "flex";
+      document.body.style.flexDirection = "column";
+      document.body.style.width = "100%";
+      document.body.style.height = "100%";
+      document.body.style.backgroundColor = "#ffffff";
+
+      var topbar = document.createElement("div");
+      topbar.style.backgroundColor = "#ffffff";
+      topbar.style.padding = "6px 12px";
+      document.body.appendChild(topbar);
+
+      var home = document.createElement("a");
+      home.href = "index.html";
+      topbar.appendChild(home);
+
+      var button = document.createElement("button");
+      button.textContent = "home";
+      button.style.lineHeight = "1.2";
+      button.style.fontSize = "100%";
+      button.style.borderRadius = "3px";
+      button.style.padding = "4px 8px";
+      button.style.appearance = "none";
+      button.style.backgroundColor = "#2f7bee";
+      button.style.border = "none";
+      button.style.margin = "0 2px";
+      button.style.overflow = "hidden";
+      button.style.color = "transparent";
+      button.style.width = "22px";
+      button.style.backgroundRepeat = "no-repeat";
+      button.style.backgroundPosition = "center";
+      button.style.backgroundImage = "url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMTYiIHdpZHRoPSIxNiIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSIjZmZmZmZmIiBkPSJNNiAxOWgzdi02aDZ2Nmgzdi05bC02LTQuNUw2IDEwWm0tMiAyVjlsOC02IDggNnYxMmgtN3YtNmgtMnY2Wm04LTguNzVaIi8+PC9zdmc+)";
+      home.appendChild(button);
+
+      var span = document.createElement("span");
+      span.textContent = data.options.names[idx];
+      span.style.marginLeft = "1em";
+      topbar.appendChild(span);
+
+      var iframe = document.createElement("iframe");
+      iframe.src = "pages/"+(data.options.names[idx])+"/index.html";
+      iframe.style.flexGrow = 1;
+      iframe.style.width = "100%";
+      iframe.style.height = "100%";
+      iframe.setAttribute("frameborder",0);
+      iframe.setAttribute("marginwidth",0);
+      iframe.setAttribute("marginheight",0);
+      document.body.appendChild(iframe);
+    }
+    return;
+  }
 
   var section = document.createElement("section");
   document.body.appendChild(section);
@@ -48,7 +109,11 @@ window.onload = function(){
     boxcontainer.appendChild(box);
 
     var a = document.createElement("a");
-    a.href = "pages/"+n+"/index.html";
+    if(data.options.external && data.options.external[i]){
+      a.href = "index.html?"+i;
+    }else{
+      a.href = "pages/"+n+"/index.html";
+    }
     box.appendChild(a);
 
     var bar = document.createElement("div");

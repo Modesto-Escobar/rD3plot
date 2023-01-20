@@ -3020,3 +3020,4 @@ function defaultColorManagement(defaultColor){
     }
     return categoryColors[0];
 }
+

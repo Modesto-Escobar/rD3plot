@@ -28,6 +28,11 @@ for(item in names(multi)){
     dir.create(paste0(dir,'/data'), showWarnings = FALSE)
     file.copy(graph, paste0(dir,'/data'), recursive = TRUE)
     jsongraph <- toJSON(paste0('data/',graphName))
+  }else if(inherits(graph,"evolMap")){
+    gClass <- "iFrame"
+    dir.create(paste0(dir,'/data'), showWarnings = FALSE)
+    objCreate(graph,paste0(dir,'/data/',item))
+    jsongraph <- toJSON(paste0('data/',item))
   }else{
     warning(paste0('Not supported object "',item,'".'))
     next
@@ -211,7 +216,7 @@ rd3_multigraph <- function(..., mfrow = NULL, dir = NULL){
   for(i in seq_along(graphs)){
     g <- graphs[[i]]
     check <- FALSE
-    for(cls in c("network_rd3","timeline_rd3","barplot_rd3","gallery_rd3","pie_rd3","multi_rd3")){
+    for(cls in c("network_rd3","timeline_rd3","barplot_rd3","gallery_rd3","pie_rd3","multi_rd3","evolMap")){
       if(inherits(g,cls)){
         check <- TRUE
         break
@@ -271,15 +276,22 @@ rd3_multiPages <- function(x, title = NULL, columns = NULL, imageSize = NULL, ce
       options$title <- title
     }
     images <- rep(NA,length(multi))
+    external <- rep(FALSE,length(multi))
     img2copy <- character()
     for(i in seq_along(multi)){
-      if(is.character(multi[[i]]$image) && file.exists(multi[[i]]$image)){
+      if(is.list(multi[[i]]) && is.character(multi[[i]]$image) && file.exists(multi[[i]]$image)){
         images[[i]] <- paste0("images/",basename(multi[[i]]$image))
         img2copy <- c(img2copy,multi[[i]]$image)
+      }
+      if((is.character(multi[[i]]) && file.exists(paste0(multi[[i]],"/index.html"))) || inherits(multi[[i]],"evolMap")){
+        external[[i]] <- TRUE
       }
     }
     if(!all(is.na(images))){
       options$images <- images
+    }
+    if(sum(external)){
+      options$external <- external
     }
     if(!is.null(columns)){
       if(is.numeric(columns)){
@@ -298,8 +310,14 @@ rd3_multiPages <- function(x, title = NULL, columns = NULL, imageSize = NULL, ce
     createHTML(dir, c("bootstrap.scrolling.nav.css","multipages.css"), "multipages.js", toJSON(list(options=options)))
     dir.create(paste0(dir,"/pages"))
     for(n in names(multi)){
-      multi[[n]]$options$multipages <- TRUE
-      objCreate(multi[[n]],paste0(dir,"/pages/",n))
+      if(is.character(multi[[n]])){
+        if(file.exists(paste0(multi[[n]],"/index.html"))){
+          file.copy(multi[[n]], paste0(dir,'/pages'), recursive = TRUE)
+        }
+      }else{
+        multi[[n]]$options$multipages <- TRUE
+        objCreate(multi[[n]],paste0(dir,"/pages/",n))
+      }
     }
     if(length(img2copy)){
       dir.create(paste0(dir,"/images"))
@@ -312,6 +330,8 @@ rd3_multiPages <- function(x, title = NULL, columns = NULL, imageSize = NULL, ce
     }else{
       message(paste0("The graph has been generated in the \"",normalizePath(dir),"\" path."))
     }
+  }else{
+    stop('x: not supported object.')
   }
 }
 
@@ -319,7 +339,7 @@ rd3_addImage <- function(x,img){
   if(!is.character(img) || !file.exists(img)){
     stop('img: file not found.')
   }
-  if(inherits(x,c("network_rd3","timeline_rd3","barplot_rd3","gallery_rd3","pie_rd3"))){
+  if(inherits(x,c("network_rd3","timeline_rd3","barplot_rd3","gallery_rd3","pie_rd3","evolMap"))){
     x$image <- img
     return(x)
   }else{
