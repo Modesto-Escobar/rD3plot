@@ -2176,6 +2176,7 @@ function displayTopBar(){
       topIcons,
       topBoxes,
       netCoinIcon,
+      netCoin = true,
       fixed = false,
       title = false,
       goback = false;
@@ -2215,26 +2216,30 @@ function displayTopBar(){
   }
 
   function display_netCoinIcon(){
-    netCoinIcon = topIcons.append("div")
-      .attr("class", "netCoin-icon")
-      .style("float", "right")
-      .style("margin", "5px 10px")
-    netCoinIcon.append("img")
-    .attr("width",30)
-    .attr("height",22.5)
-    .attr("src",b64Icons.netcoin)
-    .style("vertical-align", "middle")
-    netCoinIcon.append("a")
-    .attr("target","_blank")
-    .attr("href","https://sociocav.usal.es/blog/nca/")
-    .style("font-size","15px")
-    .text("netCoin")
+    if(netCoin){
+      netCoinIcon = topIcons.append("div")
+        .attr("class", "netCoin-icon")
+        .style("float", "right")
+        .style("margin", "5px 10px")
+      netCoinIcon.append("img")
+      .attr("width",30)
+      .attr("height",22.5)
+      .attr("src",b64Icons.netcoin)
+      .style("vertical-align", "middle")
+      netCoinIcon.append("a")
+      .attr("target","_blank")
+      .attr("href","https://sociocav.usal.es/blog/nca/")
+      .style("font-size","15px")
+      .text("netCoin")
+    }
   }
 
   function collapseTopbar(){
-    netCoinIcon.style("display", null);
+    if(netCoinIcon){
+      netCoinIcon.style("display", null);
+    }
     var boxes = topBoxes.selectAll(".topbar-box").style("display",null);
-    if(isOverflowing()){
+    if(netCoinIcon && isOverflowing()){
       netCoinIcon.style("display","none");
     }
     for(var j=boxes.size()-1; j>=0; j--){
@@ -2247,7 +2252,7 @@ function displayTopBar(){
     }
 
     function isOverflowing(){
-      var iconsWidth = netCoinIcon.node().offsetWidth;
+      var iconsWidth = netCoinIcon ? netCoinIcon.node().offsetWidth : 0;
       topIcons.selectAll(".icon").each(function(){
         iconsWidth += (this.offsetWidth+10);
       });
@@ -2310,6 +2315,12 @@ function displayTopBar(){
   exports.goback = function(x){
     if (!arguments.length) return goback;
     goback = x ? true : false;
+    return exports;
+  }
+
+  exports.netCoin = function(x){
+    if (!arguments.length) return netCoin;
+    netCoin = x ? true : false;
     return exports;
   }
 

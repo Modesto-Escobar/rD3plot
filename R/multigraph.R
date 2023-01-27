@@ -267,7 +267,7 @@ evolNetwork_rd3 <- function(..., frame = 0, speed = 50, loop = FALSE, lineplots 
 }
 
 # display multigraph with an index page
-rd3_multiPages <- function(x, title = NULL, columns = NULL, imageSize = NULL, cex = 1, dir = tempDir(), show = FALSE){
+rd3_multiPages <- function(x, title = NULL, columns = NULL, imageSize = NULL, description = NULL, note = NULL, cex = 1, dir = tempDir(), show = FALSE){
   if(inherits(x,"multi_rd3")){
     multi <- x$graphs
     options <- list(names=names(multi))
@@ -276,12 +276,18 @@ rd3_multiPages <- function(x, title = NULL, columns = NULL, imageSize = NULL, ce
       options$title <- title
     }
     images <- rep(NA,length(multi))
+    descriptions <- rep(NA,length(multi))
     external <- rep(FALSE,length(multi))
     img2copy <- character()
     for(i in seq_along(multi)){
-      if(is.list(multi[[i]]) && is.character(multi[[i]]$image) && file.exists(multi[[i]]$image)){
-        images[[i]] <- paste0("images/",basename(multi[[i]]$image))
-        img2copy <- c(img2copy,multi[[i]]$image)
+      if(is.list(multi[[i]])){
+        if(is.character(multi[[i]]$description)){
+          descriptions[[i]] <- multi[[i]]$description
+        }
+        if(is.character(multi[[i]]$image) && file.exists(multi[[i]]$image)){
+          images[[i]] <- paste0("images/",basename(multi[[i]]$image))
+          img2copy <- c(img2copy,multi[[i]]$image)
+        }
       }
       if((is.character(multi[[i]]) && file.exists(paste0(multi[[i]],"/index.html"))) || inherits(multi[[i]],"evolMap")){
         external[[i]] <- TRUE
@@ -289,6 +295,9 @@ rd3_multiPages <- function(x, title = NULL, columns = NULL, imageSize = NULL, ce
     }
     if(!all(is.na(images))){
       options$images <- images
+    }
+    if(!all(is.na(descriptions))){
+      options$descriptions <- descriptions
     }
     if(sum(external)){
       options$external <- external
@@ -299,6 +308,12 @@ rd3_multiPages <- function(x, title = NULL, columns = NULL, imageSize = NULL, ce
       }else{
         warning("columns: must be a numeric vector")
       }
+    }
+    if(!is.null(description)){
+      options$description <- as.character(description)
+    }
+    if(!is.null(note)){
+      options$note <- as.character(note)
     }
     if(!is.null(imageSize)){
       if(is.numeric(imageSize)){
@@ -341,6 +356,15 @@ rd3_addImage <- function(x,img){
   }
   if(inherits(x,c("network_rd3","timeline_rd3","barplot_rd3","gallery_rd3","pie_rd3","evolMap"))){
     x$image <- img
+    return(x)
+  }else{
+    stop('x: not supported object.')
+  }
+}
+
+rd3_addDescription <- function(x,description){
+  if(inherits(x,c("network_rd3","timeline_rd3","barplot_rd3","gallery_rd3","pie_rd3","evolMap"))){
+    x$description <- as.character(description)
     return(x)
   }else{
     stop('x: not supported object.')

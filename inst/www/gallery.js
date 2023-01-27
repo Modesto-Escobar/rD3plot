@@ -46,6 +46,7 @@ function gallery(Graph){
   options.showExport = showControls(options,2);
   options.showExport2 = showControls(options,3);
   options.showTable = showControls(options,4);
+  options.showProjectIcon = showControls(options,5);
 
   var topFilterInst = topFilter()
     .data(nodes)
@@ -141,6 +142,9 @@ function gallery(Graph){
     .title(options.main);
   if(options.multipages){
     topBar.goback(true);
+  }
+  if(!options.showProjectIcon){
+    topBar.netCoin(false);
   }
   galleryBox.call(topBar);
 
@@ -559,6 +563,17 @@ function gallery(Graph){
           if(options.nodeInfo){
             if(descriptionPanel && !options.frequencies){
               displayInDescription(n[options.nodeInfo]);
+              var template = descriptionPanel.select(".description-content > .panel-template, .description-content > .info-template");
+              if(!template.empty()){
+                template.selectAll("a[target=rightframe]").on("mousedown",function(){
+                  infoPanel.changeInfo('<iframe name="rightframe"></iframe>');
+                });
+                template.selectAll("a[target=leftframe]").on("mousedown",function(){
+                  descriptionPanel.select(".description-content").append("iframe").attr("name","leftframe");
+                }).on("mouseup",function(){
+                  template.style("display","none");
+                })
+              }
             }else{
               infoPanel.changeInfo(n[options.nodeInfo]);
             }
@@ -574,6 +589,19 @@ function gallery(Graph){
               .style("cursor","grab")
               .style("display","block")
               .html(n[options.nodeText])
+
+              var template = tooltip.select(".info-template, .panel-tempalte");
+              if(!template.empty()){
+                template.selectAll("a[target=rightframe]").on("mousedown",function(){
+                  infoPanel.changeInfo('<iframe name="rightframe"></iframe>');
+                });
+                if(descriptionPanel){
+                  template.selectAll("a[target=leftframe]").on("mousedown",function(){
+                    displayInDescription('<iframe name="leftframe"></iframe>');
+                  });
+                }
+              }
+
               tooltip.append("div")
               .attr("class","close-button")
               .on("click",function(){
