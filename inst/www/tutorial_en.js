@@ -36,7 +36,6 @@ var tutorial_texts = {
   hello: "Hello!",
   doyouneedhelp: "Do you need help?",
   seethetutorials: "See the tutorials",
-  gototheprojectwebsite: "Go to the project website",
 
   closetutorial: "Close tutorial",
   skiptutorial: "Skip tutorial"

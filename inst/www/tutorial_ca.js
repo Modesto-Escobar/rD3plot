@@ -36,7 +36,6 @@ var tutorial_texts = {
   hello: "Hola!",
   doyouneedhelp: "Necessites ajuda amb netCoin?",
   seethetutorials: "Veure els tutorials",
-  gototheprojectwebsite: "Anar a la web del projecte",
 
   closetutorial: "Tancar tutorial",
   skiptutorial: "Saltar tutorial"

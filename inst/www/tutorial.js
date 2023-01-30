@@ -157,9 +157,10 @@ function tutorialTour(options){
   }
 
   // legend
-  if(body.select(".legend-panel > .legends").node().offsetWidth){
+  var legends = body.select(".legend-panel > .legends");
+  if(!legends.empty() && legends.node().offsetWidth){
     steps.push(function(){
-      var legendDim = body.select(".legend-panel > .legends").node().getBoundingClientRect();
+      var legendDim = legends.node().getBoundingClientRect();
       tutorialContent.selectAll("*").remove()
       tutorialContent.append("p").html(tutorial_texts['legend_p1'])
 
@@ -301,13 +302,6 @@ function tutorialTour(options){
               tutorialTour(options)
             })
           tutorial.append("p")
-          tutorial.append("a")
-          .attr("target","_blank")
-          .attr("href","https://sociocav.usal.es/blog/nca/")
-          .append("button")
-            .attr("class","primary")
-            .style("width","100%")
-            .text(tutorial_texts['gototheprojectwebsite'])
         }else{
           tutorial.remove();
         }
