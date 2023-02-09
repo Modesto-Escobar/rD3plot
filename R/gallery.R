@@ -27,13 +27,13 @@ galleryCreate <- function(gallery, dir){
   createHTML(dir, styles, scripts, function(){ return(imgWrapper(gallery,galleryJSON,dir)) })
 }
 
-gallery_rd3 <- function(nodes, tree = NULL, name = NULL, label = NULL,
-    color = NULL, border = NULL, ntext = NULL, info = NULL, image = NULL,
-    zoom = 1, itemsPerRow = NULL, main = NULL, note = NULL,
+gallery_rd3 <- function(nodes, tree = NULL, name = NULL, label = NULL, color = NULL,
+    border = NULL, ntext = NULL, info = NULL, infoFrame = c("right","left"),
+    image = NULL, zoom = 1, itemsPerRow = NULL, main = NULL, note = NULL,
     showLegend = TRUE, frequencies = FALSE,
     help = NULL, helpOn = FALSE, tutorial = FALSE, description = NULL,
-    descriptionWidth = NULL, roundedItems = FALSE, controls = 1:5,
-    cex = 1, defaultColor = "#1f77b4", language = c("en", "es", "ca"), dir = NULL){
+    descriptionWidth = NULL, roundedItems = FALSE, controls = 1:5, cex = 1,
+    defaultColor = "#1f77b4", language = c("en", "es", "ca"), dir = NULL){
   if(is.null(name)){
     name <- colnames(nodes)[1]
   }
@@ -49,6 +49,13 @@ gallery_rd3 <- function(nodes, tree = NULL, name = NULL, label = NULL,
   options <- checkColumn(options,"nodeBorder",border)
   options <- checkColumn(options,"nodeText",ntext)
   options <- checkColumn(options,"nodeInfo",info)
+
+  if(is.character(infoFrame) && (infoFrame[1] %in% c("right","left"))){
+    options[["infoFrame"]] <- infoFrame[1]
+    if(options[["infoFrame"]]=="left" && is.null(description)){
+      warning("infoFrame: you must add a description to use the left panel")
+    }
+  }
 
   if(!(is.numeric(zoom) && zoom>=0.1 && zoom<=10)){
     zoom <- formals(gallery_rd3)[["zoom"]]

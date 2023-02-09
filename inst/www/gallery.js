@@ -561,18 +561,20 @@ function gallery(Graph){
             n.selected = true;
           }
           if(options.nodeInfo){
-            if(descriptionPanel && !options.frequencies){
-              displayInDescription(n[options.nodeInfo]);
-              var template = descriptionPanel.select(".description-content > .panel-template, .description-content > .info-template");
-              if(!template.empty()){
-                template.selectAll("a[target=rightframe]").on("mousedown",function(){
-                  infoPanel.changeInfo('<iframe name="rightframe"></iframe>');
-                });
-                template.selectAll("a[target=leftframe]").on("mousedown",function(){
-                  descriptionPanel.select(".description-content").append("iframe").attr("name","leftframe");
-                }).on("mouseup",function(){
-                  template.style("display","none");
-                })
+            if(options.infoFrame=="left"){
+              if(descriptionPanel && !options.frequencies){
+                displayInDescription(n[options.nodeInfo]);
+                var template = descriptionPanel.select(".description-content > .panel-template, .description-content > .info-template");
+                if(!template.empty()){
+                  template.selectAll("a[target=rightframe]").on("mousedown",function(){
+                    infoPanel.changeInfo('<iframe name="rightframe"></iframe>');
+                  });
+                  template.selectAll("a[target=leftframe]").on("mousedown",function(){
+                    descriptionPanel.select(".description-content").append("iframe").attr("name","leftframe");
+                  }).on("mouseup",function(){
+                    template.style("display","none");
+                  })
+                }
               }
             }else{
               infoPanel.changeInfo(n[options.nodeInfo]);
