@@ -293,7 +293,8 @@ function displayWindow(w,h){
 function brushSlider(){
   var domain,
       current,
-      callback;
+      callback,
+      ordinal = false;
 
   function exports(sel){
     var cex = parseInt(sel.style("font-size"))/10,
@@ -385,6 +386,9 @@ function brushSlider(){
     sliderHandle.call(d3.drag()
     .on("drag", function(d,i) {
       current[i] = x.invert(d3.mouse(sliderTray.node())[0]);
+      if(ordinal){
+        current[i] = Math.round(current[i]);
+      }
       callback(updateHandlers());
     }));
 
@@ -421,6 +425,12 @@ function brushSlider(){
   exports.callback = function(x) {
     if (!arguments.length) return callback;
     callback = x;
+    return exports;
+  };
+
+  exports.ordinal = function(x) {
+    if (!arguments.length) return ordinal;
+    ordinal = x ? true : false;
     return exports;
   };
 
@@ -661,11 +671,18 @@ function topFilter(){
 
         var type = dataType(data.filter(function(d){ return d[val] !== null; }),val);
         if(type == 'number'){
-          var extent = d3.extent(data, function(d){ return d[val]; }),
+          var discrete = true,
+              extent = d3.extent(data, function(d){
+                if(discrete && d[val]%1!=0){
+                  discrete = false;
+                }
+                return d[val];
+              }),
               tempValues;
           content.call(brushSlider()
             .domain(extent)
             .current(selectedValues[val])
+            .ordinal(discrete)
             .callback(function(s){ tempValues = s; }));
         }else{
           var dat = data.map(function(d){ return d[val]; });
@@ -719,6 +736,7 @@ function topFilter(){
             }
             if(selectedValues[val].length == 0){
               delete selectedValues[val];
+              data.forEach(function(d){ delete d._filtered; });
             }
             d3.select("div.window-background").remove();
       }
@@ -752,6 +770,7 @@ function topFilter(){
         .text(String)
         .on("click",function(d){
             delete selectedValues[d];
+            data.forEach(function(d){ delete d._filtered; });
             displayGraph(getFilteredData());
             displayTags();
          })
@@ -810,9 +829,7 @@ function topFilter(){
 
   exports.removeFilter = function(){
       selectedValues = {};
-      data.forEach(function(d){
-        delete d._filtered;
-      });
+      data.forEach(function(d){ delete d._filtered; });
       displayGraph(false);
       displayTags();
   }
@@ -2810,7 +2827,7 @@ function tableWrapper(){
     if(selectedData.length==0){
       tableContainer.append("p").text(texts["no"+item+"selected"]);
     }else{
-      var cellheight = parseInt(tables.style("font-size")) * 1.2 + 9;
+      var cellheight = parseInt(tables.style("line-height")) + 9;
       pagelength = Math.floor(tableContainer.node().offsetHeight / cellheight) - 2;
       if(selectedData.length>pagelength){
         pagination = 1;
@@ -2826,7 +2843,7 @@ function tableWrapper(){
           }
         });
         paginationDiv.append("button").text(">").on("click",function(){
-          if(pagelength * pagination-1 < selectedData.length){
+          if(pagination < Math.ceil(selectedData.length / pagelength)){
             pagination = pagination + 1;
             drawTable();
           }

@@ -544,12 +544,8 @@ function gallery(Graph){
       .on("click",function(n){
           d3.event.stopPropagation();
           if(d3.event.ctrlKey || d3.event.metaKey){
-
-            if(n.selected){
-              delete n.selected;
-            }else{
-              n.selected = true;
-            }
+            displayData.forEach(function(n){ delete n.selected; });
+            n.selected = true;
           }else if(d3.event.shiftKey){
             n.selected = true;
             var ext = d3.extent(displayData.map(function(d,i){ return [i,d.selected]; }).filter(function(d){ return d[1]; }).map(function(d){ return d[0]; }));
@@ -557,8 +553,11 @@ function gallery(Graph){
               displayData[i].selected = true;
             });
           }else{
-            displayData.forEach(function(n){ delete n.selected; });
-            n.selected = true;
+            if(n.selected){
+              delete n.selected;
+            }else{
+              n.selected = true;
+            }
           }
           if(options.nodeInfo){
             if(options.infoFrame=="left"){

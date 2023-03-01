@@ -926,6 +926,7 @@ function displayBottomPanel(){
       .on("click",function(){
         body.classed("maximize-table",!body.classed("maximize-table"));
         tables.style("height",computeTablesHeight()+"px");
+        showTables();
       })
 
     tableHeader = tableHeader.append("div")

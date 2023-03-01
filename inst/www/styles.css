@@ -186,6 +186,7 @@ th {
   white-space: nowrap;
 }
 .tables {
+  font-size: 10px;
   background-color: #ffffff;
   padding: 6px 10px;
   border-top: solid 2px #2f7bee;
