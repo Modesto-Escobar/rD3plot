@@ -236,6 +236,7 @@ function tutorialTour(options){
       tutorialContent.append("p").html(tutorial_texts['tonavigatefromonetabtoanother'])
 
       tutorialArrow.style("display",null)
+        .style("transform",null)
         .style("left",(multigraphDim.left+(multigraphDim.width/2))+"px")
         .style("top",(maxtop-10)+"px") 
 
@@ -269,6 +270,7 @@ function tutorialTour(options){
       tutorialContent.append("p").html(tutorial_texts['tonavigatefromonetoanother'])
 
       tutorialArrow.style("display",null)
+        .style("transform",null)
         .style("left",(multigraphDim.left+(multigraphDim.width/2))+"px")
         .style("top",(maxtop-10)+"px")
       tutorial2.style("display","none")

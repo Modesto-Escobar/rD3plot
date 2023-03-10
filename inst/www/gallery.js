@@ -793,9 +793,7 @@ function gallery(Graph){
         .map(function(n){
           return n[options.nodeName];
         });
-      if(!values.length){
-        topFilterInst.removeFilter();
-      }else{
+      if(values.length){
         topFilterInst.newFilter(options.nodeName,values);
       }
   }

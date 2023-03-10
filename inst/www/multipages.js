@@ -115,9 +115,13 @@ window.onload = function(){
   }
   col.appendChild(boxcontainer);
 
+  var maxHeight = 0;
   data.options.names.forEach(function(n,i){
     var box = document.createElement("div");
     box.classList.add("s-box");
+    if(data.options.descriptions){
+      box.style.justifyContent = "start";
+    }
     boxcontainer.appendChild(box);
 
     var a = document.createElement("a");
@@ -141,12 +145,6 @@ window.onload = function(){
     h1.textContent = n;
     a.appendChild(h1);
 
-    if(data.options.descriptions && data.options.descriptions[i]){
-      var p = document.createElement("p");
-      p.innerHTML = data.options.descriptions[i];
-      box.appendChild(p);
-    }
-
     if(data.options.imgsize){
       img.style.height = data.options.imgsize+"px";
       if(data.options.imgsize>200){
@@ -154,7 +152,24 @@ window.onload = function(){
         box.style.height = (data.options.imgsize+100)+"px";
       }
     }
+
+    if(data.options.descriptions && data.options.descriptions[i]){
+      var p = document.createElement("p");
+      p.innerHTML = data.options.descriptions[i];
+      box.appendChild(p);
+
+      var h = a.offsetHeight + p.offsetHeight;
+      if(h>parseInt(box.style.height) && h>maxHeight){
+        maxHeight = h;
+      }
+    }
   });
+
+  if(maxHeight){
+    for(var i=0; i<boxcontainer.childNodes.length; i++){
+      boxcontainer.childNodes[i].style.height = (maxHeight+20)+"px";
+    }
+  }
 
   if(data.options.note){
     var note = document.createElement("div");
