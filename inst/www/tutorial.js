@@ -158,6 +158,9 @@ function tutorialTour(options){
 
   // legend
   var legends = body.select(".legend-panel > .legends");
+  if(legends.empty() || !legends.node().offsetWidth){
+    legends = body.select(".legend-panel > .show-panel-button");
+  }
   if(!legends.empty() && legends.node().offsetWidth){
     steps.push(function(){
       var legendDim = legends.node().getBoundingClientRect();
@@ -166,13 +169,13 @@ function tutorialTour(options){
 
       var tutorialDim = tutorial.node().getBoundingClientRect();
       tutorial.style("left",(dim.width-tutorialDim.width-legendDim.width-80)+"px")
-      tutorial.style("top",(maxtop+30)+"px")
+      tutorial.style("top",(legendDim.top)+"px")
 
       tutorialArrow.style("display",null)
         .style("transform","rotate(90deg)")
         .style("margin-left",0)
         .style("left",(dim.width-legendDim.width-80)+"px")
-        .style("top",(maxtop+60)+"px")
+        .style("top",(-30 + legendDim.top + legendDim.height/2)+"px")
 
       tutorial2.style("display","none")
     });
@@ -236,7 +239,6 @@ function tutorialTour(options){
       tutorialContent.append("p").html(tutorial_texts['tonavigatefromonetabtoanother'])
 
       tutorialArrow.style("display",null)
-        .style("transform",null)
         .style("left",(multigraphDim.left+(multigraphDim.width/2))+"px")
         .style("top",(maxtop-10)+"px") 
 
@@ -270,7 +272,6 @@ function tutorialTour(options){
       tutorialContent.append("p").html(tutorial_texts['tonavigatefromonetoanother'])
 
       tutorialArrow.style("display",null)
-        .style("transform",null)
         .style("left",(multigraphDim.left+(multigraphDim.width/2))+"px")
         .style("top",(maxtop-10)+"px")
       tutorial2.style("display","none")

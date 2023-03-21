@@ -62,6 +62,7 @@ window.onload = function(){
       topbar.appendChild(span);
 
       var iframe = document.createElement("iframe");
+      iframe.name = "multiPages";
       iframe.src = "pages/"+(data.options.names[idx])+"/index.html";
       iframe.style.flexGrow = 1;
       iframe.style.width = "100%";

@@ -35,11 +35,15 @@ div.tutorial p > img {
   vertical-align: middle;
 }
 
+div.tutorial > .tutorial-content > ul.ul-table {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 div.tutorial > .tutorial-content > ul.ul-table > li {
-  display: inline-block;
-  width: 30%;
   margin-top: 12px;
   margin-bottom: 24px;
+  padding: 0 24px;
 }
 div.tutorial > .tutorial-content > ul.ul-table > li > span {
   display: block;
