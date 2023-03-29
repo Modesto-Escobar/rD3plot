@@ -699,7 +699,7 @@ function displayMain(){
   main.selectAll("*").remove();
   if(options.multipages){
     main.append("button").attr("class","primary home").text(texts.goback).attr("title",texts.goback).on("click",function(){
-      window.location.href = "../../index.html";
+      window.history.back();
     })
   }
   if(typeof multiGraph != 'undefined'){

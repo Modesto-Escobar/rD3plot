@@ -289,7 +289,7 @@ rd3_multiPages <- function(x, title = NULL, columns = NULL, imageSize = NULL, de
           img2copy <- c(img2copy,multi[[i]]$image)
         }
       }
-      if((is.character(multi[[i]]) && file.exists(paste0(multi[[i]],"/index.html"))) || inherits(multi[[i]],"evolMap")){
+      if(is.character(multi[[i]]) && file.exists(paste0(multi[[i]],"/index.html"))){
         external[[i]] <- TRUE
       }
     }
@@ -331,6 +331,9 @@ rd3_multiPages <- function(x, title = NULL, columns = NULL, imageSize = NULL, de
         }
       }else{
         multi[[n]]$options$multipages <- TRUE
+        if(inherits(multi[[n]],"evolMap")){
+          multi[[n]]$options$main <- n
+        }
         objCreate(multi[[n]],paste0(dir,"/pages/",n))
       }
     }
