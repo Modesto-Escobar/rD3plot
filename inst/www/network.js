@@ -702,17 +702,17 @@ function displayMain(){
       window.history.back();
     })
   }
-  if(typeof multiGraph != 'undefined'){
-      multiGraph.graphSelect(main.append("span"));
+  if(options.multigraph){
+      multiGraphSelect(main.append("span"),options.multigraph.idx,options.multigraph.names);
   }
-  if(options.main && typeof multiGraph != 'undefined'){
+  if(options.main && options.multigraph){
       main.append("span").attr("class","separator").text("/");
   }
   if(options.main){
       main.append("span")
         .attr("class", "title")
         .html(typeof options.main == "string" ? options.main : options.main[0])
-        .style("color",typeof multiGraph != 'undefined' ? "#777777" : null);
+        .style("color",options.multigraph ? "#777777" : null);
   }
   if(options.help){
         main.call(iconButton()
@@ -5421,8 +5421,6 @@ window.onresize = function(){
 
 } // network function end
 
-if(typeof multiGraph == 'undefined'){
-  window.onload = function(){
-    network(JSON.parse(d3.select("#data").text()));
-  };
-}
+window.onload = function(){
+  network(JSON.parse(d3.select("#data").text()));
+};

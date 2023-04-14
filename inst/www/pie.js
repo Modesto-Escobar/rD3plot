@@ -53,6 +53,9 @@ function piechart(json){
   // top bar
   var topBar = displayTopBar()
     .title(options.main);
+  if(options.multigraph){
+    topBar.multigraph(options.multigraph);
+  }
   if(options.multipages){
     topBar.goback(true);
   }
@@ -641,8 +644,6 @@ function piechart(json){
   }
 }
 
-if(typeof multiGraph == 'undefined'){
-  window.onload = function(){
-    piechart(JSON.parse(d3.select("#data").text()));
-  };
-}
+window.onload = function(){
+  piechart(JSON.parse(d3.select("#data").text()));
+};

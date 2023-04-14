@@ -89,6 +89,9 @@ function barplot(json){
 
   // top bar
   var topBar = displayTopBar();
+  if(options.multigraph){
+    topBar.multigraph(options.multigraph);
+  }
   if(options.multipages){
     topBar.goback(true);
   }
@@ -868,8 +871,6 @@ function svg2pdf(){
 
 } // barplot function end
 
-if(typeof multiGraph == 'undefined'){
-  window.onload = function(){
-    barplot(JSON.parse(d3.select("#data").text()));
-  };
-}
+window.onload = function(){
+  barplot(JSON.parse(d3.select("#data").text()));
+};

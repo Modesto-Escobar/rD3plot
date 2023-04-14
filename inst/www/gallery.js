@@ -140,6 +140,9 @@ function gallery(Graph){
   // top bar
   var topBar = displayTopBar()
     .title(options.main);
+  if(options.multigraph){
+    topBar.multigraph(options.multigraph);
+  }
   if(options.multipages){
     topBar.goback(true);
   }
@@ -1309,8 +1312,6 @@ function gallery(Graph){
   }
 } // gallery function end
 
-if(typeof multiGraph == 'undefined'){
-  window.onload = function(){
-    gallery(JSON.parse(d3.select("#data").text()));
-  };
-}
+window.onload = function(){
+  gallery(JSON.parse(d3.select("#data").text()));
+};

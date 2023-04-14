@@ -84,6 +84,9 @@ function timeline(json){
 
   // top bar
   var topBar = displayTopBar().fixed(true);
+  if(options.multigraph){
+    topBar.multigraph(options.multigraph);
+  }
   if(options.multipages){
     topBar.goback(true);
   }
@@ -1174,8 +1177,6 @@ function svg2pdf(){
 
 } // timeline function end
 
-if(typeof multiGraph == 'undefined'){
-  window.onload = function(){
-    timeline(JSON.parse(d3.select("#data").text()));
-  };
-}
+window.onload = function(){
+  timeline(JSON.parse(d3.select("#data").text()));
+};

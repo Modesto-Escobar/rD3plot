@@ -1,83 +1,29 @@
-# create json for multigraph
-multigraphJSON <- function(multi,dir){
-json <- character(0)
-types <- character(0)
-items <- character(0)
-for(item in names(multi)){
-  graph <- multi[[item]]
-  gClass <- ""
-  jsongraph <- "{}"
-  if(inherits(graph,"network_rd3")){
-    gClass <- "network"
-    jsongraph <- imgWrapper(graph,networkJSON,dir)
-  }else if(inherits(graph,"timeline_rd3")){
-    gClass <- "timeline"
-    jsongraph <- timelineJSON(graph)
-  }else if(inherits(graph,"barplot_rd3")){
-    gClass <- "barplot"
-    jsongraph <- barplotJSON(graph)
-  }else if(inherits(graph,"gallery_rd3")){
-    gClass <- "gallery"
-    jsongraph <- imgWrapper(graph,galleryJSON,dir)
-  }else if(inherits(graph,"pie_rd3")){
-    gClass <- "pie"
-    jsongraph <- pieJSON(graph)
-  }else if(is.character(graph) && file.exists(paste0(graph,'/index.html'))){
-    gClass <- "iFrame"
-    graphName <- sub("^.*/","",graph)
-    dir.create(paste0(dir,'/data'), showWarnings = FALSE)
-    file.copy(graph, paste0(dir,'/data'), recursive = TRUE)
-    jsongraph <- toJSON(paste0('data/',graphName))
-  }else if(inherits(graph,"evolMap")){
-    gClass <- "iFrame"
-    dir.create(paste0(dir,'/data'), showWarnings = FALSE)
-    objCreate(graph,paste0(dir,'/data/',item))
-    jsongraph <- toJSON(paste0('data/',item))
-  }else{
-    warning(paste0('Not supported object "',item,'".'))
-    next
-  }
-  json <- c(json,jsongraph)
-  types <- c(types,toJSON(gClass))
-  items <- c(items,toJSON(item))
-}
-json <- paste0(json,collapse=',')
-types <- paste0(types,collapse=',')
-items <- paste0(items,collapse=',')
-return(paste0('{"items":[',items,'],"types":[',types,'],"data":[',json,']}'))
-}
-
 multiGraph <- function(multi,dir){
-  language <- unique(unlist(lapply(multi,getLanguageScript)))
-  if(length(language)!=1)
-    language <- "en.js"
-  styles <- c("reset.css","styles.css")
-  scripts <- c("d3.min.js","jspdf.min.js","jszip.min.js","iro.min.js","images.js","colorScales.js","functions.js",language,"multigraph.js")
-  for(i in seq_along(multi)){
-    graph <- multi[[i]]
-    if(inherits(graph,"network_rd3")){
-      scripts <- c(scripts,"network.js")
-    }
-    if(inherits(graph,"timeline_rd3")){
-      scripts <- c(scripts,"timeline.js")
-    }
-    if(inherits(graph,"barplot_rd3")){
-      scripts <- c(scripts,"barplot.js")
-    }
-    if(inherits(graph,"gallery_rd3")){
-      scripts <- c(scripts,"gallery.js")
-      if(!is.null(graph$options$tutorial) && !identical(as.logical(graph$options$tutorial),FALSE)){
-        scripts <- c(scripts,"tutorial.js",paste0("tutorial_",language))
-        styles <- c(styles,"tutorial.css")
+    items <- names(multi)
+    options <- list(names=items)
+    external <- rep(FALSE,length(multi))
+    for(i in seq_along(multi)){
+      if(is.character(multi[[i]]) && file.exists(paste0(multi[[i]],"/index.html"))){
+        external[[i]] <- TRUE
       }
     }
-    if(inherits(graph,"pie_rd3")){
-      scripts <- c(scripts,"pie.js")
+    if(sum(external)){
+      options$external <- external
     }
-  }
-  styles <- unique(styles)
-  scripts <- unique(scripts)
-  createHTML(dir, styles, scripts, function(){ return(multigraphJSON(multi,dir)) })
+    createHTML(dir, "reset.css", "multigraph.js", toJSON(list(options=options)))
+    dir.create(paste0(dir,"/data"))
+    for(i in seq_along(multi)){
+      if(is.character(multi[[i]])){
+        if(file.exists(paste0(multi[[i]],"/index.html"))){
+          file.copy(multi[[i]], paste0(dir,'/data'), recursive = TRUE)
+          file.rename(paste0(dir,'/data/',basename(multi[[i]])),paste0(dir,'/data/',(i-1)))
+        }
+      }else{
+        multi[[i]]$options$multigraph <- list(idx=(i-1),names=items)
+        objCreate(multi[[i]],paste0(dir,"/data/",items[i]))
+        file.rename(paste0(dir,"/data/",items[i]),paste0(dir,"/data/",(i-1)))
+      }
+    }
 }
 
 polyGraph <- function(multi,mfrow,dir){
@@ -331,9 +277,6 @@ rd3_multiPages <- function(x, title = NULL, columns = NULL, imageSize = NULL, de
         }
       }else{
         multi[[n]]$options$multipages <- TRUE
-        if(inherits(multi[[n]],"evolMap")){
-          multi[[n]]$options$main <- n
-        }
         objCreate(multi[[n]],paste0(dir,"/pages/",n))
       }
     }

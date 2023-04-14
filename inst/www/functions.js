@@ -2196,7 +2196,8 @@ function displayTopBar(){
       netCoin = true,
       fixed = false,
       title = false,
-      goback = false;
+      goback = false,
+      multigraph = false;
 
   function exports(sel){
     topbar = sel.append("div")
@@ -2217,9 +2218,9 @@ function displayTopBar(){
       })
     }
 
-    if(typeof multiGraph != 'undefined'){
+    if(multigraph){
       exports.addBox(function(box){
-        multiGraph.graphSelect(box);
+        multiGraphSelect(box,multigraph.idx,multigraph.names);
       });
     }
 
@@ -2332,6 +2333,12 @@ function displayTopBar(){
   exports.goback = function(x){
     if (!arguments.length) return goback;
     goback = x ? true : false;
+    return exports;
+  }
+
+  exports.multigraph = function(x){
+    if (!arguments.length) return multigraph;
+    multigraph = x;
     return exports;
   }
 
@@ -3049,3 +3056,42 @@ function defaultColorManagement(defaultColor){
     return categoryColors[0];
 }
 
+function multiGraphSelect(sel,current,items){
+    sel = sel.append("div").attr("class","multi-select")
+    var select = sel.append("select")
+    select.selectAll("option")
+      .data(items)
+      .enter().append("option")
+        .property("value",function(d,i){ return i; })
+        .text(function(d){ return d; })
+        .each(function(d,i){
+          if(i==current){
+            this.selected = true; 
+          }
+        })
+    select.on("change",function(){ window.location.href = "../../index.html?"+this.value; })
+    sel.append("img")
+        .attr("src",b64Icons.menu)
+    sel.append("span")
+      .html(items[current])
+
+    d3.select("body").on("keydown.multishortcut",function(){
+      if((d3.event.ctrlKey || d3.event.metaKey) && d3.event.shiftKey){
+        var key = getKey(d3.event);
+        switch(key){
+          case "ArrowUp":
+          case "ArrowDown":
+            var idx = select.node().selectedIndex;
+            idx = (key=="ArrowUp"?idx-1:idx+1);
+            if(idx<0){
+              idx = items.length-1;
+            }
+            if(idx>=items.length){
+              idx = 0;
+            }
+            window.location.href = "../../index.html?"+idx;
+            return;
+        }
+      }
+    });
+}
