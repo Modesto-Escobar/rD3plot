@@ -1362,15 +1362,6 @@ function displayLinearScale(sel,value,range,domain,selectScale,selectAttribute,c
 
       var paddingRight = 12;
 
-      if(selectScale){
-        panel.append("img")
-          .attr("width","24")
-          .attr("height","24")
-          .attr("src",b64Icons.edit)
-          .on("click",selectScale)
-        paddingRight += 30;
-      }
-
       var div = panel.append("div")
         .attr("class","scale-content")
         .style("padding-right",paddingRight+"px");
@@ -1381,10 +1372,16 @@ function displayLinearScale(sel,value,range,domain,selectScale,selectAttribute,c
           .style("cursor", selectAttribute ? "pointer" : null)
           .on("click", selectAttribute ? selectAttribute : null);
 
-      div.append("div")
+      var legendScaleGradient = div.append("div")
         .attr("class","legend-scale-gradient")
         .style("height","10px")
         .style("width","100%")
+
+      if(selectScale){
+        legendScaleGradient
+          .style("cursor","pointer")
+          .on("click",selectScale)
+      }
 
       renderDomain(0);
       renderDomain(1);

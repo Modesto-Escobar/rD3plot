@@ -32,7 +32,7 @@ gallery_rd3 <- function(nodes, tree = NULL, name = NULL, label = NULL, color = N
     image = NULL, zoom = 1, itemsPerRow = NULL, main = NULL, note = NULL,
     showLegend = TRUE, frequencies = FALSE,
     help = NULL, helpOn = FALSE, tutorial = FALSE, description = NULL,
-    descriptionWidth = NULL, roundedItems = FALSE, controls = 1:5, cex = 1,
+    descriptionWidth = NULL, roundedItems = FALSE, controls = 1:6, cex = 1,
     defaultColor = "#1f77b4", language = c("en", "es", "ca"), dir = NULL){
   if(is.null(name)){
     name <- colnames(nodes)[1]

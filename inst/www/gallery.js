@@ -47,6 +47,7 @@ function gallery(Graph){
   options.showExport2 = showControls(options,3);
   options.showTable = showControls(options,4);
   options.showProjectIcon = showControls(options,5);
+  options.showTopbarButtons = showControls(options,6);
 
   var topFilterInst = topFilter()
     .data(nodes)
@@ -225,8 +226,6 @@ function gallery(Graph){
       options.nodeColor = this.value;
       if(options.nodeColor=="_none_"){
         delete options.nodeColor;
-      }else if(dataType(nodes,options.nodeColor)=="number"){
-        displayPicker(options,"nodeColor",displayGraphColor);
       }
       displayGraphColor();
     })
@@ -243,9 +242,10 @@ function gallery(Graph){
   // node filter in topBar
   topBar.addBox(topFilterInst);
 
-  // Select all / none
-  topBar.addBox(function(box){
-    box.append("button")
+  if(options.showTopbarButtons){
+    // Select all / none
+    topBar.addBox(function(box){
+      box.append("button")
       .attr("class","primary")
       .text(texts.selectallnone)
       .on("click",function(){
@@ -255,15 +255,16 @@ function gallery(Graph){
           selectAllItems();
         }
       })
-  })
+    })
 
-  // filter selection
-  topBar.addBox(function(box){
-    box.append("button")
+    // filter selection
+    topBar.addBox(function(box){
+      box.append("button")
       .attr("class","primary")
       .text(texts.filterselection)
       .on("click",filterSelection)
-  });
+    });
+  }
 
   var content = galleryBox.append("div")
         .attr("class","gallery-content");
@@ -935,7 +936,8 @@ function gallery(Graph){
             .attr("class","legend-item")
             .style("cursor","pointer")
             .on("click",function(v){
-              var checked = d3.select(this).select(".legend-check-box").classed("checked");
+              var checkbox = d3.select(this).select(".legend-check-box"),
+                  checked = checkbox.classed("checked");
               data.forEach(function(d){
                 if(Array.isArray(d[value])){
                   if(d[value].indexOf(v)!=-1){
@@ -947,6 +949,7 @@ function gallery(Graph){
                   }
                 }
               })
+              checkbox.classed("checked",!checked);
               displayGraph();
             })
 
@@ -966,24 +969,6 @@ function gallery(Graph){
 
         items.order();
 
-        var itemsUpdate = itemsEnter.merge(items);
-        itemsUpdate.select(".legend-check-box")
-        .classed("checked",function(v){
-          var aux = data.filter(function(d){
-            if(Array.isArray(d[value])){
-              return d[value].indexOf(v)!=-1;
-            }else{
-              return String(d[value])==v;
-            }
-          });
-          if(aux.length){
-            return aux.filter(function(d){
-              return !d.selected;
-            }).length==0;
-          }
-          return false;
-        })
-
         contentHeight(parent);
 
         if(initialize){
@@ -994,9 +979,11 @@ function gallery(Graph){
           .attr("class","legend-selectall")
           .style("cursor","pointer")
           .on("click",function(){
-              var checked = d3.select(this).select(".legend-check-box").classed("checked");
+              var checkbox = d3.select(this).select(".legend-check-box"),
+                  checked = !checkbox.classed("checked");
+              content.selectAll(".legend-item > .legend-check-box").classed("checked",checked);
               data.forEach(function(d){
-                d.selected = !checked ? true : false;
+                d.selected = checked ? true : false;
               })
               displayGraph();
           })
@@ -1018,15 +1005,10 @@ function gallery(Graph){
           .attr("title",texts.filterInfo)
         }
 
-        legends.select(".legend-selectall > .legend-check-box").classed("checked",function(){
-          return content.selectAll(".legend-item > .checked").size();
-        })
-        legends.select(".legend-bottom-button").classed("disabled",function(){
-          var nselected = data.filter(function(d){
-            return d.selected;
-          }).length;
-          return !nselected || (nselected==data.length);
-        })
+        var allboxes = content.selectAll(".legend-item > .legend-check-box").size(),
+            somechecked = content.selectAll(".legend-item > .checked").size();
+        legends.select(".legend-selectall > .legend-check-box").classed("checked",somechecked)
+        legends.select(".legend-bottom-button").classed("disabled",!somechecked || somechecked==allboxes)
       }
 
       // linear scale

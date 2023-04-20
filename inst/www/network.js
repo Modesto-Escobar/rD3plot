@@ -1502,12 +1502,6 @@ function addVisualController(){
       .on("change", function(){
         var attr = this.value;
         applyAuto(item+visual,attr);
-        if((visual=="Color"|| visual=="Group") && dataType(data,attr) == "number"){
-          displayPicker(options,item+visual,function(){
-            delete VisualHandlers[item+visual];
-            drawNet();
-          });
-        }
         if(visual=="Order" && Graph.nodenames.indexOf(attr)!=-1){
           var win = displayWindow(200);
           win.append("h2")
