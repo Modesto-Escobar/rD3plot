@@ -1485,15 +1485,21 @@ function addVisualController(){
             .attr("title",function(d){ return texts[d+"Info"]; });
 
     sels.each(function(visual){
-      var attributes = Graph[item+"names"].filter(function(d){
+      var attributes = [];
+      if(visual=="Image"){
+        attributes = options.imageNames.map(String);
+      }else{
+        attributes = Graph[item+"names"].filter(function(d){
           if(!hiddenFields.has(d) && (items!="links" || (options.linkSource!=d && options.linkTarget!=d))){
             var t = dataType(data,d,true);
-            if(!((onlyNumeric.indexOf(visual)!=-1 && t!="number") || (visual=="Image" && options.imageNames.indexOf(d)==-1))){
+            if(!(onlyNumeric.indexOf(visual)!=-1 && t!="number")){
               return true;
             }
           }
           return false;
-        }).map(function(d){ return [d,d]; });
+        });
+      }
+      attributes = attributes.map(function(d){ return [d,d]; });
       attributes.unshift(["_none_","-"+texts.none+"-"]);
 
       d3.select(this).append("div")
@@ -2997,22 +3003,18 @@ function drawNet(){
 
       var gSelectAll = legendBottomControls.append("div")
         .attr("class","legend-selectall")
-      displaycheck(gSelectAll,function(self){
-        Graph.nodes.forEach(function(d){
-            if(self.selected && checkSelectableNode(d)){
-              d.selected = true;
-            }else{
-              delete d.selected;
+        .style("cursor","pointer")
+        .on("click",function(){
+          var selected = !this.selected;
+          div.selectAll(".legend-item > .legend-check-box").each(function(){
+            if(!selected ^ d3.select(this).classed("checked")){
+              this.parentNode.click();
             }
+            this.parentNode.click();
+          })
         });
-        Graph.links.forEach(function(d){
-            if(self.selected && checkSelectableLink(d)){
-              d.selected = true;
-            }else{
-              delete d.selected;
-            }
-        });
-      });
+      gSelectAll.append("div")
+        .attr("class","legend-check-box")
       gSelectAll.append("span")
         .text(texts.selectall)
 
@@ -3577,7 +3579,7 @@ function showTooltip(node,fixed){
              .attr("class","tooltip"+(fixed?" fixed":""))
              .datum(node)
              .html(node[options.nodeText])
-        tooltip.select(".tooltip > .info-template > h2.auto-color").style("background-color",options.nodeColor ? VisualHandlers.nodeColor(node) : options.defaultColor);
+        tooltipTemplateAutoColor(tooltip,options.nodeColor ? VisualHandlers.nodeColor(node) : options.defaultColor);
     }
 }
 
@@ -3608,6 +3610,7 @@ function clickNet(){
     }
     if(options.nodeInfo){
       infoPanel.changeInfo(node[options.nodeInfo]);
+      body.select(".panel-template.auto-color").datum(node);
     }
   }else{
     if(d3.event.shiftKey && options.heatmap){
@@ -4365,7 +4368,7 @@ function displayLegend(){
     var selectionWindow = attrSelectionWindow()
             .visual(type)
             .active(options[item+type])
-            .list(Graph[item+"names"].filter(function(d){ return !hiddenFields.has(d); }))
+            .list(type=="Image" ? options.imageNames : Graph[item+"names"].filter(function(d){ return !hiddenFields.has(d); }))
             .clickAction(function(val){
               applyAuto(item+type,val);
             });
@@ -4383,8 +4386,16 @@ function displayLegend(){
       .data(data)
     .enter().append("div")
       .attr("class","legend-item")
+      .property("item",true)
+      .style("cursor","pointer")
+    .on("click",function(){
+      this.selected = !this.selected;
+      var self = d3.select(this),
+          selected = this.selected;
+      self.select(".legend-check-box").classed("checked",selected);
 
-    displaycheck(row,function(self){
+      checkSelectAll();
+
       var compare = function(value){
         value = String(value);
         Graph[item+"s"].forEach(function(d){
@@ -4392,7 +4403,7 @@ function displayLegend(){
             delete d.selected;
           }
           if(checkLegendKeyValue(d,key,value)){
-            if(self.selected && checkSelectable(d)){
+            if(selected && checkSelectable(d)){
               d.selected = true;
             }else{
               delete d.selected;
@@ -4418,9 +4429,13 @@ function displayLegend(){
           return i>=first && i<=last;
         }).each(compare);
       }else{
-        compare(d3.select(self).datum());
+        compare(self.datum());
       }
-    },true);
+      showTables();
+    });
+
+    row.append("div")
+    .attr("class","legend-check-box")
 
     if(type == "Image"){
       row.append("img")
@@ -4468,6 +4483,15 @@ function displayLegend(){
 
     row.append("span")
       .text(text)
+
+    function checkSelectAll(){
+      var divLegends = d3.select(parent.node().parentNode);
+      var gSelectAll = divLegends.select(".legend-bottom-controls > .legend-selectall");
+      var itemsSize = legend.selectAll(".legend-item").size(),
+          checkedSize = legend.selectAll(".legend-item > .checked").size();
+      gSelectAll.select(".legend-check-box").classed("checked", gSelectAll.node().selected = checkedSize ? true : false);
+      divLegends.selectAll("button.legend-bottom-button").classed("disabled", !checkedSize || checkedSize==itemsSize);
+    }
   }
 
   exports.type = function(x) {
@@ -4527,24 +4551,6 @@ function displayLegend(){
   };
 
   return exports;
-}
-
-// render checkbox
-function displaycheck(sel,callback,item){
-
-    if(item){
-      sel.property("item",true);
-    }
-
-    sel.append("div")
-    .attr("class","legend-check-box")
-
-    sel.style("cursor","pointer")
-    .on("click",function(){
-      this.selected = !this.selected;
-      callback(this);
-      showTables();
-    })
 }
 
 function checkLegendKeyValue(d,key,value){
@@ -4635,6 +4641,10 @@ function showTables() {
   }
 
   tables.call(tableInst);
+
+  panelTemplateAutoColor(body,function(node){
+    return options.nodeColor && node ? VisualHandlers.nodeColor(node) : options.defaultColor;
+  });
 
   // update frequency bars
   if(frequencyBars && options.frequencies){
@@ -4852,9 +4862,6 @@ function showTables() {
   // update sidebar filter selected
   updateSidebarFilters();
 
-  // check legend items checked
-  checkLegendItemsChecked();
-
   // enable/disable selection buttons
   if(selectedNodesData.length){
     d3.selectAll("button.primary.selectneighbors, button.primary.isolate, button.primary.filter").classed("disabled",!(selectedNodesData.length<nodesData.length));
@@ -4923,49 +4930,6 @@ function renderLinkCell(item,key){
     return formatter(txt);
   }
   return String(txt);
-}
-
-// check checkboxes after node selections
-function checkLegendItemsChecked() {
-    var parent = legendPanel.select(".legends > div.legends-content"),
-        legendSelectAll = legendPanel.select(".legend-selectall");
-    if(!legendSelectAll.empty()){
-      checkItems("nodes",checkSelectableNode);
-      checkItems("links",checkSelectableLink);
-
-      var items = parent.selectAll(".legend-item");
-      if(!items.empty()){
-        var size = items.filter(function(){ return this.selected; }).size();
-        checkInBox(legendSelectAll.node(), size ? true : false);
-        legendPanel.selectAll("button.legend-bottom-button").classed("disabled",!size || size==items.size());
-      }
-    }
-
-    function checkItems(itemsname,checkSelectable){
-      var items = parent.selectAll(".legend."+itemsname+" > .legend-item"),
-          unselected, key, i, d;
-      if(!items.empty()){
-        unselected = Graph[itemsname].filter(checkSelectable).filter(function(d){ return !d.selected; });
-        items.each(function(value){
-          checkInBox(this,true);
-          key = this.parentNode.key;
-          for(i = 0; i<unselected.length; i++){
-            d = unselected[i];
-            if(checkLegendKeyValue(d,key,value)){
-              checkInBox(this,false);
-              break;
-            }
-          }
-        })
-      }
-    }
-
-    // visually mark/unmark checkbox
-    function checkInBox(thiz,select){
-        var checkBox = d3.select(thiz).select(".legend-check-box");
-        thiz.selected = select;
-        checkBox.classed("checked",select)
-    }
 }
 
 function tables2xlsx(){

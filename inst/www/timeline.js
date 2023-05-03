@@ -944,7 +944,7 @@ function timeline(json){
         if(html){
           tip.style("display","block").html(html);
           if(color){
-            tooltip.select(".tooltip > .info-template > h2.auto-color").style("background-color",color);
+            tooltipTemplateAutoColor(tooltip,color);
           }
         }
     }

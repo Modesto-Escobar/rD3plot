@@ -73,12 +73,6 @@ function gallery(Graph){
 
   var body = d3.select("body");
 
-  if(options.cex){
-      body.style("font-size", 10*options.cex + "px")
-  }else{
-      options.cex = 1;
-  }
-
   var infoPanel = displayInfoPanel();
   body.call(infoPanel);
 
@@ -341,6 +335,10 @@ function gallery(Graph){
         .attr("class","gallery-items fade-labels")
         .classed("rounded-items",options.roundedItems);
 
+  if(options.cex){
+    galleryItems.style("font-size", 10*options.cex + "px")
+  }
+
   var legend = displayLegend()
                  .type("Color")
                  .displayGraph(displayGraph)
@@ -595,7 +593,7 @@ function gallery(Graph){
               .style("display","block")
               .html(n[options.nodeText])
 
-              var template = tooltip.select(".info-template, .panel-tempalte");
+              var template = tooltip.select(".info-template, .panel-template");
               if(!template.empty()){
                 template.selectAll("a[target=rightframe]").on("mousedown",function(){
                   infoPanel.changeInfo('<iframe name="rightframe"></iframe>');
@@ -647,12 +645,7 @@ function gallery(Graph){
                 tooltip
                   .style("top",(coor[1]+10)+"px")
               }
-              tooltip.select(".tooltip > .info-template > h2.auto-color").style("background-color",function(d){
-                if(options.nodeColor){
-                  return applyColorScale(colorScale,n[options.nodeColor]);
-                }
-                return options.defaultColor;
-              })
+              tooltipTemplateAutoColor(tooltip,options.nodeColor ? applyColorScale(colorScale,n[options.nodeColor]) : options.defaultColor);
             }
           }
           displayGraph();
@@ -743,15 +736,9 @@ function gallery(Graph){
       })
     }
 
-    var panelTemplate = body.select(".panel-template.auto-color");
-    if(!panelTemplate.empty()){
-      var color = options.nodeColor && panelTemplate.datum() ? applyColorScale(colorScale,panelTemplate.datum()[options.nodeColor]) : options.defaultColor;
-      if(panelTemplate.classed("mode-1")){
-        panelTemplate.style("background-color",color);
-      }else if(panelTemplate.classed("mode-2")){
-        panelTemplate.select(".panel-template > h2").style("background-color",color);
-      }
-    }
+    panelTemplateAutoColor(body,function(node){
+      return options.nodeColor && node ? applyColorScale(colorScale,node[options.nodeColor]) : options.defaultColor;
+    });
 
     if(descriptionPanel && frequencyBars && options.frequencies){
       frequencyBars

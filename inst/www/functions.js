@@ -3092,3 +3092,25 @@ function multiGraphSelect(sel,current,items){
       }
     });
 }
+
+function tooltipTemplateAutoColor(tooltip,color){
+  var h2 = tooltip.select(".tooltip > .info-template > h2.auto-color");
+  if(!h2.empty()){
+    h2.style("background-color",color);
+    h2.style("color",d3.hsl(color).l > 0.75 ? basicColors.black : basicColors.white);
+  }
+}
+
+function panelTemplateAutoColor(body,getColor){
+    var panelTemplate = body.select(".panel-template.auto-color");
+    if(!panelTemplate.empty()){
+      var color = getColor(panelTemplate.datum());
+      var h2 = panelTemplate.select(".panel-template > h2");
+      if(panelTemplate.classed("mode-1")){
+        panelTemplate.style("background-color",color);
+      }else if(panelTemplate.classed("mode-2")){
+        h2.style("background-color",color);
+      }
+      h2.style("color",d3.hsl(color).l > 0.75 ? basicColors.black : basicColors.white);
+    }
+}
