@@ -27,13 +27,14 @@ galleryCreate <- function(gallery, dir){
   createHTML(dir, styles, scripts, function(){ return(imgWrapper(gallery,galleryJSON,dir)) })
 }
 
-gallery_rd3 <- function(nodes, tree = NULL, name = NULL, label = NULL, color = NULL,
+gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
     border = NULL, ntext = NULL, info = NULL, infoFrame = c("right","left"),
     image = NULL, zoom = 1, itemsPerRow = NULL, main = NULL, note = NULL,
     showLegend = TRUE, frequencies = FALSE,
     help = NULL, helpOn = FALSE, tutorial = FALSE, description = NULL,
     descriptionWidth = NULL, roundedItems = FALSE, controls = 1:6, cex = 1,
     defaultColor = "#1f77b4", language = c("en", "es", "ca"), dir = NULL){
+
   if(is.null(name)){
     name <- colnames(nodes)[1]
   }
@@ -106,22 +107,84 @@ gallery_rd3 <- function(nodes, tree = NULL, name = NULL, label = NULL, color = N
 
   # more options
   gallery <- checkItemValue(gallery,"nodes","nodeColor",color,"color",isColor,categoryColors,col2hex)
-  
-    #check tree
-  if(!is.null(tree)){
-    tree <- tree[tree[,1] %in% nodes[[name]] & tree[,2] %in% nodes[[name]] & as.character(tree[,2])!=as.character(tree[,1]),]
-    if(nrow(tree)==0){
-      warning("tree: no row (Source and Target) matches the name column of the nodes")
-    }else{
-      gallery$tree <- data.frame(Source=tree[,1],Target=tree[,2])
-      if(ncol(tree)==4){
-        gallery$tree$Type1 <- tree[,3]
-        gallery$tree$Type2 <- tree[,4]
-      }
-    }
+
+  if(!is.null(dir)){
+    galleryCreate(gallery,dir)
+  }
+  return(gallery)
+}
+
+treeGallery_rd3 <- function(tree, deep = FALSE, ...){
+  arguments <- list(...)
+
+  dir <- NULL
+  if(!is.null(arguments$dir)){
+    dir <- arguments$dir
+    arguments$dir <- NULL
   }
 
-  if (!is.null(dir)) galleryCreate(gallery,dir)
+  if(is.null(arguments$nodes)){
+    if(deep){
+      arguments$nodes <- as.vector(as.matrix(tree))
+      arguments$nodes <- unlist(strsplit(arguments$nodes,"|",fixed=TRUE))
+    }else{
+      arguments$nodes <- as.vector(as.matrix(tree[,1:2]))
+    }
+    arguments$nodes <- data.frame(name=unique(arguments$nodes))
+  }
+
+  gallery <- do.call(gallery_rd3,arguments)
+
+  name <- gallery$options$nodeName
+
+  if(deep){
+      tree2 <- list()
+      types <- colnames(tree)
+      for(i in seq_len(nrow(tree))){
+        aux <- strsplit(tree[i,],"|",fixed=TRUE)
+        aux <- expand.grid(aux)
+        for(j in seq_len(nrow(aux))){
+          tree2[[length(tree2)+1]] <- aux[j,]
+        }
+      }
+      tree <- do.call(rbind,tree2)
+      tree <- tree[apply(tree,1,function(x){
+        !length(setdiff(x,gallery$nodes[[name]]))
+      }),]
+      if(nrow(tree)==0){
+        warning("tree: missing nodes in every tree row")
+      }else{
+        gallery$options$deepTree <- TRUE
+        gallery$tree <- as.data.frame(t(tree))
+        if(length(types)){
+          gallery$nodes[["type"]] <- sapply(gallery$nodes[[name]],function(x){
+            aux <- types[as.logical(apply(tree,2,function(y){ sum(x==y) }))]
+            return(paste0(aux,collapse="|"))
+          })
+        }
+      }
+  }else{
+      tree <- tree[tree[,1] %in% gallery$nodes[[name]] & tree[,2] %in% gallery$nodes[[name]] & as.character(tree[,2])!=as.character(tree[,1]),]
+      if(nrow(tree)==0){
+        warning("tree: no row (Source and Target) matches the name column of the nodes")
+      }else{
+        gallery$tree <- data.frame(Source=tree[,1],Target=tree[,2])
+        if(ncol(tree)==4){
+          gallery$tree$Type1 <- tree[,3]
+          gallery$tree$Type2 <- tree[,4]
+          names <- c(tree[,1],tree[,2])
+          types <- c(tree[,3],tree[,4])
+          gallery$nodes[["type"]] <- sapply(gallery$nodes[[name]],function(x){
+            aux <- unique(types[names==x])
+            return(paste0(aux,collapse="|"))
+          })
+        }
+      }
+  }
+
+  if(!is.null(dir)){
+    galleryCreate(gallery,dir)
+  }
   return(gallery)
 }
 

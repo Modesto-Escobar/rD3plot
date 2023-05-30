@@ -869,6 +869,15 @@ function topFilter(){
     displayTags();
   }
 
+  exports.getFilter = function(key){
+    if(key){
+      if(selectedValues[key]){
+        return selectedValues[key];
+      }
+    }
+    return [];
+  }
+
   return exports;
 }
 

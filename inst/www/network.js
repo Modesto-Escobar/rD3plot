@@ -1673,7 +1673,7 @@ function addFilterController(){
       slider = false;
       selectMultiple = false;
       var tmpData = items=="nodes" ? Graph.nodes.filter(checkSelectableNode) : Graph.links.filter(checkSelectableLink);
-      var type = dataType(tmpData,val);
+      var type = dataType(tmpData,val,true);
       if(type == 'number'){
         var extent = d3.extent(tmpData, function(d){ return d[val]; }),
             mid = (extent[0]+extent[1])/2;
@@ -2866,10 +2866,10 @@ function drawNet(){
 
     // display legends
     var legendLegend = options.nodeLegend ? true : false,
-        legendColor = options.nodeColor && dataType(nodes,options.nodeColor)!='number',
+        legendColor = options.nodeColor && dataType(nodes,options.nodeColor,true)!='number',
         legendShape = options.nodeShape ? true : false,
         legendImage = (!options.heatmap && options.imageItem) && (options.imageItems && options.imageNames),
-        legendLcolor = options.linkColor && dataType(links,options.linkColor)!='number';
+        legendLcolor = options.linkColor && dataType(links,options.linkColor,true)!='number';
 
     Legends = {};
     var data;
@@ -4095,7 +4095,7 @@ function setColorScale(){
 function getNumAttr(data,itemAttr,range,def){
     if(options[itemAttr]){
       if(data.length){
-        if(dataType(data,options[itemAttr]) == "number"){
+        if(dataType(data,options[itemAttr],true) == "number"){
           var item = itemAttr.slice(0,4),
               attrDomain;
           if(options[item+"Bipolar"])
