@@ -9,11 +9,12 @@ Object of class \code{treeGallery_rd3}.
 }
 
 \usage{
-treeGallery_rd3(tree, deep = FALSE, ...)
+treeGallery_rd3(tree, deep = FALSE, initialType = NULL, ...)
 }
 \arguments{
 \item{tree}{a data frame with two columns: source and target, describing relationships between nodes. It indicates a hierarchy between nodes which can be dynamically explored. Optionally, another two columns describing types can be passed.}
 \item{deep}{The tree is especified in a structure that preserves paths. Each column will be a tree level, colnames as node types.}
+\item{initialType}{A character vector indicating which node type will be shown at start. No effects with 'deep' node.}
 \item{...}{Any \link{gallery_rd3} argument.}
 }
 \author{
@@ -37,7 +38,7 @@ tree <- data.frame(
     "director", "director", "director", "director", "director", "director", "director",
     "director", "director"))
 
-gallery <- treeGallery_rd3(tree, color="type", zoom=2)
+gallery <- treeGallery_rd3(tree, initialType="film", color="type", zoom=2)
 
 \dontrun{
 plot(gallery)
@@ -53,7 +54,7 @@ c("a4","b3|b4","c6|c7|c8")
 
 colnames(tree) <- c("a","b","c")
 
-gallery<-treeGallery_rd3(tree,deep=TRUE,color="type")
+gallery<-treeGallery_rd3(tree, deep=TRUE, color="type")
 \dontrun{
 plot(gallery)
 }

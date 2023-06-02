@@ -114,7 +114,7 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
   return(gallery)
 }
 
-treeGallery_rd3 <- function(tree, deep = FALSE, ...){
+treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, ...){
   arguments <- list(...)
 
   dir <- NULL
@@ -138,6 +138,7 @@ treeGallery_rd3 <- function(tree, deep = FALSE, ...){
   name <- gallery$options$nodeName
 
   if(deep){
+      tree <- as.matrix(tree)
       tree2 <- list()
       types <- colnames(tree)
       for(i in seq_len(nrow(tree))){
@@ -161,13 +162,14 @@ treeGallery_rd3 <- function(tree, deep = FALSE, ...){
             aux <- types[as.logical(apply(tree,2,function(y){ sum(x==y) }))]
             return(paste0(aux,collapse="|"))
           })
+          gallery$options$nodeTypes <- types
         }
       }
   }else{
-      tree <- tree[tree[,1] %in% gallery$nodes[[name]] & tree[,2] %in% gallery$nodes[[name]] & as.character(tree[,2])!=as.character(tree[,1]),]
-      if(nrow(tree)==0){
+    tree <- tree[tree[,1] %in% gallery$nodes[[name]] & tree[,2] %in% gallery$nodes[[name]] & as.character(tree[,2])!=as.character(tree[,1]),]
+    if(nrow(tree)==0){
         warning("tree: no row (Source and Target) matches the name column of the nodes")
-      }else{
+    }else{
         gallery$tree <- data.frame(Source=tree[,1],Target=tree[,2])
         if(ncol(tree)==4){
           gallery$tree$Type1 <- tree[,3]
@@ -178,8 +180,13 @@ treeGallery_rd3 <- function(tree, deep = FALSE, ...){
             aux <- unique(types[names==x])
             return(paste0(aux,collapse="|"))
           })
+          gallery$options$nodeTypes <- unique(types)
         }
-      }
+    }
+
+    if(!is.null(initialType)){
+      gallery$options$initialType <- as.character(initialType)[1]
+    }
   }
 
   if(!is.null(dir)){

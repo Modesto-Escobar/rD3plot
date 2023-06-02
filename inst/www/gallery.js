@@ -47,20 +47,16 @@ function gallery(Graph){
     if(options.deepTree){
       Tree.path = [];
       Tree.type = "deep";
-      Tree.nodeTypeColumn = Graph.nodenames.indexOf("type");
-      if(Tree.nodeTypeColumn!=-1){
-        Tree.nodeTypes = d3.set(Graph.nodes[Tree.nodeTypeColumn]).values()
+      if(options.nodeTypes){
         Tree.current = "";
         Tree.type = "deepextended";
       }
-      delete Tree.nodeTypeColumn;
     }else{
       Tree.treeParent = [];
       Tree.type = "simple";
-      if(Graph.tree.length==4){
+      if(options.nodeTypes){
         Tree.type = "extended";
         Tree.treeParent = "";
-        Tree.nodeTypes = d3.set(d3.merge([Graph.tree[2],Graph.tree[3]])).values();
       }
     }
 
@@ -86,8 +82,8 @@ function gallery(Graph){
           .style("color",basicColors.mediumBlue)
           .on("click",function(){
             topFilterInst.removeFilter();
-            if(Tree.nodeTypes){
-              topFilterInst.addFilter("type",[Tree.nodeTypes[0]]);
+            if(options.nodeTypes){
+              topFilterInst.addFilter("type",[options.nodeTypes[0]]);
             }
             callback();
             thiz.empty();
@@ -455,9 +451,10 @@ function gallery(Graph){
         })
 
   if(Tree){
+    topFilterInst.hiddenFilters(["type"]);
     Tree.breadcrumbs = new BreadCrumbs(galleryBox.select(".topbar"));
-    if(Tree.nodeTypes){
-      topFilterInst.addFilter("type",[Tree.nodeTypes[0]]);
+    if(options.nodeTypes && options.initialType && options.nodeTypes.indexOf(options.initialType)!=-1){
+      topFilterInst.addFilter("type",[options.initialType]);
     }
   }
 
@@ -613,7 +610,7 @@ function gallery(Graph){
               });
             Tree.breadcrumbs.addPath([Tree.treeParent,topFilterInst.getFilter("type").join(" | ")]);
           }else{
-            Tree.nodeTypes.forEach(function(type){
+            options.nodeTypes.forEach(function(type){
               Tree.breadcrumbs.addButton("",type,function(){
                 Tree.treeParent = "";
               });
@@ -913,30 +910,31 @@ function gallery(Graph){
                 });
               });
             }else if(Tree.type=="deepextended"){
-              var related = [],
-                  callback;
               Tree.breadcrumbs.empty();
-              Tree.nodeTypes.forEach(function(t){
-                related.push(t);
-              });
 
-              related.forEach(function(type,i){
+              options.nodeTypes.forEach(function(type,j){
                 Tree.breadcrumbs.addButton(n[options.nodeName],type,function(){
                   Tree.current = n[options.nodeName];
                   Tree.path = Graph.tree.map(function(d,i){
                       return [d[0],i];
                     }).filter(function(d){
                       if(!Tree.path.length){
-                        return d[0]==n[options.nodeName];
+                        return d[0]==Tree.current;
                       }else{
-                        return Tree.path.indexOf(d[1])!=-1;
+                        var level = options.nodeTypes.indexOf(n.type)
+                        if(level>=j){
+                          var tmpPath = Graph.tree.filter(function(d,k){ return Tree.path.indexOf(k)!=-1 && d.indexOf(Tree.current)!=-1; })[0];
+                          var end = level>j ? j+1 : j;
+                          return tmpPath.slice(0,end).join("|") == Graph.tree[d[1]].slice(0,end).join("|");
+                        }else{
+                          return Tree.path.indexOf(d[1])!=-1 && Graph.tree[d[1]].indexOf(Tree.current)!=-1;
+                        }
                       }
                     }).map(function(d){
                       return d[1];
-                  });
+                    });
                 });
               });
-
             }
           }
           displayGraph();
