@@ -650,8 +650,7 @@ function topFilter(){
       displayGraph = function(){},
       selectedValues = {},
       selFilter,
-      filterTags,
-      hiddenFilters = [];
+      filterTags;
 
   function exports(div){
 
@@ -765,7 +764,7 @@ function topFilter(){
 
   function displayTags(){
     if(filterTags){
-      var tags = filterTags.selectAll(".tag").data(d3.keys(selectedValues).filter(function(d){ return hiddenFilters.indexOf(d)==-1; }),String)
+      var tags = filterTags.selectAll(".tag").data(d3.keys(selectedValues),String)
       tags.enter().append("div")
         .attr("class","tag")
         .attr("filter",String)
@@ -878,12 +877,6 @@ function topFilter(){
       }
     }
     return [];
-  }
-
-  exports.hiddenFilters = function(x){
-    if (!arguments.length) return hiddenFilters;
-    hiddenFilters = Array.isArray(x) ? x : [x];
-    return exports;
   }
 
   return exports;

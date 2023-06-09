@@ -114,8 +114,34 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
   return(gallery)
 }
 
-treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, ...){
+table2links <- function(x){
+      tree <- as.matrix(x)
+      tree2 <- list()
+      types <- colnames(tree)
+      if(!length(types)){
+        types <- paste0("Level_",seq_len(ncol(tree)))
+      }
+      for(i in 1:nrow(tree)){
+        if(!is.na(tree[i,1])){
+          for(j in 2:ncol(tree)){
+            if(!is.na(tree[i,j])){
+              aux <- strsplit(tree[i,c(1,j)],"|",fixed=TRUE)
+              aux <- expand.grid(aux)
+              aux <- cbind(aux,types[1],types[j])
+              colnames(aux) <- c("parent","child","type1","type2")
+              tree2[[length(tree2)+1]] <- aux
+            }
+          }
+        }
+      }
+      tree <- do.call(rbind,tree2)
+      return(tree)
+}
+
+treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat = FALSE, ...){
   arguments <- list(...)
+
+  tree <- tree[rowSums(is.na(tree)) != ncol(tree), ]
 
   dir <- NULL
   if(!is.null(arguments$dir)){
@@ -123,14 +149,20 @@ treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, ...){
     arguments$dir <- NULL
   }
 
+  if(!deep && tableformat){
+    tree <- table2links(tree)
+  }
+
   if(is.null(arguments$nodes)){
     if(deep){
-      arguments$nodes <- as.vector(as.matrix(tree))
-      arguments$nodes <- unlist(strsplit(arguments$nodes,"|",fixed=TRUE))
+      nodes <- as.vector(as.matrix(tree))
+      nodes <- unlist(strsplit(nodes,"|",fixed=TRUE))
     }else{
-      arguments$nodes <- as.vector(as.matrix(tree[,1:2]))
+      nodes <- as.vector(as.matrix(tree[,1:2]))
     }
-    arguments$nodes <- data.frame(name=unique(arguments$nodes))
+    nodes <- unique(nodes)
+    nodes <- nodes[!is.na(nodes)]
+    arguments$nodes <- data.frame(name=nodes)
   }
 
   gallery <- do.call(gallery_rd3,arguments)
@@ -141,31 +173,32 @@ treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, ...){
       tree <- as.matrix(tree)
       tree2 <- list()
       types <- colnames(tree)
+      if(!length(types)){
+        types <- paste0("Level_",seq_len(ncol(tree)))
+      }
       for(i in seq_len(nrow(tree))){
         aux <- strsplit(tree[i,],"|",fixed=TRUE)
         aux <- expand.grid(aux)
-        for(j in seq_len(nrow(aux))){
-          tree2[[length(tree2)+1]] <- aux[j,]
-        }
+        tree2[[length(tree2)+1]] <- aux
       }
       tree <- do.call(rbind,tree2)
+      tree <- unique(tree)
       tree <- tree[apply(tree,1,function(x){
-        !length(setdiff(x,gallery$nodes[[name]]))
+        !length(setdiff(x[!is.na(x)],gallery$nodes[[name]]))
       }),]
       if(nrow(tree)==0){
         warning("tree: missing nodes in every tree row")
       }else{
         gallery$options$deepTree <- TRUE
         gallery$tree <- as.data.frame(t(tree))
-        if(length(types)){
-          gallery$nodes[["type"]] <- sapply(gallery$nodes[[name]],function(x){
-            aux <- types[as.logical(apply(tree,2,function(y){ sum(x==y) }))]
+        gallery$nodes[["type"]] <- sapply(gallery$nodes[[name]],function(x){
+            aux <- types[as.logical(apply(tree,2,function(y){ sum(x==y,na.rm=TRUE) }))]
             return(paste0(aux,collapse="|"))
-          })
-          gallery$options$nodeTypes <- types
-        }
+        })
+        gallery$options$nodeTypes <- types
       }
   }else{
+    tree <- unique(tree)
     tree <- tree[tree[,1] %in% gallery$nodes[[name]] & tree[,2] %in% gallery$nodes[[name]] & as.character(tree[,2])!=as.character(tree[,1]),]
     if(nrow(tree)==0){
         warning("tree: no row (Source and Target) matches the name column of the nodes")
