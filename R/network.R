@@ -192,6 +192,13 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
       target <- colnames(links)[2]
     }
 
+    if(source=="source"){
+      colnames(links)[colnames(links)=="source"] <- source <- "Source"
+    }
+    if(target=="target"){
+      colnames(links)[colnames(links)=="target"] <- target <- "Target"
+    }
+
     options$linkSource <- source
     options$linkTarget <- target
 

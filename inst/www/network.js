@@ -1642,6 +1642,15 @@ function addFilterController(){
           applyValueSelection();
           filterLinkSelection();
         })
+
+      itemFilter.append("button")
+        .attr("class","primary")
+        .text(texts.isolate)
+        .attr("title",texts.isolateInfo)
+        .on("click",function(){
+          applyValueSelection();
+          isolateLinkSelection();
+        })
     }
 
     itemFilter.append("button")

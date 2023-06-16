@@ -294,14 +294,37 @@ function gallery(Graph){
   }
 
   // node multi search
+  var searchFunction = filterSelection;
+  if(Tree){
+    if(Tree.type == "deepextended"){
+      searchFunction = function(){
+        Tree.resetOptions();
+        var node = nodes.filter(function(n){
+            return n.selected;
+          })[0];
+        for(var i=0; i<Graph.tree.length; i++){
+          var j = Graph.tree[i].indexOf(node[options.nodeName]);
+          if(j!=-1){
+            Tree.path = [i];
+            Tree.typeFilter = options.nodeTypes[j];
+            break;
+          }
+        }
+        displayGraph();
+      }
+    }else{
+      searchFunction = function(){
+        Tree.resetOptions();
+        filterSelection();
+      }
+    }
+  }
+
   topBar.addBox(displayMultiSearch()
         .data(itemsFiltered ? itemsFiltered : nodes)
         .column(options.nodeLabel)
         .updateSelection(displayGraph)
-        .updateFilter(Tree ? function(){
-          Tree.resetOptions();
-          filterSelection();
-        } : filterSelection));
+        .updateFilter(searchFunction));
 
   // count elements
   var elementsCount;
@@ -1048,6 +1071,9 @@ function gallery(Graph){
     function applyColorScale(scale, value){
       if(value == null){
         return basicColors.white;
+      }
+      if(Tree && options.nodeColor=="type" && Tree.typeFilter){
+        return scale(Tree.typeFilter);
       }
       if(typeof value == "object"){
         value = value[0];

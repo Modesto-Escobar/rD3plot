@@ -3064,6 +3064,9 @@ function defaultColorManagement(defaultColor){
 }
 
 function multiGraphSelect(sel,current,items){
+    if(typeof items == "string"){
+      items = [items];
+    }
     sel = sel.append("div").attr("class","multi-select")
     var select = sel.append("select")
     select.selectAll("option")
