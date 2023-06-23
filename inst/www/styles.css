@@ -1763,3 +1763,8 @@ pointer-events: none;
   z-index: 1;
   pointer-events: none;
 }
+
+/* breadcrumbs */
+.breadcrumbs {
+  font-size: 1.2em;
+}

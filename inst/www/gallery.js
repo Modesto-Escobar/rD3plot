@@ -43,6 +43,9 @@ function gallery(Graph){
 
   var Tree = false;
   if(Graph.tree){
+    Graph.tree = Graph.tree.map(function(d){
+      return d.map(String);
+    });
     Tree = {};
     options.tableitem = "nodes";
     if(options.deepTree){
@@ -78,6 +81,28 @@ function gallery(Graph){
       });
     }
 
+    if(Tree.type == "deepextended"){
+      Tree.getTreePath = function(name,level,newlevel){
+        return Graph.tree.map(function(d,k){
+                      return [d[0],k];
+                    }).filter(function(d){
+                      if(!Tree.path.length){
+                        return d[0] == name;
+                      }else{
+                        if(level>=newlevel){
+                          var tmpPath = Graph.tree.filter(function(d,k){ return Tree.path.indexOf(k)!=-1 && d.indexOf(name)!=-1; })[0];
+                          var end = level>newlevel ? newlevel+1 : newlevel;
+                          return tmpPath.slice(0,end).join("|") == Graph.tree[d[1]].slice(0,end).join("|");
+                        }else{
+                          return Tree.path.indexOf(d[1])!=-1 && Graph.tree[d[1]].indexOf(name)!=-1;
+                        }
+                      }
+                    }).map(function(d){
+                      return d[1];
+                    });
+      }
+    }
+
     function BreadCrumbs(sel){
       this.breadcrumbs = sel.append("div")
               .attr("class","breadcrumbs")
@@ -93,10 +118,10 @@ function gallery(Graph){
       },
       addHome: function(callback){
         var thiz = this;
-        thiz.breadcrumbs.append("span")
-          .text("home")
-          .style("cursor","pointer")
-          .style("color",basicColors.mediumBlue)
+        thiz.breadcrumbs.append("button")
+          .attr("class","primary home")
+          .text(texts.goback)
+          .attr("title",texts.goback)
           .on("click",function(){
             topFilterInst.removeFilter();
             callback();
@@ -106,22 +131,30 @@ function gallery(Graph){
       },
       addPath: function(path,callback){
         var thiz = this;
-        path.forEach(function(parent,i){
+        path.forEach(function(parents,i){
             thiz.breadcrumbs.append("span").text(" > ");
-            var text = thiz.breadcrumbs.append("span").text(parent);
-            if(callback){
-              text.style("cursor","pointer")
-              .style("color",basicColors.mediumBlue)
-              .attr("index",i)
-              .on("click",function(){
-                var idx = +d3.select(this).attr("index");
-                callback(path.filter(function(e,j){
-                  return j<=idx;
-                }));
-                thiz.empty();
-                deselectAllItems();
-              })
+            if(!Array.isArray(parents)){
+              parents = [parents];
             }
+            parents.forEach(function(parent,j){
+              if(j){
+                thiz.breadcrumbs.append("span").text(" | ");
+              }
+              var text = thiz.breadcrumbs.append("span").text(parent);
+              if(callback){
+                text.style("cursor","pointer")
+                .style("color",basicColors.mediumBlue)
+                .attr("index",i)
+                .attr("index2",j)
+                .on("click",function(){
+                  var idx = +d3.select(this).attr("index"),
+                      idx2 = +d3.select(this).attr("index2");
+                  callback(idx,idx2);
+                  thiz.empty();
+                  deselectAllItems();
+                })
+              }
+            });
           });
       },
       addButton: function(item,text,callback){
@@ -595,9 +628,15 @@ function gallery(Graph){
             }
           });
           path = path.map(function(d){
-            return d3.set(d).values().join(" | ");
+            return d3.set(d).values();
           })
-          Tree.breadcrumbs.addPath(path);
+          Tree.breadcrumbs.addPath(path,function(i,j){
+            var selected = path[i][j],
+                level = options.nodeTypes.indexOf(Tree.typeFilter);
+
+            Tree.path = Tree.getTreePath(selected,level,i);
+            Tree.typeFilter = options.nodeTypes[i];
+          });
         }
 
         var names = [];
@@ -705,8 +744,8 @@ function gallery(Graph){
             Tree.breadcrumbs.addHome(function(){
               Tree.treeParent = [];
             });
-            Tree.breadcrumbs.addPath(Tree.treeParent,function(path){
-              Tree.treeParent = path;
+            Tree.breadcrumbs.addPath(Tree.treeParent,function(i){
+              Tree.treeParent = Tree.treeParent.filter(function(d,j){ return j<=i; });
             });
           }
         }
@@ -740,7 +779,9 @@ function gallery(Graph){
     var items = galleryItems.selectAll(".item").data(displayData, function(d){ return d[options.nodeName]; });
 
     var itemsEnter = items.enter()
-          .append("div").attr("class","item")
+          .append("div")
+          .attr("class","item")
+
     var imgWrapper = itemsEnter
         .append("div")
           .attr("class","img-wrapper")
@@ -757,8 +798,11 @@ function gallery(Graph){
     }
 
     itemsEnter.append("span")
-        .attr("title",function(d){ return d[options.nodeLabel]; })
         .text(function(d){ return d[options.nodeLabel]; })
+
+    if(options.labelTooltip){
+      itemsEnter.attr("title",function(d){ return d[options.nodeLabel]; })
+    }
 
     items.exit().remove();
 
@@ -936,25 +980,9 @@ function gallery(Graph){
               options.nodeTypes.forEach(function(type,j){
                 Tree.breadcrumbs.addButton(n[options.nodeName],type,function(){
                   var current = n[options.nodeName];
+                  var level = options.nodeTypes.indexOf(n.type);
                   Tree.typeFilter = type;
-                  Tree.path = Graph.tree.map(function(d,i){
-                      return [d[0],i];
-                    }).filter(function(d){
-                      if(!Tree.path.length){
-                        return d[0]== current;
-                      }else{
-                        var level = options.nodeTypes.indexOf(n.type)
-                        if(level>=j){
-                          var tmpPath = Graph.tree.filter(function(d,k){ return Tree.path.indexOf(k)!=-1 && d.indexOf(current)!=-1; })[0];
-                          var end = level>j ? j+1 : j;
-                          return tmpPath.slice(0,end).join("|") == Graph.tree[d[1]].slice(0,end).join("|");
-                        }else{
-                          return Tree.path.indexOf(d[1])!=-1 && Graph.tree[d[1]].indexOf(current)!=-1;
-                        }
-                      }
-                    }).map(function(d){
-                      return d[1];
-                    });
+                  Tree.path = Tree.getTreePath(current,level,j);
                 });
               });
             }else{
@@ -1442,6 +1470,7 @@ function gallery(Graph){
       return;
     }
 
+    body.selectAll(".tooltip").remove();
     body.classed("maximize-table",true);
 
     var tables = body.append("div")
@@ -1584,16 +1613,32 @@ function gallery(Graph){
           }
         }else{
           if(options.nodeTypes){
-            columns = ["Parent","Child","Parent type","Child type"];
+            columns = [d3.set(Graph.tree[2]).values().join(" | ")];
+            d3.set(Graph.tree[3]).values().forEach(function(d){
+              columns.push(d);
+            });
+            var parents = {};
+            for(var i=0; i<Graph.tree[0].length; i++){
+              var key = Graph.tree[0][i];
+              if(!parents[key]){
+                parents[key] = {};
+                parents[key][columns[0]] = key;
+              }
+              var type = Graph.tree[3][i];
+              parents[key][type] = parents[key][type] ? parents[key][type] + " | " + Graph.tree[1][i] : Graph.tree[1][i];
+            }
+            for(var key in parents){
+              data.push(parents[key]);
+            }
           }else{
             columns = ["Parent","Child"];
-          }
-          for(var i=0; i<Graph.tree[0].length; i++){
-            var row = {};
-            columns.forEach(function(d,j){
-              row[d] = Graph.tree[j][i];
-            });
-            data.push(row);
+            for(var i=0; i<Graph.tree[0].length; i++){
+              var row = {};
+              columns.forEach(function(d,j){
+                row[d] = Graph.tree[j][i];
+              });
+              data.push(row);
+            }
           }
         }
         tableInst.data(data)

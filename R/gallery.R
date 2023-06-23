@@ -30,7 +30,7 @@ galleryCreate <- function(gallery, dir){
 gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
     border = NULL, ntext = NULL, info = NULL, infoFrame = c("right","left"),
     image = NULL, zoom = 1, itemsPerRow = NULL, main = NULL, note = NULL,
-    showLegend = TRUE, frequencies = FALSE,
+    showLegend = TRUE, frequencies = FALSE, labelTooltip = TRUE,
     help = NULL, helpOn = FALSE, tutorial = FALSE, description = NULL,
     descriptionWidth = NULL, roundedItems = FALSE, controls = 1:6, cex = 1,
     defaultColor = "#1f77b4", language = c("en", "es", "ca"), dir = NULL){
@@ -82,6 +82,7 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
       warning("descriptionWidth: not a valid percentage.")
     }
   }
+  options <- showSomething(options,"labelTooltip",labelTooltip)
   options <- showSomething(options,"roundedItems",roundedItems)
   options <- showSomething(options,"showLegend",showLegend)
   options <- showSomething(options,"helpOn",helpOn)
@@ -153,17 +154,27 @@ treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat 
     tree <- table2links(tree)
   }
 
-  if(is.null(arguments$nodes)){
-    if(deep){
-      nodes <- as.vector(as.matrix(tree))
-      nodes <- unlist(strsplit(nodes,"|",fixed=TRUE))
-    }else{
-      nodes <- as.vector(as.matrix(tree[,1:2]))
-    }
-    nodes <- unique(nodes)
-    nodes <- nodes[!is.na(nodes)]
-    arguments$nodes <- data.frame(name=nodes)
+  if(deep){
+    nodes <- as.vector(as.matrix(tree))
+    nodes <- unlist(strsplit(nodes,"|",fixed=TRUE))
+  }else{
+    nodes <- as.vector(as.matrix(tree[,1:2]))
   }
+  nodes <- unique(nodes)
+  nodes <- nodes[!is.na(nodes)]
+  nodes <- data.frame(name=nodes)
+
+  if(!is.null(arguments$nodes)){
+    if(is.null(arguments$name)){
+      name <- colnames(arguments$nodes)[1]
+    }else{
+      name <- arguments$name
+    }
+    colnames(nodes)[1] <- name
+    nodes <- merge(nodes,arguments$nodes, by = name, all.x=TRUE)
+  }
+
+  arguments$nodes <- nodes
 
   gallery <- do.call(gallery_rd3,arguments)
 
@@ -183,28 +194,21 @@ treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat 
       }
       tree <- do.call(rbind,tree2)
       tree <- unique(tree)
-      tree <- tree[apply(tree,1,function(x){
-        !length(setdiff(x[!is.na(x)],gallery$nodes[[name]]))
-      }),]
-      if(nrow(tree)==0){
-        warning("tree: missing nodes in every tree row")
-      }else{
-        gallery$options$deepTree <- TRUE
-        gallery$tree <- as.data.frame(t(tree))
-        gallery$nodes[["type"]] <- sapply(gallery$nodes[[name]],function(x){
-            aux <- types[as.logical(apply(tree,2,function(y){ sum(x==y,na.rm=TRUE) }))]
-            return(paste0(aux,collapse="|"))
-        })
-        gallery$options$nodeTypes <- types
-      }
+
+      gallery$options$deepTree <- TRUE
+      gallery$tree <- as.data.frame(t(tree))
+      gallery$nodes[["type"]] <- sapply(gallery$nodes[[name]],function(x){
+        aux <- types[as.logical(apply(tree,2,function(y){ sum(x==y,na.rm=TRUE) }))]
+        return(paste0(aux,collapse="|"))
+      })
+      gallery$options$nodeTypes <- types
   }else{
     tree <- unique(tree)
-    tree <- tree[tree[,1] %in% gallery$nodes[[name]] & tree[,2] %in% gallery$nodes[[name]] & as.character(tree[,2])!=as.character(tree[,1]),]
-    if(nrow(tree)==0){
-        warning("tree: no row (Source and Target) matches the name column of the nodes")
-    }else{
-        gallery$tree <- data.frame(Source=tree[,1],Target=tree[,2])
-        if(ncol(tree)==4){
+    tree[,1] <- as.character(tree[,1])
+    tree[,2] <- as.character(tree[,2])
+    tree <- tree[tree[,2]!=tree[,1],]
+    gallery$tree <- data.frame(Source=tree[,1],Target=tree[,2])
+    if(ncol(tree)==4){
           gallery$tree$Type1 <- tree[,3]
           gallery$tree$Type2 <- tree[,4]
           names <- c(tree[,1],tree[,2])
@@ -214,7 +218,6 @@ treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat 
             return(paste0(aux,collapse="|"))
           })
           gallery$options$nodeTypes <- unique(types)
-        }
     }
 
     if(!is.null(initialType)){
