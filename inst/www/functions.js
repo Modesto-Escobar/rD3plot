@@ -747,14 +747,7 @@ function topFilter(){
       .append("select")
         .on("change",function(){ changeAttrSel(this.value); })
 
-    var options = datanames.slice();
-    options.unshift("-"+texts.none+"-");
-    selFilter.selectAll("option")
-        .data(options)
-      .enter().append("option")
-        .property("disabled",function(d,i){ return !i; })
-        .property("value",String)
-        .text(String)
+    updateSelect();
 
     var topbar = d3.select(div.node().parentNode.parentNode);
     if(topbar.classed("topbar")){
@@ -778,6 +771,20 @@ function topFilter(){
 
       tags.exit().remove()
     }
+  }
+
+  function updateSelect(){
+      if(selFilter){
+        selFilter.selectAll("option").remove();
+        var options = datanames.slice();
+        options.unshift("-"+texts.none+"-");
+        selFilter.selectAll("option")
+        .data(options)
+          .enter().append("option")
+        .property("disabled",function(d,i){ return !i; })
+        .property("value",String)
+        .text(String)
+      }
   }
 
   function getFilteredData(){
@@ -844,6 +851,7 @@ function topFilter(){
   exports.datanames = function(x) {
     if (!arguments.length) return datanames;
     datanames = x;
+    updateSelect();
     return exports;
   };
 
@@ -2832,14 +2840,22 @@ function tableWrapper(){
 
     var tableTitle = tables.select("div.table-title")
     tableTitle.selectAll("span").remove();
-    tableTitle.append("span").text(texts[item+"attributes"])
+    var text = texts[item+"attributes"];
+    if(!text){
+      text = texts["elementsattributes"];
+    }
+    tableTitle.append("span").text(text)
     if(onlySelectedData){
       tableTitle.append("span").text(" ("+selectedData.length+" "+texts.outof+" "+currentData.length+")")
     }
     tables.select(".table-pagination").remove();
     tableContainer.selectAll("table, p").remove();
     if(selectedData.length==0){
-      tableContainer.append("p").text(texts["no"+item+"selected"]);
+      var text = texts["no"+item+"selected"];
+      if(!text){
+        text = texts["noelementsselected"];
+      }
+      tableContainer.append("p").text(text);
     }else{
       var cellheight = parseInt(tables.style("line-height")) + 9;
       pagelength = Math.floor(tableContainer.node().offsetHeight / cellheight) - 2;

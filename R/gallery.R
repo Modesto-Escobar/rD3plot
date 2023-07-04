@@ -165,13 +165,57 @@ treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat 
   nodes <- data.frame(name=nodes)
 
   if(!is.null(arguments$nodes)){
-    if(is.null(arguments$name)){
-      name <- colnames(arguments$nodes)[1]
-    }else{
-      name <- arguments$name
+    name <- arguments$name
+    if(is.data.frame(arguments$nodes)){
+      if(is.null(name)){
+        name <- colnames(arguments$nodes)[1]
+      }
+      colnames(nodes)[1] <- name
+      nodes <- merge(nodes,arguments$nodes, by = name, all.x=TRUE)
+    }else if(is.list(arguments$nodes)){
+      if(!is.null(name)){
+        colnames(nodes)[1] <- name
+      }else{
+        name <- "name"
+        for(n in names(arguments$nodes)){
+          colnames(arguments$nodes[[n]])[1] <- "name"
+        }
+      }
+      nodenamesbytype <- list()
+      allnodenames <- sapply(arguments$nodes,colnames)
+      dupnames <- setdiff(unique(allnodenames[duplicated(as.vector(allnodenames))]),name)
+      for(n in names(arguments$nodes)){
+        nodenamesbytype[[n]] <- names(arguments$nodes[[n]])
+        tochange <- colnames(arguments$nodes[[n]]) %in% dupnames
+        colnames(arguments$nodes[[n]])[tochange] <- paste0(n,".",colnames(arguments$nodes[[n]])[tochange])
+        nodes <- merge(nodes,arguments$nodes[[n]], by=name, all.x=TRUE)
+      }
+      for(d in dupnames){
+        nodes[[d]] <- NA
+        for(n in names(arguments$nodes)){
+          col <- paste0(n,".",d)
+          if(col %in% colnames(nodes)){
+            nodes[,d] <- apply(nodes,1,function(x){
+              if(is.na(x[d]) && is.na(x[col])){
+                return(NA)
+              }
+              if(is.na(x[d]) && !is.na(x[col])){
+                return(x[col])
+              }
+              if(!is.na(x[d]) && is.na(x[col])){
+                return(x[d])
+              }
+              aux <- unlist(strsplit(c(as.character(x[d]),as.character(x[col])),"|",fixed=TRUE))
+              paste0(unique(aux),collapse="|")
+            })
+            nodes[[col]] <- NULL
+          }
+        }
+        if(all(is.na(nodes[[d]]))){
+          nodes[[d]] <- NULL
+        }
+      }
     }
-    colnames(nodes)[1] <- name
-    nodes <- merge(nodes,arguments$nodes, by = name, all.x=TRUE)
   }
 
   arguments$nodes <- nodes
@@ -179,6 +223,12 @@ treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat 
   gallery <- do.call(gallery_rd3,arguments)
 
   name <- gallery$options$nodeName
+
+  checkColumnType <- function(gallery){
+    if("type" %in% colnames(gallery$nodes)){
+      warning("nodes: Column named 'type' will be overwritten")
+    }
+  }
 
   if(deep){
       tree <- as.matrix(tree)
@@ -197,6 +247,7 @@ treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat 
 
       gallery$options$deepTree <- TRUE
       gallery$tree <- as.data.frame(t(tree))
+      checkColumnType(gallery)
       gallery$nodes[["type"]] <- sapply(gallery$nodes[[name]],function(x){
         aux <- types[as.logical(apply(tree,2,function(y){ sum(x==y,na.rm=TRUE) }))]
         return(paste0(aux,collapse="|"))
@@ -213,6 +264,7 @@ treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat 
           gallery$tree$Type2 <- tree[,4]
           names <- c(tree[,1],tree[,2])
           types <- c(tree[,3],tree[,4])
+          checkColumnType(gallery)
           gallery$nodes[["type"]] <- sapply(gallery$nodes[[name]],function(x){
             aux <- unique(types[names==x])
             return(paste0(aux,collapse="|"))
@@ -222,6 +274,15 @@ treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat 
 
     if(!is.null(initialType)){
       gallery$options$initialType <- as.character(initialType)[1]
+    }
+  }
+
+  if(exists("nodenamesbytype") && !is.null(gallery$options$nodeTypes)){
+    commonnames <- intersect(gallery$options$nodeTypes, names(nodenamesbytype))
+    if(!length(commonnames)){
+      warning("nodes: all tree node types missing in this list")
+    }else{
+      gallery$options$nodeNamesByType <- nodenamesbytype[]
     }
   }
 

@@ -840,7 +840,7 @@ p.window-message {
   text-align: center;
 }
 .filter-options {
-  margin: 20px 0;
+  margin: 10px 0;
   overflow-y: auto;
 }
 .filter-options > div > div:first-child {
@@ -1767,4 +1767,18 @@ pointer-events: none;
 /* breadcrumbs */
 .breadcrumbs {
   font-size: 1.2em;
+}
+
+.buttons-popup {
+  position: absolute;
+  z-index: 14;
+  background-color: #ffffff;
+  padding: 13px 19px;
+  border-radius: 12px;
+  font-size: 1.2em;
+  line-height: 1.5;
+  max-width: 264px;
+}
+.buttons-popup > button {
+  margin: 2px;
 }
