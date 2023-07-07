@@ -1039,6 +1039,7 @@ div.tooltip {
   padding: 13px 19px;
   border-radius: 12px;
   line-height: 1.5;
+  border: solid 3px #ffffff;
 }
 div.tooltip.fixed{
   cursor: grab;

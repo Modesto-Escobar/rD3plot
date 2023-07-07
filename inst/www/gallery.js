@@ -47,7 +47,7 @@ function gallery(Graph){
       return d.map(String);
     });
     Tree = {};
-    options.tableitem = "links";
+    options.tableitem = "table";
     if(options.deepTree){
       Tree.path = [];
       Tree.typeFilter = options.nodeTypes[0];
@@ -199,7 +199,7 @@ function gallery(Graph){
       addButton: function(text,callback){
         var thiz = this;
         thiz.breadcrumbs.append("button")
-          .attr("class","primary")
+          .attr("class","primary"+(Tree.typeFilter && Tree.typeFilter == text ? " disabled" : ""))
           .text(text)
           .on("click",function(){
             topFilterInst.removeFilter();
@@ -689,7 +689,14 @@ function gallery(Graph){
                 Tree.typeFilter = options.initialType ? options.initialType : "";
                 updateSelectOptions();
               });
-            Tree.breadcrumbs.addPath([Tree.treeParent,Tree.typeFilter]);
+            Tree.breadcrumbs.addPath(Tree.typeFilter ? [Tree.treeParent,Tree.typeFilter] : [Tree.treeParent],function(i){
+              if(i==0){
+                Tree.typeFilter = "";
+                updateSelectOptions();
+              }else if(i==1){
+                Tree.treeParent = "";
+              }
+            });
           }else{
             options.nodeTypes.forEach(function(type){
               Tree.breadcrumbs.addButton(type,function(){
@@ -1703,17 +1710,17 @@ function gallery(Graph){
       });
 
     if(options.tableitem){
-      var tabs = ["links","nodes"];
+      var tabs = ["table","nodes"];
       if(options.nodeTypes){
         tabs = options.nodeTypes.slice();
-        tabs.unshift("links");
+        tabs.unshift("table");
       }
       header.append("span")
         .style("padding","0 2em")
         .style("display","inline-block")
       tabs.forEach(function(t){
         header.append("button")
-          .attr("class","primary")
+          .attr("class","primary"+(options.tableitem == t ? " disabled" : ""))
           .text(t)
           .on("click",function(){
             closeTable();
@@ -1737,7 +1744,7 @@ function gallery(Graph){
 
     if(options.tableitem){
       tableInst.item(options.tableitem);
-      if(options.tableitem=="links"){
+      if(options.tableitem=="table"){
         var data = [],
             columns = [];
         if(options.deepTree){
@@ -1782,7 +1789,21 @@ function gallery(Graph){
         tableInst.data(data)
           .columns(columns);
       }else if(options.nodeTypes && options.nodeTypes.indexOf(options.tableitem)!=-1){
-        var columns = options.nodeNamesByType && options.nodeNamesByType.hasOwnProperty(options.tableitem) ? options.nodeNamesByType[options.tableitem] : [options.nodeName],
+        var columns = Graph.nodenames.filter(function(d){
+          if(d==options.nodeName){
+            return true;
+          }
+          if(d.substring(0,1)=="_" || (options.imageItems && d==options.imageItems)){
+            return false;
+          }
+          if((d==options.nodeText || d==options.nodeInfo) && d!=options.nodeLabel){
+            return false;
+          }
+          if(options.nodeNamesByType && (!options.nodeNamesByType.hasOwnProperty(options.tableitem) || options.nodeNamesByType[options.tableitem].indexOf(d)==-1) && d!="type"){
+            return false;
+          }
+          return true;
+        }),
             data = nodes.filter(function(n){
           if(Array.isArray(n.type)){
             return n.type.indexOf(options.tableitem)!=-1;

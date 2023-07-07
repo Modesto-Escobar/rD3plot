@@ -171,7 +171,7 @@ treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat 
         name <- colnames(arguments$nodes)[1]
       }
       colnames(nodes)[1] <- name
-      nodes <- merge(nodes,arguments$nodes, by = name, all.x=TRUE)
+      nodes <- merge(nodes, arguments$nodes, by=name, all.x=TRUE)
     }else if(is.list(arguments$nodes)){
       if(!is.null(name)){
         colnames(nodes)[1] <- name
@@ -188,7 +188,7 @@ treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat 
         nodenamesbytype[[n]] <- names(arguments$nodes[[n]])
         tochange <- colnames(arguments$nodes[[n]]) %in% dupnames
         colnames(arguments$nodes[[n]])[tochange] <- paste0(n,".",colnames(arguments$nodes[[n]])[tochange])
-        nodes <- merge(nodes,arguments$nodes[[n]], by=name, all.x=TRUE)
+        nodes <- merge(nodes, arguments$nodes[[n]], by=name, all.x=TRUE)
       }
       for(d in dupnames){
         nodes[[d]] <- NA
