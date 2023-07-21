@@ -108,6 +108,17 @@ function gallery(Graph){
         return;
       }
 
+      var tooltip = body.selectAll(".tooltip").filter(function(d){ return d==name; });
+      if(tooltip.size()==1){
+        var infoTemplate = tooltip.select(".info-template");
+        if(!infoTemplate.empty()){
+          var buttons = infoTemplate.insert("div","div")
+            .attr("class","template-buttons-popup")
+          appendButtons(buttons);
+          return;
+        }
+      }
+
       var popup = body.select("body > .buttons-popup");
       if(!popup.empty()){
         popup.remove();
@@ -115,19 +126,23 @@ function gallery(Graph){
       popup = body.append("div")
             .attr("class","buttons-popup")
             .attr("item",name);
-      types.forEach(function(type,i){
-        popup.append("button")
+      appendButtons(popup);
+      mousePosition(popup,true);
+
+      function appendButtons(sel){
+        types.forEach(function(type,i){
+          sel.append("button")
           .attr("class","primary")
           .text(type)
           .on("click",function(){
             topFilterInst.removeFilter();
             callback(type,i);
-            popup.remove();
+            sel.remove();
             Tree.breadcrumbs.empty();
             deselectAllItems();
           })
-      })
-      mousePosition(popup,true);
+        })
+      }
     }
 
     Tree.cleanButtonsPopup = function(){
@@ -597,7 +612,11 @@ function gallery(Graph){
             }
           }
           prevk = k;
-          return Math.floor((gallery.node().offsetWidth-24) / currentItemsPerRow)-18;
+          var h = Math.floor((gallery.node().offsetWidth-24) / currentItemsPerRow)-18;
+          if(options.imageRatio){
+            h = h / options.imageRatio;
+          }
+          return h;
     }
 
     currentGridHeight = getCurrentHeight(1);
@@ -815,7 +834,7 @@ function gallery(Graph){
           .attr("class","img-wrapper")
     if(options.imageItems){
       imgWrapper.append("img")
-          .on("load", !options.roundedItems && !options.itemsPerRow ? function(){
+          .on("load", !options.imageRatio && !options.roundedItems && !options.itemsPerRow ? function(){
             this.ratio = 1;
             if(this.complete && this.naturalHeight!==0){
               this.ratio = this.naturalWidth / this.naturalHeight;
@@ -835,7 +854,15 @@ function gallery(Graph){
     items.exit().remove();
 
     var itemsUpdate = itemsEnter.merge(items);
-    itemsUpdate.classed("selected",function(n){ return n.selected; });
+    var someselected = false;
+    itemsUpdate.classed("selected",function(n){
+      if(n.selected){
+        someselected = true;
+        return true;
+      }
+      return false;
+    });
+    itemsUpdate.classed("highlighting",someselected);
 
     itemsUpdate.order();
 
@@ -846,7 +873,7 @@ function gallery(Graph){
 
     itemsUpdate.style("width",function(){
       var img = this.querySelector("img"),
-          ratio = img && img.ratio ? img.ratio : 1;
+          ratio = options.imageRatio ? options.imageRatio : (img && img.ratio ? img.ratio : 1);
       return (currentGridHeight*ratio)+"px";
     });
 
@@ -920,6 +947,10 @@ function gallery(Graph){
               .on("click",function(){
                 d3.event.stopPropagation();
                 tooltip.remove();
+                if(Tree){
+                  delete n.selected;
+                  displayGraph();
+                }
               })
               tooltip.call(d3.drag()
               .on("start",function(){

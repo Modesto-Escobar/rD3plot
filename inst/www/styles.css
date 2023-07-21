@@ -1039,7 +1039,8 @@ div.tooltip {
   padding: 13px 19px;
   border-radius: 12px;
   line-height: 1.5;
-  border: solid 3px #ffffff;
+  border: solid 6px #ffffff;
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.07);
 }
 div.tooltip.fixed{
   cursor: grab;
@@ -1602,10 +1603,16 @@ div.grid-gallery > .gallery-items.rounded-items > .item > .img-wrapper {
 div.grid-gallery > .gallery-items > .item.selected > .img-wrapper {
   border-color: #ffff00;
 }
+div.grid-gallery > .gallery-items > .item.highlighting:not(.selected) {
+  opacity: 0.2;
+}
 div.grid-gallery > .gallery-items > .item > .img-wrapper > img {
   display: block;
   height: 100%;
   width: 100%;
+  object-fit: contain;
+}
+div.grid-gallery > .gallery-items.rounded-items > .item > .img-wrapper > img {
   object-fit: cover;
 }
 div.grid-gallery > .gallery-items > .item > span {
@@ -1770,16 +1777,20 @@ pointer-events: none;
   font-size: 1.2em;
 }
 
+.buttons-popup,
+.template-buttons-popup {
+  background-color: #ffffff;
+  padding: 13px 19px;
+  font-size: 1.2em;
+  line-height: 1.5;
+}
 .buttons-popup {
   position: absolute;
   z-index: 14;
-  background-color: #ffffff;
-  padding: 13px 19px;
   border-radius: 12px;
-  font-size: 1.2em;
-  line-height: 1.5;
   max-width: 264px;
 }
-.buttons-popup > button {
+.buttons-popup > button,
+.template-buttons-popup > button {
   margin: 2px;
 }

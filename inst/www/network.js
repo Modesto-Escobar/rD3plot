@@ -29,7 +29,7 @@ function network(Graph){
       nodeSizeRange = [0.5,4], // node size range
       nodeLabelSizeRange = [8,20], // node label size range
       nodeBorderRange = [1,3], // node border range
-      linkWeightRange = [200,40], // link weight range (link distance)
+      linkWeightRange = [200,0], // link weight range (link distance)
       linkWidthRange = [1,5], // link width range
       zoomRange = [0.1, 10], // zoom range
       chargeRange = [0,-1000], // charge range

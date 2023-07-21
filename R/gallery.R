@@ -182,7 +182,7 @@ treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat 
         }
       }
       nodenamesbytype <- list()
-      allnodenames <- sapply(arguments$nodes,colnames)
+      allnodenames <- unlist(lapply(arguments$nodes,colnames))
       dupnames <- setdiff(unique(allnodenames[duplicated(as.vector(allnodenames))]),name)
       for(n in names(arguments$nodes)){
         nodenamesbytype[[n]] <- names(arguments$nodes[[n]])
@@ -216,6 +216,12 @@ treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat 
         }
       }
     }
+
+    mainitems <- unique(as.character(tree[,1]))
+    names <- as.character(nodes[[name]])
+    nodeorder <- c(mainitems,setdiff(names,mainitems))
+    rownames(nodes) <- names
+    nodes <- nodes[nodeorder,]
   }
 
   arguments$nodes <- nodes
