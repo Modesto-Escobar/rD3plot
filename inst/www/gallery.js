@@ -112,9 +112,12 @@ function gallery(Graph){
       if(tooltip.size()==1){
         var infoTemplate = tooltip.select(".info-template");
         if(!infoTemplate.empty()){
-          var buttons = infoTemplate.insert("div","div")
-            .attr("class","template-buttons-popup")
-          appendButtons(buttons);
+          var buttons = infoTemplate.select(".template-buttons-popup");
+          if(buttons.empty()){
+            buttons = infoTemplate.insert("div","div")
+              .attr("class","template-buttons-popup")
+            appendButtons(buttons);
+          }
           return;
         }
       }
@@ -234,7 +237,7 @@ function gallery(Graph){
   options.showTopbarButtons = showControls(options,6);
 
   var topFilterInst = topFilter()
-    .data(nodes)
+    .data(getFilterData())
     .datanames(getSelectOptions(sortAsc))
     .displayGraph(displayGraph);
 
@@ -431,7 +434,7 @@ function gallery(Graph){
   // node filter in topBar
   topBar.addBox(topFilterInst);
 
-  if(options.showTopbarButtons){
+  if(options.showTopbarButtons && !Tree){
     // Select all / none
     topBar.addBox(function(box){
       box.append("button")
@@ -948,6 +951,7 @@ function gallery(Graph){
                 d3.event.stopPropagation();
                 tooltip.remove();
                 if(Tree){
+                  infoPanel.close();
                   delete n.selected;
                   displayGraph();
                 }
@@ -1923,9 +1927,23 @@ function gallery(Graph){
     topOrderInst.datanames(opt);
     topColorSelectInst.datanames(opt);
     topFilterInst.datanames(opt);
+    topFilterInst.data(getFilterData());
     legend.selectionWindow().list(opt);
     topColorSelectInst.getSelect().dispatch("change");
     topOrderInst.getSelect().dispatch("change");
+  }
+
+  function getFilterData(){
+    if(Tree && Tree.typeFilter){
+      return nodes.filter(function(n){
+        if(Array.isArray(n.type)){
+          return n.type.indexOf(Tree.typeFilter)!=-1;
+        }else{
+          return n.type==Tree.typeFilter;
+        }
+      });
+    }
+    return nodes;
   }
 
 } // gallery function end

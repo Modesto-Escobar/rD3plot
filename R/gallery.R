@@ -139,6 +139,32 @@ table2links <- function(x){
       return(tree)
 }
 
+links2table <- function(x){
+  if(ncol(x)==4){
+    types <- c(paste0(unique(x[,3]),collapse="|"),unique(x[,4]))
+    elements <- unique(x[,1])
+    tree <- matrix(NA,length(elements),length(types))
+    colnames(tree) <- types
+    tree[,1] <- elements
+    for(i in 1:nrow(tree)){
+      for(j in 2:ncol(tree)){
+        tree[i,j] <- paste0(x[x[,1]==elements[i] & x[,4]==types[j],2],collapse="|")
+      }
+    }
+    return(tree)
+  }else{
+    types <- c("parent","children")
+    elements <- unique(x[,1])
+    tree <- matrix(NA,length(elements),length(types))
+    colnames(tree) <- types
+    tree[,1] <- elements
+    for(i in 1:nrow(tree)){
+      tree[i,2] <- paste0(x[x[,1]==elements[i],2],collapse="|")
+    }
+    return(tree)
+  }
+}
+
 treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat = FALSE, ...){
   arguments <- list(...)
 
@@ -288,13 +314,15 @@ treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat 
     if(!length(commonnames)){
       warning("nodes: all tree node types missing in this list")
     }else{
-      gallery$options$nodeNamesByType <- nodenamesbytype[]
+      gallery$options$nodeNamesByType <- nodenamesbytype
     }
   }
 
   if(!is.null(dir)){
     galleryCreate(gallery,dir)
   }
+
+  class(gallery) <- c("treeGallery_rd3",class(gallery))
   return(gallery)
 }
 

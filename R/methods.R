@@ -14,6 +14,10 @@ print.gallery_rd3 <- function(x, ...) {
   printNetwork(x)
 }
 
+print.treeGallery_rd3 <- function(x, ...){
+  printTreeGallery(x)
+}
+
 print.pie_rd3 <- function(x, ...) {
   aux <- x$data
   if(!is.null(x$labels)){
@@ -51,6 +55,34 @@ printNetwork <- function(x){
   printTable(x$nodes[,setdiff(names(x$nodes),c("hidden","chaine","fx","fy")),drop=FALSE],"Nodes")
   if(!is.null(x$links)){
     printTable(x$links[,setdiff(names(x$links),c("hidden","chaine"))],"Links")
+  }
+  cat("\n")
+  printNote(x)
+}
+
+printTreeGallery <- function(x){
+  printMain(x)
+  if(is.null(x$options$nodeNamesByType)){
+    printTable(x$nodes,"Nodes")
+    cat("\n")
+  }else{
+    for(t in names(x$options$nodeNamesByType)){
+      cols <- x$options$nodeNamesByType[[t]]
+      printTable(x$nodes[vapply(x$nodes$type,function(y){
+        aux <- unlist(strsplit(y,"|",fixed=TRUE))
+        if(length(aux)==1){
+          return(aux==t)
+        }else{
+          return(t %in% aux)
+        }
+      },logical(1)),cols],t)
+      cat("\n")
+    }
+  }
+  if(!is.null(x$options$deepTree)){
+    printTable(x$tree,"Tree")
+  }else{
+    printTable(links2table(x$tree),"Tree")
   }
   cat("\n")
   printNote(x)
