@@ -1188,10 +1188,13 @@ function gallery(Graph){
 
   function getSelectOptions(order){
     return Graph.nodenames.filter(function(d){
+          if(d.substring(0,1)=="_"){
+            return false;
+          }
           if(d==options.nodeName){
             return true;
           }
-          if(d.substring(0,1)=="_" || (options.imageItems && d==options.imageItems)){
+          if(options.imageItems && d==options.imageItems){
             return false;
           }
           if((d==options.nodeText || d==options.nodeInfo) && d!=options.nodeLabel){
@@ -1366,25 +1369,21 @@ function gallery(Graph){
         scale,
         displayFunction,
         filterHandler,
-        scalePicker;
+        scalePicker,
+        selectionWindow;
 
     function exports(parent){
-      if(!value || !scale){
-        parent.selectAll("*").remove();
-        return;
-      }
-
-      selectionWindow
-        .visual(type)
-        .active(value)
-
       displayShowPanelButton(parent,function(){
         parent.classed("hide-legend",false);
         contentHeight(parent);
       })
 
+      selectionWindow
+        .visual(type)
+        .active(value)
+
       // ordinal scale
-      if(scale.name=="i"){
+      if(!value || !scale || scale.name=="i"){
         parent.select("div.scale").remove();
 
         var legends = parent.select(".legends");
@@ -1438,9 +1437,9 @@ function gallery(Graph){
           legend.append("hr")
             .attr("class","legend-separator")
         }
-        legend.select(".title").text(texts[type] + " / " + value);
+        legend.select(".title").text(texts[type] + " / " + (value ? value : "-"+texts.none+"-"));
 
-        var itemsData = getColumnValues(data,value);
+        var itemsData = (value && scale) ? getColumnValues(data,value) : [];
 
         var items = legend.selectAll(".legend-item")
               .data(itemsData,String)
@@ -1523,6 +1522,11 @@ function gallery(Graph){
             somechecked = content.selectAll(".legend-item > .checked").size();
         legends.select(".legend-selectall > .legend-check-box").classed("checked",somechecked)
         legends.select(".legend-bottom-button").classed("disabled",!somechecked || somechecked==allboxes)
+
+        legends.select(".legend-bottom-controls").style("display",(!value || !scale) ? "none" : null);
+        legend.select("hr.legend-separator").style("border",(!value || !scale) ? "none" : null);
+
+        return;
       }
 
       // linear scale
@@ -1541,6 +1545,7 @@ function gallery(Graph){
             displayFunction();
           }
         );
+        return;
       }
     }
     
@@ -1825,10 +1830,13 @@ function gallery(Graph){
           .columns(columns);
       }else if(options.nodeTypes && options.nodeTypes.indexOf(options.tableitem)!=-1){
         var columns = Graph.nodenames.filter(function(d){
+          if(d.substring(0,1)=="_"){
+            return false;
+          }
           if(d==options.nodeName){
             return true;
           }
-          if(d.substring(0,1)=="_" || (options.imageItems && d==options.imageItems)){
+          if(options.imageItems && d==options.imageItems){
             return false;
           }
           if((d==options.nodeText || d==options.nodeInfo) && d!=options.nodeLabel){
