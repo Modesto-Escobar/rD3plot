@@ -107,6 +107,7 @@ var texts = {
     speed: "Velocitat",
     searchintable: "Cerca a la taula ",
     goback: "Tornar",
+    home: "Home",
     newtab: "Obriu a la pestanya nova",
     tools: "Eines",
     poweredby: "Fet amb",

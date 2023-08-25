@@ -107,6 +107,7 @@ var texts = {
     speed: "Speed",
     searchintable: "Search in table",
     goback: "Return",
+    home: "Home",
     newtab: "Open in new tab",
     tools: "Tools",
     poweredby: "Powered by",

@@ -757,7 +757,7 @@ function topFilter(){
 
   function displayTags(){
     if(filterTags){
-      var tags = filterTags.selectAll(".tag").data(d3.keys(selectedValues),String)
+      var tags = filterTags.selectAll(".tag").data(d3.keys(selectedValues).filter(function(d){ return d.substring(0,1)!="_" }),String)
       tags.enter().append("div")
         .attr("class","tag")
         .attr("filter",String)
@@ -1362,9 +1362,22 @@ function stripTags(text){
   return text.replace(/(<([^>]+)>)/ig,"");
 }
 
-function displayLinearScale(sel,value,range,domain,selectScale,selectAttribute,closePanel,changeDomain){
-    var panel = sel.select(".scale");
-    domain = d3.extent(domain);
+function displayLinearScale(sel, value, range, domain, selectScale, selectAttribute, closePanel, changeDomain, simplify){
+  domain = d3.extent(domain);
+  var panel;
+
+  if(simplify){
+    panel = sel.select(".scale-content");
+    if(panel.empty()){
+      panel = sel.append("div")
+        .attr("class","scale-content");
+
+      renderScaleGradient(panel);
+      renderDomain(panel,0);
+      renderDomain(panel,1);
+    }
+  }else{
+    panel = sel.select(".scale");
     if(panel.empty()){
       panel = sel.append("div")
           .attr("class","scale")
@@ -1378,11 +1391,9 @@ function displayLinearScale(sel,value,range,domain,selectScale,selectAttribute,c
               .on("click",closePanel)
       }
 
-      var paddingRight = 12;
-
       var div = panel.append("div")
         .attr("class","scale-content")
-        .style("padding-right",paddingRight+"px");
+        .style("padding-right","12px");
 
       div.append("div")
           .attr("class","title")
@@ -1390,6 +1401,19 @@ function displayLinearScale(sel,value,range,domain,selectScale,selectAttribute,c
           .style("cursor", selectAttribute ? "pointer" : null)
           .on("click", selectAttribute ? selectAttribute : null);
 
+      renderScaleGradient(div);
+      renderDomain(div,0);
+      renderDomain(div,1);
+    }
+  }
+
+  panel.select("div.legend-scale-gradient")
+      .datum(range)
+      .style("background-image",function(d){ return "linear-gradient(to right, " + d.join(", ") + ")"; })
+  panel.select(".domain1 > span").text(formatter(domain[0]));
+  panel.select(".domain2 > span").text(formatter(domain[1]));
+
+  function renderScaleGradient(div){
       var legendScaleGradient = div.append("div")
         .attr("class","legend-scale-gradient")
         .style("height","10px")
@@ -1400,57 +1424,49 @@ function displayLinearScale(sel,value,range,domain,selectScale,selectAttribute,c
           .style("cursor","pointer")
           .on("click",selectScale)
       }
+  }
 
-      renderDomain(0);
-      renderDomain(1);
+  function renderDomain(div,i){
+    var container = document.createElement('div')
+    container.classList.add('domain'+(i+1))
 
-      function renderDomain(i){
-            var container = document.createElement('div')
-            container.classList.add('domain'+(i+1))
+    var span = document.createElement('span');
 
-            var span = document.createElement('span');
+    container.appendChild(span);
+    div.node().appendChild(container);
 
-            container.appendChild(span);
-            div.node().appendChild(container);
+    if(changeDomain){
+      var domInput = document.createElement('input');
+      domInput.style.width = "80%";
+      domInput.type = "text";
 
-            if(changeDomain){
-              var domInput = document.createElement('input');
-              domInput.style.width = "80%";
-              domInput.type = "text";
+      domInput.addEventListener("keydown",function(event){
+        if(this.parentNode && getKey(event)=="Enter"){
+            domain[i] = +domInput.value;
+            close(event);
+            changeDomain(domain);
+        }
+      })
 
-              domInput.addEventListener("keydown",function(event){
-                if(this.parentNode && getKey(event)=="Enter"){
-                    domain[i] = +domInput.value;
-                    close(event);
-                    changeDomain(domain);
-                }
-              })
+      domInput.addEventListener("blur",close)
 
-              domInput.addEventListener("blur",close)
+      span.addEventListener("click",function(){
+        event.preventDefault();
+        domInput.value = "";
+        span.parentNode.removeChild(span);
+        container.appendChild(domInput);
+        domInput.focus();
+      })
 
-              span.addEventListener("click",function(){
-                event.preventDefault();
-                domInput.value = "";
-                span.parentNode.removeChild(span);
-                container.appendChild(domInput);
-                domInput.focus();
-              })
-
-              function close(event){
-                event.preventDefault();
-                if(domInput.parentNode){
-                  domInput.parentNode.removeChild(domInput);
-                }
-                container.appendChild(span);
-              }
-            }
+      function close(event){
+        event.preventDefault();
+        if(domInput.parentNode){
+          domInput.parentNode.removeChild(domInput);
+        }
+        container.appendChild(span);
       }
     }
-    panel.select("div.legend-scale-gradient")
-      .datum(range)
-      .style("background-image",function(d){ return "linear-gradient(to right, " + d.join(", ") + ")"; })
-    panel.select(".domain1 > span").text(formatter(domain[0]));
-    panel.select(".domain2 > span").text(formatter(domain[1]));
+  }
 }
 
 function addGradient(defs,id,range){

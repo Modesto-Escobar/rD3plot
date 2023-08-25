@@ -107,6 +107,7 @@ var texts = {
     speed: "Velocidad",
     searchintable: "Busca en la tabla",
     goback: "Volver",
+    home: "Home",
     newtab: "Abrir en nueva pestaña",
     tools: "Herramientas",
     poweredby: "Hecho con",

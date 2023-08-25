@@ -94,7 +94,15 @@ button.primary-outline.disabled {
   opacity: 0.5;
   pointer-events: none;
 }
+button.primary.return,
 button.primary.home {
+  overflow: hidden;
+  white-space: nowrap;
+  min-width: unset;
+  width: 2.2em;
+}
+button.primary.home {
+  color: transparent;
   overflow: hidden;
   white-space: nowrap;
   color: transparent;
@@ -460,13 +468,13 @@ div.poweredby img {
   font-size: 1.4em;
   margin-bottom: 6px;
 }
-.legend-panel > .linear-scale > .scale > .scale-content > .domain1,
-.legend-panel > .linear-scale > .scale > .scale-content > .domain2 {
+.scale-content > .domain1,
+.scale-content > .domain2 {
   display: inline-block;
   width: 50%;
   font-size: 1.2em;
 }
-.legend-panel > .linear-scale > .scale > .scale-content > .domain2 {
+.scale-content > .domain2 {
   text-align: right;
 }
 .legend-panel > .legends > div.legends-content {
@@ -1793,4 +1801,11 @@ pointer-events: none;
 .buttons-popup > button,
 .template-buttons-popup > button {
   margin: 2px;
+}
+
+.switch-reverse-order {
+  margin-bottom: 12px;
+}
+.switch-reverse-order > h3 {
+  padding-right: 4px;
 }

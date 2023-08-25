@@ -32,8 +32,9 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
     image = NULL, zoom = 1, itemsPerRow = NULL, main = NULL, note = NULL,
     showLegend = TRUE, frequencies = FALSE, labelTooltip = TRUE,
     help = NULL, helpOn = FALSE, tutorial = FALSE, description = NULL,
-    descriptionWidth = NULL, roundedItems = FALSE, controls = 1:6, cex = 1,
-    defaultColor = "#1f77b4", language = c("en", "es", "ca"), dir = NULL){
+    descriptionWidth = NULL, roundedItems = FALSE, ntextctrl = FALSE,
+    controls = 1:6, cex = 1, defaultColor = "#1f77b4",
+    language = c("en", "es", "ca"), dir = NULL){
 
   if(is.null(name)){
     name <- colnames(nodes)[1]
@@ -88,6 +89,7 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
   options <- showSomething(options,"helpOn",helpOn)
   options <- showSomething(options,"tutorial",tutorial)
   options <- showSomething(options,"frequencies",frequencies)
+  options <- showSomething(options,"ntextctrl",ntextctrl)
 
   if (!is.null(controls)) options[["controls"]] <- as.numeric(controls)
   options[["cex"]] <- check_cex(cex)
@@ -250,6 +252,10 @@ treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat 
   }
 
   arguments$nodes <- nodes
+
+  if(is.null(arguments$ntextctrl)){
+    arguments$ntextctrl <- TRUE
+  }
 
   gallery <- do.call(gallery_rd3,arguments)
 

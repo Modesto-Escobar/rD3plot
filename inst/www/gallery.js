@@ -57,6 +57,7 @@ function gallery(Graph){
       Tree.type = "simple";
       if(options.nodeTypes){
         Tree.type = "extended";
+        Tree.history = [];
         Tree.treeParent = "";
         Tree.typeFilter = "";
         if(options.initialType){
@@ -70,9 +71,9 @@ function gallery(Graph){
     }
 
     Tree.resetOptions = function(){
-      ['path','treeParent','typeFilter'].forEach(function(k){
+      ['path','treeParent','typeFilter','history'].forEach(function(k){
         if(Tree.hasOwnProperty(k)){
-          if(typeof k == "string"){
+          if(typeof Tree[k] == "string"){
             Tree[k] = "";
           }else{
             Tree[k] = [];
@@ -175,10 +176,31 @@ function gallery(Graph){
       },
       addHome: function(callback){
         var thiz = this;
+        if(Tree.history){
+          thiz.breadcrumbs.append("button")
+          .attr("class","primary return")
+          .html("&larr;")
+          .attr("title",texts.goback)
+          .on("click",function(){
+            topFilterInst.removeFilter();
+            Tree.history.pop();
+            if(!Tree.history.length){
+              Tree.treeParent = "";
+              Tree.typeFilter = options.initialType ? options.initialType : "";
+              Tree.history = [];
+            }else{
+              Tree.treeParent = Tree.history[Tree.history.length-1][0];
+              Tree.typeFilter = Tree.history[Tree.history.length-1][1];
+            }
+            updateSelectOptions();
+            thiz.empty();
+            deselectAllItems();
+          })
+        }
         thiz.breadcrumbs.append("button")
           .attr("class","primary home")
-          .text(texts.goback)
-          .attr("title",texts.goback)
+          .text(texts.home)
+          .attr("title",texts.home)
           .on("click",function(){
             topFilterInst.removeFilter();
             callback();
@@ -217,7 +239,7 @@ function gallery(Graph){
       addButton: function(text,callback){
         var thiz = this;
         thiz.breadcrumbs.append("button")
-          .attr("class","primary"+(Tree.typeFilter && Tree.typeFilter == text ? " disabled" : ""))
+          .attr("class","primary")
           .text(text)
           .on("click",function(){
             topFilterInst.removeFilter();
@@ -225,6 +247,14 @@ function gallery(Graph){
             thiz.empty();
             deselectAllItems();
           })
+        thiz.updateSelectedType();
+      },
+      updateSelectedType: function(){
+        var thiz = this;
+        thiz.breadcrumbs.selectAll("button.primary").each(function(){
+          var button = d3.select(this);
+          button.classed("disabled",!Tree.treeParent && Tree.typeFilter && Tree.typeFilter == button.text());
+        });
       }
     }
   }
@@ -411,6 +441,12 @@ function gallery(Graph){
     }else{
       searchFunction = function(){
         Tree.resetOptions();
+        var node = nodes.filter(function(n){
+            return n.selected;
+          })[0];
+        Tree.typeFilter = node.type;
+        Tree.history.push([Tree.treeParent,Tree.typeFilter]);
+        updateSelectOptions();
         filterSelection();
       }
     }
@@ -541,10 +577,8 @@ function gallery(Graph){
     galleryItems.style("font-size", 10*options.cex + "px")
   }
 
-  var legend = displayLegend()
+  var colorLegend = displayLegend()
                  .type("Color")
-                 .displayGraph(displayGraph)
-                 .filterHandler(topFilterInst)
                  .displayScalePicker(function(){
                    displayPicker(options,"nodeColor",displayGraphColor);
                  })
@@ -555,6 +589,30 @@ function gallery(Graph){
                        .property("value",val)
                        .dispatch("change");
                    }));
+
+  var legendLegend = displayLegend()
+                 .type("Legend")
+                 .selectionWindow(attrSelectionWindow()
+                   .list(getSelectOptions(sortAsc))
+                   .clickAction(function(val){
+                     if(val=="_none_"){
+                       delete options.nodeLegend;
+                     }else{
+                       options.nodeLegend = val;
+                     }
+                     displayGraph();
+                   }));
+
+  var orderLegend = displayLegend()
+                 .type("Order")
+                 .selectionWindow(attrSelectionWindow()
+                   .list(getSelectOptions(sortAsc))
+                   .clickAction(function(val){
+                     topOrderInst.getSelect()
+                       .property("value",val)
+                       .dispatch("change");
+                   }));
+
   var legendPanel = content.append("div")
         .attr("class","legend-panel")
         .classed("hide-legend",!options.showLegend)
@@ -709,21 +767,28 @@ function gallery(Graph){
             Tree.breadcrumbs.addHome(function(){
                 Tree.treeParent = "";
                 Tree.typeFilter = options.initialType ? options.initialType : "";
+                Tree.history = [];
                 updateSelectOptions();
               });
-            Tree.breadcrumbs.addPath(Tree.typeFilter ? [Tree.treeParent,Tree.typeFilter] : [Tree.treeParent],function(i){
-              if(i==0){
-                Tree.typeFilter = "";
-                updateSelectOptions();
-              }else if(i==1){
+            if(Tree.typeFilter){
+              Tree.breadcrumbs.addButton(Tree.typeFilter,function(){
                 Tree.treeParent = "";
-              }
+                Tree.typeFilter = Tree.typeFilter;
+                Tree.history.push([Tree.treeParent,Tree.typeFilter]);
+                updateSelectOptions();
+              });
+            }
+            Tree.breadcrumbs.addPath([Tree.treeParent],function(i){
+              Tree.typeFilter = "";
+              Tree.history.push([Tree.treeParent,Tree.typeFilter]);
+              updateSelectOptions();
             });
           }else{
             options.nodeTypes.forEach(function(type){
               Tree.breadcrumbs.addButton(type,function(){
                 Tree.treeParent = "";
                 Tree.typeFilter = type;
+                Tree.history.push([Tree.treeParent,Tree.typeFilter]);
                 updateSelectOptions();
               });
             });
@@ -922,6 +987,9 @@ function gallery(Graph){
             }
             body.select(".panel-template.auto-color").datum(n);
           }
+          if(options.ntextctrl && !(d3.event.ctrlKey || d3.event.metaKey)){
+            body.selectAll(".tooltip").remove();
+          }
           if(options.nodeText && n[options.nodeText]){
             if(body.selectAll(".tooltip").filter(function(d){
               return d==n[options.nodeName];
@@ -1018,6 +1086,7 @@ function gallery(Graph){
               Tree.popButtons(n[options.nodeName],types,function(type){
                   Tree.treeParent = n[options.nodeName];
                   Tree.typeFilter = type;
+                  Tree.history.push([Tree.treeParent,Tree.typeFilter]);
                   updateSelectOptions();
               });
             }
@@ -1103,11 +1172,31 @@ function gallery(Graph){
         }
       }
     }
-    legend
+
+    colorLegend
       .data(orderedData)
       .value(options.nodeColor)
       .scale(colorScale)
-    legendPanel.call(legend);
+    legendPanel.call(colorLegend);
+
+    legendLegend
+      .data(orderedData)
+      .value(options.nodeLegend)
+    legendPanel.call(legendLegend);
+
+    orderLegend
+      .value(options.order)
+    legendPanel.call(orderLegend);
+
+    var emptylegend = true;
+    legendPanel.selectAll(".legends-content > .legend").each(function(){
+      if(d3.select(this).property("key")){
+        emptylegend = false;
+      }
+    });
+    if(!legendPanel.classed("hide-legend") && emptylegend){
+      legendPanel.select(".close-button").dispatch("click");
+    }
 
     if(options.imageItems){
       itemsUpdate.select(".img-wrapper").style("border-color",function(d){
@@ -1212,7 +1301,8 @@ function gallery(Graph){
     var data = [],
         datanames = [],
         displayFunction = function(){},
-        orderSelect;
+        orderSelect,
+        reverseSwitch;
 
     function exports(div){
       div.append("h3").text(texts.Order + ":")
@@ -1221,7 +1311,7 @@ function gallery(Graph){
       .append("select")
       .on("change",function(){
         options.order = this.value;
-        if(options.order=="-default-")
+        if(options.order=="-"+texts.default+"-")
           options.order = false;
         displayFunction();
       })
@@ -1230,21 +1320,17 @@ function gallery(Graph){
 
       div.append("h3")
       .text(texts.Reverse)
-      div.append("button")
+      reverseSwitch = div.append("button")
       .attr("class","switch-button")
       .classed("active",options.rev)
-      .on("click",function(){
-        options.rev = !options.rev;
-        d3.select(this).classed("active",options.rev);
-        displayFunction();
-      })
+      .on("click",reverseOrder)
     }
 
     function updateSelect(){
       if(orderSelect){
         orderSelect.selectAll("option").remove();
         var opt = datanames.slice();
-        opt.unshift("-default-");
+        opt.unshift("-"+texts.default+"-");
         orderSelect.selectAll("option")
           .data(opt)
         .enter().append("option")
@@ -1254,6 +1340,16 @@ function gallery(Graph){
           .property("value",String)
           .text(String)
       }
+    }
+
+    function reverseOrder(){
+        options.rev = !options.rev;
+        reverseSwitch.classed("active",options.rev);
+        displayFunction();
+    }
+
+    exports.reverse = function(){
+      reverseOrder();
     }
 
     exports.data = function(x) {
@@ -1367,24 +1463,18 @@ function gallery(Graph){
         type,
         data,
         scale,
-        displayFunction,
-        filterHandler,
         scalePicker,
         selectionWindow;
 
     function exports(parent){
-      displayShowPanelButton(parent,function(){
-        parent.classed("hide-legend",false);
-        contentHeight(parent);
-      })
+        displayShowPanelButton(parent,function(){
+          parent.classed("hide-legend",false);
+          contentHeight(parent);
+        })
 
-      selectionWindow
+        selectionWindow
         .visual(type)
         .active(value)
-
-      // ordinal scale
-      if(!value || !scale || scale.name=="i"){
-        parent.select("div.scale").remove();
 
         var legends = parent.select(".legends");
 
@@ -1416,19 +1506,20 @@ function gallery(Graph){
           legends.append("div")
               .attr("class","goback")
               .on("click",function(){
-                filterHandler.removeFilter();
+                topFilterInst.removeFilter();
               })
 
           legends.append("div").attr("class","legends-content")
-            .append("div").attr("class","legend")
         }
 
         legends.select(".goback").style("display", itemsFiltered===false ? "none" : null)
 
         var content = legends.select(".legends-content");
-        var legend = legends.select(".legend");
+        var legend = legends.select(".legend.legend"+type);
 
-        if(initialize){
+        if(legend.empty()){
+          legend = content.append("div")
+            .attr("class","legend legend"+type)
           legend.append("div")
             .attr("class","title")
             .style("cursor","pointer")
@@ -1437,14 +1528,35 @@ function gallery(Graph){
           legend.append("hr")
             .attr("class","legend-separator")
         }
-        legend.select(".title").text(texts[type] + " / " + (value ? value : "-"+texts.none+"-"));
 
-        var itemsData = (value && scale) ? getColumnValues(data,value) : [];
+        legend.property("key",value);
+        legend.select(".title").text(texts[type] + " / " + (value ? value : (data ? "-"+texts.none+"-" : "-"+texts.default+"-")));
 
-        var items = legend.selectAll(".legend-item")
+        // linear scale
+        if(scale && scale.name=="h"){
+          legend.selectAll(".legend-item").remove();
+          displayLinearScale(legend,
+            value,
+            scale.range(),
+            scale.domain(),
+            scalePicker,
+            false,
+            false,
+            function(d){
+              scale.domain(d);
+              displayGraph();
+            },
+            true
+          );
+        }else if(data){
+          legend.selectAll(".scale-content").remove();
+
+          var itemsData = value ? getColumnValues(data,value) : [];
+
+          var items = legend.selectAll(".legend-item")
               .data(itemsData,String)
 
-        var itemsEnter = items.enter()
+          var itemsEnter = items.enter()
         .append("div")
             .attr("class","legend-item")
             .style("cursor","pointer")
@@ -1463,24 +1575,36 @@ function gallery(Graph){
                 }
               })
               checkbox.classed("checked",!checked);
-              displayFunction();
+              displayGraph();
             })
 
-        itemsEnter.append("div")
+          itemsEnter.append("div")
         .attr("class","legend-check-box")
 
-        itemsEnter.append("div")
+          itemsEnter.append("div")
         .attr("class","legend-bullet")
-        .style("background-color",function(value){
+        .style("background-color",scale ? function(value){
           return scale(value);
-        })
+        } : basicColors.black)
 
-        itemsEnter.append("span")
+          itemsEnter.append("span")
         .text(stripTags)
 
-        items.exit().remove();
+          items.exit().remove();
 
-        items.order();
+          items.order();
+        }else if(type=="Order"){
+          if(legend.select(".switch-reverse-order").empty()){
+            var div = legend.append("div").attr("class","switch-reverse-order")
+            div.append("h3")
+            .style("display","inline-block")
+            .text(texts.Reverse)
+            div.append("button")
+            .attr("class","switch-button")
+            .on("click",topOrderInst.reverse)
+          }
+          legend.select(".switch-button").classed("active",options.rev);
+        }
 
         contentHeight(parent);
 
@@ -1498,7 +1622,7 @@ function gallery(Graph){
               data.forEach(function(d){
                 d.selected = checked ? true : false;
               })
-              displayFunction();
+              displayGraph();
           })
           legendSelectAll.append("div")
           .attr("class","legend-check-box")
@@ -1509,44 +1633,30 @@ function gallery(Graph){
           .attr("class","legend-bottom-button primary")
           .text(texts["filter"])
           .on("click",function(){
-            var values = [];
-            legend.selectAll(".legend-item > .checked").each(function(d){
-              values.push(d);
+            legends.selectAll(".legend").each(function(){
+              var legend = d3.select(this),
+                  key = legend.property("key"),
+                  values = [];
+              legend.selectAll(".legend-item > .checked").each(function(d){
+                values.push(d);
+              });
+              if(values.length){
+                topFilterInst.addFilter(key,values);
+              }
             });
-            filterHandler.addFilter(value,values);
           })
           .attr("title",texts.filterInfo)
         }
 
-        var allboxes = content.selectAll(".legend-item > .legend-check-box").size(),
+        var allboxes = content.selectAll(".legend-item > .legend-check-box"),
+            allboxessize = allboxes.size(),
             somechecked = content.selectAll(".legend-item > .checked").size();
         legends.select(".legend-selectall > .legend-check-box").classed("checked",somechecked)
-        legends.select(".legend-bottom-button").classed("disabled",!somechecked || somechecked==allboxes)
+        legends.select(".legend-bottom-button").classed("disabled",!somechecked || somechecked==allboxessize)
 
-        legends.select(".legend-bottom-controls").style("display",(!value || !scale) ? "none" : null);
-        legend.select("hr.legend-separator").style("border",(!value || !scale) ? "none" : null);
+        legends.select(".legend-bottom-controls").style("display",allboxes.empty() ? "none" : null);
+        legend.select("hr.legend-separator").style("border",(!value || !data) ? "none" : null);
 
-        return;
-      }
-
-      // linear scale
-      if(scale.name=="h"){
-        parent.select("div.legends").remove();
-        parent.select("div.linear-scale").remove();
-        displayLinearScale(parent.append("div").attr("class","linear-scale"),
-          value,
-          scale.range(),
-          scale.domain(),
-          scalePicker,
-          selectionWindow,
-          function(){ parent.classed("hide-legend",true); },
-          function(d){
-            scale.domain(d);
-            displayFunction();
-          }
-        );
-        return;
-      }
     }
     
     function contentHeight(parent){
@@ -1578,19 +1688,6 @@ function gallery(Graph){
     exports.scale = function(x) {
       if (!arguments.length) return scale;
       scale = x;
-      return exports;
-    };
-
-    exports.displayGraph = function(x) {
-      if (!arguments.length) return displayFunction;
-      displayFunction = x;
-      return exports;
-    };
-
-    exports.filterHandler = function(x) {
-      if (!arguments.length) return filterHandler;
-      filterHandler = x;
-
       return exports;
     };
 
@@ -1918,15 +2015,31 @@ function gallery(Graph){
 
   function mousePosition(sel,invert){
     var coor = d3.mouse(body.node());
-    if(coor[0]>(body.node().offsetWidth/2)){
-      sel.style("left",(coor[0]-sel.node().offsetWidth-10)+"px")
-    }else{
-      sel.style("left",(coor[0]+10)+"px")
+
+    mgmtPosition();
+
+    var imgs = sel.selectAll("img");
+    if(imgs.size()){
+      var count = 0;
+      imgs.on("load",function(){
+        count++;
+        if(count==imgs.size()){
+          mgmtPosition();
+        }
+      });
     }
-    if(coor[1]>(body.node().offsetHeight/2) ^ invert){
-      sel.style("top",(coor[1]-sel.node().offsetHeight-10)+"px")
-    }else{
-      sel.style("top",(coor[1]+10)+"px")
+
+    function mgmtPosition(){
+      if(coor[0]>(body.node().offsetWidth/2)){
+        sel.style("left",(coor[0]-sel.node().offsetWidth-10)+"px")
+      }else{
+        sel.style("left",(coor[0]+10)+"px")
+      }
+      if(coor[1]>(body.node().offsetHeight/2) ^ invert){
+        sel.style("top",(coor[1]-sel.node().offsetHeight-10)+"px")
+      }else{
+        sel.style("top",(coor[1]+10)+"px")
+      }
     }
   }
 
@@ -1936,9 +2049,12 @@ function gallery(Graph){
     topColorSelectInst.datanames(opt);
     topFilterInst.datanames(opt);
     topFilterInst.data(getFilterData());
-    legend.selectionWindow().list(opt);
+    colorLegend.selectionWindow().list(opt);
+    legendLegend.selectionWindow().list(opt);
+    orderLegend.selectionWindow().list(opt);
     topColorSelectInst.getSelect().dispatch("change");
     topOrderInst.getSelect().dispatch("change");
+    Tree.breadcrumbs.updateSelectedType();
   }
 
   function getFilterData(){
