@@ -294,13 +294,16 @@ function brushSlider(){
   var domain,
       current,
       callback,
-      ordinal = false;
+      ordinal = false,
+      mode = 1;
 
   function exports(sel){
+    sel.selectAll(".slider").remove();
+
     var cex = parseInt(sel.style("font-size"))/10,
-        margin = {top: 21 + 15*cex, right: 40, bottom: 0, left: 10},
-        width = sel.node().clientWidth - margin.left - margin.right,
-        height = 21;
+        margin = mode==1 ? [21 + 15*cex, 40, 0, 10] : [0,0,0,0],
+        width = sel.node().clientWidth - margin[3] - margin[1],
+        height = mode==1 ? 21 : 0;
 
     if(!current)
       current = domain.slice();
@@ -310,33 +313,42 @@ function brushSlider(){
         .domain(domain)
         .clamp(true);
 
-    sel.style("height", height+margin.top+margin.bottom + "px");
+    sel.style("height", height+margin[0]+margin[2] + "px");
   
     var slider = sel.append("div")
-      .attr("class", "slider")
+      .attr("class", "slider mode"+mode)
       .style("width", width + "px")
       //.style("height", height + "px")
       .style("position", "relative")
-      .style("top", margin.top+"px")
-      .style("left", margin.left+"px");
+      .style("top", margin[0]+"px")
+      .style("left", margin[3]+"px");
     
     var sliderTray = slider.append("div")
       .attr("class", "slider-tray");
     
-    var sliderExtent = slider.append("span")
-      .attr("class","slider-extent")
+    var sliderExtent = false;
 
-    slider.append("span")
-    .attr("class","slider-min")
-    .style("left", -5*cex+"px")
-    .style("top", -20*cex + "px")
-    .text(formatter(domain[0]))
+    if(mode==1){
+      sliderExtent = slider.append("span")
+        .attr("class","slider-extent")
 
-    slider.append("span")
-    .attr("class","slider-max")
-    .style("left", width-5*cex+"px")
-    .style("top", -20*cex + "px")
-    .text(formatter(domain[1]))
+      slider.append("span")
+      .attr("class","slider-min")
+      .style("left", -5*cex+"px")
+      .style("top", -20*cex + "px")
+      .text(formatter(domain[0]))
+
+      slider.append("span")
+      .attr("class","slider-max")
+      .style("left", width-5*cex+"px")
+      .style("top", -20*cex + "px")
+      .text(formatter(domain[1]))
+    }
+
+    if(mode==2){
+      sliderExtent = sliderTray.append("span")
+        .attr("class","slider-extent")
+    }
 
     var sliderHandle = slider.selectAll(".slider-handle")
     .data(current)
@@ -399,9 +411,11 @@ function brushSlider(){
       sliderHandle.style("left",function(d){ return x(d) + "px"; });
       sliderHandle.select(".slider-text").text(function(d){ return formatter(d); });
       var extent = d3.extent(current);
-      sliderExtent
+      if(sliderExtent){
+        sliderExtent
         .style("width", (x(extent[1])-x(extent[0]))+"px")
         .style("left",x(extent[0])+"px");
+      }
       return extent;
     }
   }
@@ -431,6 +445,12 @@ function brushSlider(){
   exports.ordinal = function(x) {
     if (!arguments.length) return ordinal;
     ordinal = x ? true : false;
+    return exports;
+  };
+
+  exports.mode = function(x) {
+    if (!arguments.length) return mode;
+    mode = x;
     return exports;
   };
 
@@ -787,7 +807,7 @@ function topFilter(){
       }
   }
 
-  function getFilteredData(){
+  function getFilteredData(additive){
     var keys = d3.keys(selectedValues);
     if(keys.length){
       return data.filter(function(d){
@@ -819,13 +839,25 @@ function topFilter(){
               value = true;
             }
           }
-          if(!value){
-            d._filtered = true;
-            return false;
+          if(!additive){
+            if(!value){
+              d._filtered = true;
+              return false;
+            }
+          }else{
+            if(value){
+              delete d._filtered;
+              return true;
+            }
           }
         }
-        delete d._filtered;
-        return true;
+        if(additive){
+          d._filtered = true;
+          return false;
+        }else{
+          delete d._filtered;
+          return true;
+        }
       });
     }else{
       data.forEach(function(d){
@@ -885,6 +917,28 @@ function topFilter(){
       }
     }
     return [];
+  }
+
+  exports.storeFilter = function(key,values){
+    if(key){
+      selectedValues[key] = values;
+    }
+  }
+
+  exports.storeNumericFilter = function(key,min,max){
+    if(key){
+      selectedValues[key] = [];
+      data.forEach(function(d){
+        if((d[key] >= min) && (d[key] <= max )){
+          selectedValues[key].push(d[key]);
+        }
+      });
+    }
+  }
+
+  exports.applyFilter = function(additive){
+    displayGraph(getFilteredData(additive));
+    displayTags();
   }
 
   return exports;
@@ -1362,7 +1416,7 @@ function stripTags(text){
   return text.replace(/(<([^>]+)>)/ig,"");
 }
 
-function displayLinearScale(sel, value, range, domain, selectScale, selectAttribute, closePanel, changeDomain, simplify){
+function displayLinearScale(sel, value, range, domain, selectScale, selectAttribute, closePanel, changeDomain, simplify, slider){
   domain = d3.extent(domain);
   var panel;
 
@@ -1412,8 +1466,21 @@ function displayLinearScale(sel, value, range, domain, selectScale, selectAttrib
       .style("background-image",function(d){ return "linear-gradient(to right, " + d.join(", ") + ")"; })
   panel.select(".domain1 > span").text(formatter(domain[0]));
   panel.select(".domain2 > span").text(formatter(domain[1]));
+  if(slider){
+    var slidercontainer = panel.select(".slider-container");
+    slidercontainer.call(brushSlider()
+            .domain(domain)
+            .current(domain)
+            .callback(slider)
+            .mode(2))
+  }
 
   function renderScaleGradient(div){
+      if(slider){
+        div.style("padding-top","12px")
+          .append("div").attr("class","slider-container");
+      }
+
       var legendScaleGradient = div.append("div")
         .attr("class","legend-scale-gradient")
         .style("height","10px")

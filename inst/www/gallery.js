@@ -71,6 +71,7 @@ function gallery(Graph){
     }
 
     Tree.resetOptions = function(){
+      Tree.breadcrumbs.empty();
       ['path','treeParent','typeFilter','history'].forEach(function(k){
         if(Tree.hasOwnProperty(k)){
           if(typeof Tree[k] == "string"){
@@ -163,7 +164,6 @@ function gallery(Graph){
     function BreadCrumbs(sel){
       this.breadcrumbs = sel.append("div")
               .attr("class","breadcrumbs")
-
               .style("padding","4px 12px");
     }
 
@@ -279,9 +279,7 @@ function gallery(Graph){
         .updateSelection(displayGraph)
         .filterHandler(topFilterInst)
         .applyColor(function(val){
-          topColorSelectInst.getSelect()
-            .property("value",val)
-            .dispatch("change");
+          topColorSelectInst.change(val);
         })
   }
 
@@ -438,18 +436,27 @@ function gallery(Graph){
         }
         displayGraph();
       }
-    }else{
+    }else if(Tree.type == "extended"){
       searchFunction = function(){
         Tree.resetOptions();
         var node = nodes.filter(function(n){
             return n.selected;
-          })[0];
-        Tree.typeFilter = node.type;
-        Tree.history.push([Tree.treeParent,Tree.typeFilter]);
-        updateSelectOptions();
-        filterSelection();
+          });
+        if(node.length){
+          node = node[0];
+          Tree.typeFilter = node.type;
+          Tree.history.push([Tree.treeParent,Tree.typeFilter]);
+          updateSelectOptions();
+          filterSelection();
+        }
       }
     }
+  }
+
+  if(Tree){
+    topBar.addBox(function(box){
+      Tree.breadcrumbs = new BreadCrumbs(box);
+    });
   }
 
   topBar.addBox(displayMultiSearch()
@@ -462,13 +469,13 @@ function gallery(Graph){
   topBar.addBox(elementsCountInst);
 
   // node order
-  topBar.addBox(topOrderInst);
+  //topBar.addBox(topOrderInst);
 
   // colors
-  topBar.addBox(topColorSelectInst);
+  //topBar.addBox(topColorSelectInst);
 
   // node filter in topBar
-  topBar.addBox(topFilterInst);
+  //topBar.addBox(topFilterInst);
 
   if(options.showTopbarButtons && !Tree){
     // Select all / none
@@ -492,10 +499,6 @@ function gallery(Graph){
       .text(texts.filterselection)
       .on("click",filterSelection)
     });
-  }
-
-  if(Tree){
-    Tree.breadcrumbs = new BreadCrumbs(galleryBox.select(".topbar"));
   }
 
   var content = galleryBox.append("div")
@@ -585,9 +588,7 @@ function gallery(Graph){
                  .selectionWindow(attrSelectionWindow()
                    .list(getSelectOptions(sortAsc))
                    .clickAction(function(val){
-                     topColorSelectInst.getSelect()
-                       .property("value",val)
-                       .dispatch("change");
+                     topColorSelectInst.change(val);
                    }));
 
   var legendLegend = displayLegend()
@@ -608,9 +609,7 @@ function gallery(Graph){
                  .selectionWindow(attrSelectionWindow()
                    .list(getSelectOptions(sortAsc))
                    .clickAction(function(val){
-                     topOrderInst.getSelect()
-                       .property("value",val)
-                       .dispatch("change");
+                     topOrderInst.change(val);
                    }));
 
   var legendPanel = content.append("div")
@@ -1344,7 +1343,9 @@ function gallery(Graph){
 
     function reverseOrder(){
         options.rev = !options.rev;
-        reverseSwitch.classed("active",options.rev);
+        if(reverseSwitch){
+          reverseSwitch.classed("active",options.rev);
+        }
         displayFunction();
     }
 
@@ -1358,8 +1359,27 @@ function gallery(Graph){
       return exports;
     };
 
-    exports.getSelect = function() {
-      return orderSelect;
+    exports.value = function(x) {
+      if (!arguments.length) return options.order;
+      options.order = x;
+      if(orderSelect){
+        orderSelect.property("value",x)
+      }
+      return exports;
+    };
+
+    exports.change = function(x) {
+      if(arguments.length){
+        options.order = Graph.nodenames.indexOf(x)!=-1 ? x : false;
+      }
+      if(orderSelect){
+        orderSelect
+          .property("value",options.order)
+          .dispatch("change");
+      }else{
+        displayFunction();
+      }
+      return exports;
     };
 
     exports.datanames = function(x) {
@@ -1413,8 +1433,18 @@ function gallery(Graph){
       }
     }
 
-    exports.getSelect = function() {
-      return colorSelect;
+    exports.change = function(x) {
+      if(arguments.length){
+        options.nodeColor = Graph.nodenames.indexOf(x)!=-1 ? x : false;
+      }
+      if(colorSelect){
+        colorSelect
+          .property("value",options.nodeColor)
+          .dispatch("change");
+      }else{
+        displayFunction();
+      }
+      return exports;
     };
 
     exports.datanames = function(x) {
@@ -1530,7 +1560,7 @@ function gallery(Graph){
         }
 
         legend.property("key",value);
-        legend.select(".title").text(texts[type] + " / " + (value ? value : (data ? "-"+texts.none+"-" : "-"+texts.default+"-")));
+        legend.select(".title").html("<b>" + texts[type] + ":</b> " + (value ? value : (data ? "-"+texts.none+"-" : "-"+texts.default+"-")));
 
         // linear scale
         if(scale && scale.name=="h"){
@@ -1546,7 +1576,11 @@ function gallery(Graph){
               scale.domain(d);
               displayGraph();
             },
-            true
+            true,
+            function(s){
+              legend.property("selectedValues",s);
+              mgmtBottomButtons(legends,s.join(",")!=d3.extent(scale.domain()).join(","));
+            }
           );
         }else if(data){
           legend.selectAll(".scale-content").remove();
@@ -1633,37 +1667,57 @@ function gallery(Graph){
           .attr("class","legend-bottom-button primary")
           .text(texts["filter"])
           .on("click",function(){
+            topFilterInst.removeFilter();
+            var selectedValues = {},
+                selectedNumericValues = {};
             legends.selectAll(".legend").each(function(){
               var legend = d3.select(this),
-                  key = legend.property("key"),
-                  values = [];
-              legend.selectAll(".legend-item > .checked").each(function(d){
-                values.push(d);
-              });
-              if(values.length){
-                topFilterInst.addFilter(key,values);
+                  key = legend.property("key");
+              if(!legend.select(".scale-content").empty()){
+                var values = legend.property("selectedValues");
+                if(values.length==2){
+                  selectedNumericValues[key] = values;
+                }
+              }else{
+                legend.selectAll(".legend-item > .checked").each(function(d){
+                  if(!selectedValues[key]){
+                    selectedValues[key] = [];
+                  }
+                  selectedValues[key].push(d);
+                });
               }
             });
+            for(var k in selectedValues){
+              topFilterInst.storeFilter(k,selectedValues[k]);
+            }
+            for(var k in selectedNumericValues){
+              topFilterInst.storeNumericFilter(k,selectedNumericValues[k][0],selectedNumericValues[k][1]);
+            }
+            topFilterInst.applyFilter(true);
           })
           .attr("title",texts.filterInfo)
         }
 
-        var allboxes = content.selectAll(".legend-item > .legend-check-box"),
-            allboxessize = allboxes.size(),
-            somechecked = content.selectAll(".legend-item > .checked").size();
-        legends.select(".legend-selectall > .legend-check-box").classed("checked",somechecked)
-        legends.select(".legend-bottom-button").classed("disabled",!somechecked || somechecked==allboxessize)
-
-        legends.select(".legend-bottom-controls").style("display",allboxes.empty() ? "none" : null);
+        mgmtBottomButtons(legends);
         legend.select("hr.legend-separator").style("border",(!value || !data) ? "none" : null);
 
     }
-    
+
+    function mgmtBottomButtons(legends, scaleSelection){
+        var content = legends.select(".legends-content"),
+            allboxes = content.selectAll(".legend-item > .legend-check-box"),
+            allboxessize = allboxes.size(),
+            somechecked = content.selectAll(".legend-item > .checked").size(),
+            allScales = content.selectAll(".legend > .scale-content");
+        legends.select(".legend-selectall > .legend-check-box").classed("checked",somechecked)
+        legends.select(".legend-bottom-button").classed("disabled",(!somechecked || somechecked==allboxessize) && !scaleSelection);
+        legends.select(".legend-bottom-controls").style("display",allboxes.empty() && allScales.empty() ? "none" : null);
+    }
+
     function contentHeight(parent){
       if(!parent.classed("hide-legend")){
-        var legends = parent.select(".legends");
         var legendsHeight = parent.node().parentNode.offsetHeight-250;
-        legends.select(".legends-content").style("height",legends.select(".legend").node().offsetHeight>legendsHeight ? legendsHeight+"px" : null)
+        parent.select(".legends > .legends-content").style("max-height", legendsHeight+"px");
       }
     }
 
@@ -2052,8 +2106,8 @@ function gallery(Graph){
     colorLegend.selectionWindow().list(opt);
     legendLegend.selectionWindow().list(opt);
     orderLegend.selectionWindow().list(opt);
-    topColorSelectInst.getSelect().dispatch("change");
-    topOrderInst.getSelect().dispatch("change");
+    topColorSelectInst.change();
+    topOrderInst.change();
     Tree.breadcrumbs.updateSelectedType();
   }
 
