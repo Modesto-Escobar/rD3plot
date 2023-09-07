@@ -105,12 +105,79 @@ function gallery(Graph){
       }
     }
 
-    Tree.popButtons = function(name,types,callback){
+    Tree.popButtons = function(node){
+      var name = node[options.nodeName],
+          type = node.type,
+          types = [];
+
+      if(Tree.type=="extended"){
+        var loadLowerTypes = function(nam){
+          Graph.tree[3].forEach(function(t,i){
+            if(Graph.tree[0][i]==nam){
+              types.push(t);
+              loadLowerTypes(Graph.tree[1][i]);
+            }
+          });
+        };
+        var loadSiblingTypes = function(nam){
+          var gparents = Graph.tree[0].filter(function(e,i){ return nam==Graph.tree[1][i]; });
+          Graph.tree[3].forEach(function(t,i){
+            if(gparents.indexOf(Graph.tree[0][i])!=-1){
+              types.push(t);
+            }
+          });
+        };
+        var loadUpperTypes = function(nam){
+          Graph.tree[2].forEach(function(t,i){
+            if(Graph.tree[1][i]==nam){
+              types.push(t);
+              loadUpperTypes(Graph.tree[0][i]);
+            }
+          });
+        };
+                
+        loadLowerTypes(name);
+        loadSiblingTypes(name);
+        loadUpperTypes(name);
+        types = d3.set(types).values();
+      }else if(Tree.type=="deepextended"){
+        types = options.nodeTypes;
+      }else{
+        types = Graph.tree[0].indexOf(name)!=-1 ? ["children"] : [];
+      }
+
       if(!types.length){
         return;
       }
 
-      var tooltip = body.selectAll(".tooltip").filter(function(d){ return d==name; });
+      var callback;
+
+      if(Tree.type=="extended"){
+        callback = function(t){
+          Tree.treeParent = name;
+          Tree.typeFilter = t;
+          Tree.history.push([Tree.treeParent,Tree.typeFilter]);
+          updateSelectOptions();
+        }
+      }else if(Tree.type=="deepextended"){
+        callback = function(t,i){
+          var current = name;
+          var level = options.nodeTypes.indexOf(type);
+          Tree.typeFilter = t;
+          updateSelectOptions();
+          Tree.path = Tree.getTreePath(current,level,i);
+        }
+      }else{
+        callback = function(){
+          nodes.forEach(function(n){ delete n.selected; });
+          Tree.treeParent.push(name);
+          deselectAllItems();
+        }
+      }
+
+      Tree.breadcrumbs.empty();
+
+      var tooltip = body.selectAll(".tooltip").filter(function(){ return d3.select(this).attr("nodeName")==name; });
       if(tooltip.size()==1){
         var infoTemplate = tooltip.select(".info-template");
         if(!infoTemplate.empty()){
@@ -120,6 +187,17 @@ function gallery(Graph){
               .attr("class","template-buttons-popup")
             appendButtons(buttons);
           }
+          infoTemplate.selectAll(".tree-relatives > span").each(function(){
+              var self = d3.select(this),
+                  n = nodes.filter(function(n){ return n[options.nodeName]==self.text(); })[0];
+              if(n[options.nodeText]){
+                self.style("cursor","pointer")
+                  .on("click",function(){
+                    displayTooltip(n);
+                    Tree.popButtons(n);
+                  })
+              }
+          })
           return;
         }
       }
@@ -135,13 +213,13 @@ function gallery(Graph){
       mousePosition(popup,true);
 
       function appendButtons(sel){
-        types.forEach(function(type,i){
+        types.forEach(function(t,i){
           sel.append("button")
           .attr("class","primary")
-          .text(type)
+          .text(t)
           .on("click",function(){
             topFilterInst.removeFilter();
-            callback(type,i);
+            callback(t,i);
             sel.remove();
             Tree.breadcrumbs.empty();
             deselectAllItems();
@@ -643,12 +721,20 @@ function gallery(Graph){
   }else{
     var footer = galleryBox.append("div")
       .attr("class","footer")
-    footer.append("img")
+    footer.append("div")
+      .style("text-align","left")
+    .append("img")
+      .attr("src","images/acknowledgement.png")
+      .style("height","24px")
+      .style("margin","0 0 -10px 0")
+    var central = footer.append("div");
+    central.append("img")
       .attr("height",20)
       .style("vertical-align","middle")
       .attr("src",b64Icons.netcoinblack)
-    footer.append("span")
+    central.append("span")
       .text("netCoin")
+    footer.append("div")
   }
 
   if(options.help && options.helpOn){
@@ -990,127 +1076,10 @@ function gallery(Graph){
             body.selectAll(".tooltip").remove();
           }
           if(options.nodeText && n[options.nodeText]){
-            if(body.selectAll(".tooltip").filter(function(d){
-              return d==n[options.nodeName];
-            }).empty()){
-              var tooltip = body.append("div")
-              .attr("class","tooltip")
-              .datum(n[options.nodeName])
-              .style("cursor","grab")
-              .style("display","block")
-              .html(n[options.nodeText])
-
-              var template = tooltip.select(".info-template, .panel-template");
-              if(!template.empty()){
-                template.selectAll("a[target=rightframe]").on("mousedown",function(){
-                  infoPanel.changeInfo('<iframe name="rightframe"></iframe>');
-                });
-                if(descriptionPanel){
-                  template.selectAll("a[target=leftframe]").on("mousedown",function(){
-                    displayInDescription('<iframe name="leftframe"></iframe>');
-                  });
-                }
-              }
-
-              tooltip.append("div")
-              .attr("class","close-button")
-              .on("click",function(){
-                d3.event.stopPropagation();
-                tooltip.remove();
-                if(Tree){
-                  infoPanel.close();
-                  delete n.selected;
-                  displayGraph();
-                }
-              })
-              tooltip.call(d3.drag()
-              .on("start",function(){
-                tooltip.style("cursor","grabbing");
-                tooltip.datum(d3.mouse(tooltip.node()));
-              })
-              .on("drag",function(){
-                var coor = d3.mouse(body.node().parentNode),
-                    coor2 = tooltip.datum();
-                coor[0] = coor[0]-coor2[0];
-                coor[1] = coor[1]-coor2[1];
-                tooltip
-                 .style("top",(coor[1])+"px")
-                 .style("left",(coor[0])+"px")
-              })
-              .on("end",function(){
-                tooltip.style("cursor","grab");
-                tooltip.datum(null);
-              })
-              );
-              mousePosition(tooltip);
-              tooltipTemplateAutoColor(tooltip,options.nodeColor ? applyColorScale(colorScale,n[options.nodeColor]) : options.defaultColor);
-            }
+            displayTooltip(n);
           }
           if(Tree){
-            if(Tree.type=="extended"){
-
-            var types = [],
-                loadLowerTypes = function(name){
-                  Graph.tree[3].forEach(function(t,i){
-                    if(Graph.tree[0][i]==name){
-                      types.push(t);
-                      loadLowerTypes(Graph.tree[1][i]);
-                    }
-                  });
-                },
-                loadSiblingTypes = function(name){
-                  var gparents = Graph.tree[0].filter(function(e,i){ return name==Graph.tree[1][i]; });
-                  Graph.tree[3].forEach(function(t,i){
-                    if(gparents.indexOf(Graph.tree[0][i])!=-1){
-                      types.push(t);
-                    }
-                  });
-                },
-                loadUpperTypes = function(name){
-                  Graph.tree[2].forEach(function(t,i){
-                    if(Graph.tree[1][i]==name){
-                      types.push(t);
-                      loadUpperTypes(Graph.tree[0][i]);
-                    }
-                  });
-                }
-                
-            loadLowerTypes(n[options.nodeName]);
-            loadSiblingTypes(n[options.nodeName]);
-            loadUpperTypes(n[options.nodeName]);
-            types = d3.set(types).values();
-
-            if(types.length){
-              Tree.breadcrumbs.empty();
-              Tree.popButtons(n[options.nodeName],types,function(type){
-                  Tree.treeParent = n[options.nodeName];
-                  Tree.typeFilter = type;
-                  Tree.history.push([Tree.treeParent,Tree.typeFilter]);
-                  updateSelectOptions();
-              });
-            }
-
-            }else if(Tree.type=="deepextended"){
-              Tree.breadcrumbs.empty();
-              Tree.popButtons(n[options.nodeName],options.nodeTypes,function(type,i){
-                  var current = n[options.nodeName];
-                  var level = options.nodeTypes.indexOf(n.type);
-                  Tree.typeFilter = type;
-                  updateSelectOptions();
-                  Tree.path = Tree.getTreePath(current,level,i);
-                });
-            }else{
-              var related = [];
-              Tree.breadcrumbs.empty();
-              if(Graph.tree[0].indexOf(n[options.nodeName])!=-1){
-                related.push("children");
-              }
-              Tree.popButtons(n[options.nodeName],related,function(){
-                  nodes.forEach(function(node){ delete node.selected; });
-                  Tree.treeParent.push(n[options.nodeName]);
-                  deselectAllItems();
-              });
-            }
+            Tree.popButtons(n);
           }
           displayGraph();
       })
@@ -1170,6 +1139,7 @@ function gallery(Graph){
             .domain(d3.set(values).values())
         }
       }
+      
     }
 
     colorLegend
@@ -1200,21 +1170,18 @@ function gallery(Graph){
     if(options.imageItems){
       itemsUpdate.select(".img-wrapper").style("border-color",function(d){
         if(!d.selected && options.nodeColor){
-            return applyColorScale(colorScale,d[options.nodeColor]);
+            return applyColorScale(colorScale,d[options.nodeColor],true);
         }
         return null;
       })
     }else{
       itemsUpdate.select(".img-wrapper").style("background-color",function(d){
-        if(options.nodeColor){
-            return applyColorScale(colorScale,d[options.nodeColor]);
-        }
-        return options.defaultColor;
+        return applyColorScale(colorScale,d[options.nodeColor],true);
       })
     }
 
-    panelTemplateAutoColor(body,function(node){
-      return options.nodeColor && node ? applyColorScale(colorScale,node[options.nodeColor]) : options.defaultColor;
+    panelTemplateAutoColor(body,function(n){
+      return n ? applyColorScale(colorScale,n[options.nodeColor]) : options.defaultColor;
     });
 
     if(descriptionPanel && frequencyBars && options.frequencies){
@@ -1225,19 +1192,6 @@ function gallery(Graph){
       content.classed("hide-description",false);
       frequencyBars(descriptionPanel.select(".description-content").html(""));
       descriptionPanel.select(".close-button").style("display","block");
-    }
-
-    function applyColorScale(scale, value){
-      if(value == null){
-        return basicColors.white;
-      }
-      if(Tree && options.nodeColor=="type" && Tree.typeFilter){
-        return scale(Tree.typeFilter);
-      }
-      if(typeof value == "object"){
-        value = value[0];
-      }
-      return scale(value);
     }
   }
 
@@ -2122,6 +2076,82 @@ function gallery(Graph){
       });
     }
     return nodes;
+  }
+
+  function displayTooltip(n){
+    body.selectAll(".tooltip").filter(function(){
+      return d3.select(this).attr("nodeName")==n[options.nodeName];
+    }).remove();
+
+    var tooltip = body.append("div")
+              .attr("class","tooltip")
+              .attr("nodeName",n[options.nodeName])
+              .style("cursor","grab")
+              .style("display","block")
+              .html(n[options.nodeText])
+
+    var template = tooltip.select(".info-template, .panel-template");
+    if(!template.empty()){
+                template.selectAll("a[target=rightframe]").on("mousedown",function(){
+                  infoPanel.changeInfo('<iframe name="rightframe"></iframe>');
+
+                });
+                if(descriptionPanel){
+                  template.selectAll("a[target=leftframe]").on("mousedown",function(){
+                    displayInDescription('<iframe name="leftframe"></iframe>');
+                  });
+                }
+    }
+
+    tooltip.append("div")
+              .attr("class","close-button")
+              .on("click",function(){
+                d3.event.stopPropagation();
+                tooltip.remove();
+                if(Tree){
+                  infoPanel.close();
+                  delete n.selected;
+                  displayGraph();
+                }
+              })
+    tooltip.call(d3.drag()
+              .on("start",function(){
+                tooltip.style("cursor","grabbing");
+                tooltip.datum(d3.mouse(tooltip.node()));
+
+              })
+              .on("drag",function(){
+                var coor = d3.mouse(body.node().parentNode),
+                    coor2 = tooltip.datum();
+                coor[0] = coor[0]-coor2[0];
+                coor[1] = coor[1]-coor2[1];
+                tooltip
+                 .style("top",(coor[1])+"px")
+                 .style("left",(coor[0])+"px")
+              })
+              .on("end",function(){
+                tooltip.style("cursor","grab");
+                tooltip.datum(null);
+              })
+              );
+    mousePosition(tooltip);
+    tooltipTemplateAutoColor(tooltip,applyColorScale(colorScale,n[options.nodeColor]));
+  }
+
+  function applyColorScale(scale, value, forceTypeFilter){
+      if(!options.nodeColor){
+        return options.defaultColor;
+      }
+      if(value == null){
+        return basicColors.white;
+      }
+      if(forceTypeFilter && Tree && options.nodeColor=="type" && Tree.typeFilter){
+        return scale(Tree.typeFilter);
+      }
+      if(typeof value == "object"){
+        value = value[0];
+      }
+      return scale(value);
   }
 
 } // gallery function end

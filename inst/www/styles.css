@@ -1581,7 +1581,11 @@ div.footer {
   text-align: center;
   font-weight: 700;
   font-size: 1.4em;
-  padding: 1em;
+  padding: 14px;
+}
+div.footer > div {
+  width: 33.33%;
+  display: inline-block;
 }
 div.description-panel {
   display: inline-block;

@@ -25,6 +25,11 @@ galleryCreate <- function(gallery, dir){
     styles <- c(styles,"tutorial.css")
   }
   createHTML(dir, styles, scripts, function(){ return(imgWrapper(gallery,galleryJSON,dir)) })
+  if(is.null(gallery$options$note)){
+    dir.create(paste0(dir,"/images"),FALSE)
+    www <- wwwDirectory()
+    file.copy(paste0(www,"/acknowledgement.png"), paste0(dir,"/images"))
+  }
 }
 
 gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
