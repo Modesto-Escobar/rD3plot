@@ -258,10 +258,6 @@ treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat 
 
   arguments$nodes <- nodes
 
-  if(is.null(arguments$ntextctrl)){
-    arguments$ntextctrl <- TRUE
-  }
-
   gallery <- do.call(gallery_rd3,arguments)
 
   name <- gallery$options$nodeName

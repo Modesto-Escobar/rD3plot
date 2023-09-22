@@ -36,5 +36,9 @@ var b64Icons = {
 
   netcoinblack: "data:image/svg+xml;base64,"+btoa('<svg width="136" height="113" version="1.1" viewBox="0 0 136 113" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#000" stroke-linejoin="round" stroke-width="2"><line x1="31.9" x2="24" y1="35.4" y2="26.9"/><line x1="31.2" x2="21.7" y1="45.7" y2="59.9"/><line x1="56.7" x2="28.7" y1="65.5" y2="69.5"/><line x1="70.1" x2="69" y1="51.4" y2="32.9"/><line x1="81.1" x2="120.2" y1="71.4" y2="98.2"/><line x1="36.2" x2="67.8" y1="41.7" y2="18"/></g><g fill="#000" fill-opacity=".99714"><circle cx="66.6" cy="16.5" r="16.5"/><circle cx="16.5" cy="20.5" r="9.9"/><circle cx="14.5" cy="72.5" r="14.5"/><circle cx="35.6" cy="40.9" r="6.6"/><circle cx="69.9" cy="64.6" r="13.2"/><circle cx="127" cy="104" r="9"/></g></svg>'),
 
-  home: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 24 24"><path d="M6 19h3v-6h6v6h3v-9l-6-4.5L6 10Zm-2 2V9l8-6 8 6v12h-7v-6h-2v6Zm8-8.75Z"/></svg>')
+  home: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 24 24"><path d="M6 19h3v-6h6v6h3v-9l-6-4.5L6 10Zm-2 2V9l8-6 8 6v12h-7v-6h-2v6Zm8-8.75Z"/></svg>'),
+
+  intersection: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 24 24"><rect x="4" y="4" width="12" height="12" style="fill:none;stroke-width:2;stroke:#2f7bee" /><rect x="7" y="7" width="12" height="12" style="fill:none;stroke-width:2;stroke:#2f7bee" /><rect x="8" y="8" width="8" height="8" style="fill:#2f7bee;stroke:none" /></svg>'),
+
+  union: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 24 24">  <rect x="3" y="3" width="12" height="12" style="fill:#2f7bee;stroke:none" /><rect x="8" y="8" width="12" height="12" style="fill:#2f7bee;stroke:none" /></svg>')
 }

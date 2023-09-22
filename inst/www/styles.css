@@ -337,6 +337,14 @@ img.icon {
   cursor: pointer;
   margin: 0 5px;
 }
+img.icon-selection {
+  vertical-align: middle;
+  cursor: pointer;
+}
+img.icon-selection.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
 .switch-maximize-node-link {
   display: none;
   position: absolute;
@@ -1046,7 +1054,7 @@ div.tooltip {
   background-color: #777777;
   color: #ffffff;
   padding: 13px 19px;
-  border-radius: 12px;
+  border-radius: 18px;
   line-height: 1.5;
   border: solid 6px #ffffff;
   box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.07);
@@ -1632,9 +1640,6 @@ div.grid-gallery > .gallery-items.rounded-items > .item > .img-wrapper {
 div.grid-gallery > .gallery-items > .item.selected > .img-wrapper {
   border-color: #ffff00;
 }
-div.grid-gallery > .gallery-items > .item.highlighting:not(.selected) {
-  opacity: 0.2;
-}
 div.grid-gallery > .gallery-items > .item > .img-wrapper > img {
   display: block;
   height: 100%;
@@ -1820,7 +1825,8 @@ pointer-events: none;
   max-width: 264px;
 }
 .buttons-popup > button,
-.template-buttons-popup > button {
+.template-buttons-popup > button,
+.window-content > .type-buttons > button {
   margin: 2px;
 }
 

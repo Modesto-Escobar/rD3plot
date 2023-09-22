@@ -58,7 +58,6 @@ function gallery(Graph){
       if(options.nodeTypes){
         Tree.type = "extended";
         Tree.history = [];
-        Tree.treeParent = "";
         Tree.typeFilter = "";
         if(options.initialType){
           if(options.nodeTypes.indexOf(options.initialType)!=-1){
@@ -154,7 +153,7 @@ function gallery(Graph){
 
       if(Tree.type=="extended"){
         callback = function(t){
-          Tree.treeParent = name;
+          Tree.treeParent = [name];
           Tree.typeFilter = t;
           Tree.history.push([Tree.treeParent,Tree.typeFilter]);
           updateSelectOptions();
@@ -175,33 +174,6 @@ function gallery(Graph){
         }
       }
 
-      Tree.breadcrumbs.empty();
-
-      var tooltip = body.selectAll(".tooltip").filter(function(){ return d3.select(this).attr("nodeName")==name; });
-      if(tooltip.size()==1){
-        var infoTemplate = tooltip.select(".info-template");
-        if(!infoTemplate.empty()){
-          var buttons = infoTemplate.select(".template-buttons-popup");
-          if(buttons.empty()){
-            buttons = infoTemplate.insert("div","div")
-              .attr("class","template-buttons-popup")
-            appendButtons(buttons);
-          }
-          infoTemplate.selectAll(".tree-relatives > span").each(function(){
-              var self = d3.select(this),
-                  n = nodes.filter(function(n){ return n[options.nodeName]==self.text(); })[0];
-              if(n[options.nodeText]){
-                self.style("cursor","pointer")
-                  .on("click",function(){
-                    displayTooltip(n);
-                    Tree.popButtons(n);
-                  })
-              }
-          })
-          return;
-        }
-      }
-
       var popup = body.select("body > .buttons-popup");
       if(!popup.empty()){
         popup.remove();
@@ -210,7 +182,7 @@ function gallery(Graph){
             .attr("class","buttons-popup")
             .attr("item",name);
       appendButtons(popup);
-      mousePosition(popup,true);
+      mousePosition(popup);
 
       function appendButtons(sel){
         types.forEach(function(t,i){
@@ -224,6 +196,25 @@ function gallery(Graph){
             Tree.breadcrumbs.empty();
             deselectAllItems();
           })
+        })
+      }
+    }
+
+    Tree.treeRelatives = function(node){
+      var name = node[options.nodeName];
+
+      var tooltip = body.selectAll(".tooltip").filter(function(){ return d3.select(this).attr("nodeName")==name; });
+      if(tooltip.size()==1){
+        tooltip.selectAll(".info-template .tree-relatives > span").each(function(){
+          var self = d3.select(this),
+              n = nodes.filter(function(n){ return n[options.nodeName]==self.text(); })[0];
+          if(n[options.nodeText]){
+            self.style("cursor","pointer")
+              .on("click",function(){
+                displayTooltip(n);
+                Tree.treeRelatives(n);
+              })
+          }
         })
       }
     }
@@ -263,7 +254,7 @@ function gallery(Graph){
             topFilterInst.removeFilter();
             Tree.history.pop();
             if(!Tree.history.length){
-              Tree.treeParent = "";
+              Tree.treeParent = [];
               Tree.typeFilter = options.initialType ? options.initialType : "";
               Tree.history = [];
             }else{
@@ -331,7 +322,7 @@ function gallery(Graph){
         var thiz = this;
         thiz.breadcrumbs.selectAll("button.primary").each(function(){
           var button = d3.select(this);
-          button.classed("disabled",!Tree.treeParent && Tree.typeFilter && Tree.typeFilter == button.text());
+          button.classed("disabled",!Tree.treeParent.length && Tree.typeFilter && Tree.typeFilter == button.text());
         });
       }
     }
@@ -535,6 +526,55 @@ function gallery(Graph){
     topBar.addBox(function(box){
       Tree.breadcrumbs = new BreadCrumbs(box);
     });
+
+    if(Tree.type=="extended"){
+      topBar.addBox(function(box){
+        appendButton(box,"union",function(){
+          delete Tree.intersection;
+        });
+        appendButton(box,"intersection",function(){
+          Tree.intersection = true;
+        });
+      });
+
+      function appendButton(sel,name,callback){
+        sel.append("img")
+          .attr("class","icon-selection disabled")
+          .attr("width",24)
+          .attr("height",24)
+          .attr("src",b64Icons[name])
+          .attr("alt",name)
+          .attr("title",name)
+          .on("click",function(){
+            buttonsWindow(callback);
+          })
+      }
+
+      function buttonsWindow(callback){
+        var names = selectedNames();
+        if(names.length){
+          var win = displayWindow();
+          var div = win.append("div")
+            .attr("class","type-buttons");
+          options.nodeTypes.forEach(function(t,i){
+            div.append("button")
+            .attr("class","primary")
+            .text(t)
+            .on("click",function(){
+              topFilterInst.removeFilter();
+              callback();
+              Tree.treeParent = names;
+              Tree.typeFilter = t;
+              Tree.history.push([Tree.treeParent,Tree.typeFilter]);
+              updateSelectOptions();
+              d3.select(win.node().parentNode.parentNode).remove();
+              Tree.breadcrumbs.empty();
+              deselectAllItems();
+            })
+          })
+        }
+      }
+    }
   }
 
   topBar.addBox(displayMultiSearch()
@@ -848,22 +888,23 @@ function gallery(Graph){
 
       }else if(Tree.type=="extended"){
         if(Tree.breadcrumbs.isEmpty()){
-          if(Tree.treeParent){
+          if(Tree.treeParent.length){
             Tree.breadcrumbs.addHome(function(){
-                Tree.treeParent = "";
+                Tree.treeParent = [];
                 Tree.typeFilter = options.initialType ? options.initialType : "";
                 Tree.history = [];
                 updateSelectOptions();
               });
             if(Tree.typeFilter){
               Tree.breadcrumbs.addButton(Tree.typeFilter,function(){
-                Tree.treeParent = "";
+                Tree.treeParent = [];
                 Tree.typeFilter = Tree.typeFilter;
                 Tree.history.push([Tree.treeParent,Tree.typeFilter]);
                 updateSelectOptions();
               });
             }
-            Tree.breadcrumbs.addPath([Tree.treeParent],function(i){
+            Tree.breadcrumbs.addPath([Tree.treeParent],function(i,j){
+              Tree.treeParent = [Tree.treeParent[j]];
               Tree.typeFilter = "";
               Tree.history.push([Tree.treeParent,Tree.typeFilter]);
               updateSelectOptions();
@@ -871,7 +912,7 @@ function gallery(Graph){
           }else{
             options.nodeTypes.forEach(function(type){
               Tree.breadcrumbs.addButton(type,function(){
-                Tree.treeParent = "";
+                Tree.treeParent = [];
                 Tree.typeFilter = type;
                 Tree.history.push([Tree.treeParent,Tree.typeFilter]);
                 updateSelectOptions();
@@ -904,13 +945,23 @@ function gallery(Graph){
             children = [];
             getParents(d[options.nodeName]);
             getChildren(d[options.nodeName]);
-            var gparents = Graph.tree[0].filter(function(e,i){ return Tree.treeParent==Graph.tree[1][i]; });
-            if(parents.indexOf(Tree.treeParent)==-1 && children.indexOf(Tree.treeParent)==-1 && !intersection(parents,gparents).length){
-              return false;
+            var gparents = Graph.tree[0].filter(function(e,i){ return Tree.treeParent.indexOf(Graph.tree[1][i])!=-1; });
+            if(Tree.treeParent.length>1 && Tree.intersection){
+              gparents = d3.set(gparents).values().filter(function(e,i){
+                return gparents.filter(function(d){ return d==e; }).length==Tree.treeParent.length;
+              });
+              if(intersection(parents,Tree.treeParent).length!=Tree.treeParent.length && intersection(children,Tree.treeParent).length!=Tree.treeParent.length && !intersection(parents,gparents).length){
+                return false;
+              }
+            }else{
+              gparents = d3.set(gparents).values();
+              if(!intersection(parents,Tree.treeParent).length && !intersection(children,Tree.treeParent).length && !intersection(parents,gparents).length){
+                return false;
+              }
             }
             if(Tree.typeFilter){
-              var typesparent = Graph.tree[2].filter(function(e,i){ return Graph.tree[1][i]==Tree.treeParent && Graph.tree[0][i]==d[options.nodeName]; }),
-                  typeschildren = Graph.tree[3].filter(function(e,i){ return Graph.tree[0][i]==Tree.treeParent && Graph.tree[1][i]==d[options.nodeName]; }),
+              var typesparent = Graph.tree[2].filter(function(e,i){ return Tree.treeParent.indexOf(Graph.tree[1][i])!=-1 && Graph.tree[0][i]==d[options.nodeName]; }),
+                  typeschildren = Graph.tree[3].filter(function(e,i){ return Tree.treeParent.indexOf(Graph.tree[0][i])!=-1 && Graph.tree[1][i]==d[options.nodeName]; }),
                   typessiblings = Graph.tree[3].filter(function(e,i){ return gparents.indexOf(Graph.tree[0][i])!=-1 && Graph.tree[1][i]==d[options.nodeName]; }),
                   types = d3.set(d3.merge([typesparent,typeschildren,typessiblings])).values();
               if(types.indexOf(Tree.typeFilter)==-1){
@@ -968,6 +1019,8 @@ function gallery(Graph){
             bb = b[options.order];
         return compareFunction(aa,bb,options.rev);
       })
+    }else if(options.rev){
+      orderedData.reverse();
     }
 
     var displayData = orderedData;
@@ -1007,15 +1060,9 @@ function gallery(Graph){
     items.exit().remove();
 
     var itemsUpdate = itemsEnter.merge(items);
-    var someselected = false;
     itemsUpdate.classed("selected",function(n){
-      if(n.selected){
-        someselected = true;
-        return true;
-      }
-      return false;
+      return n.selected;
     });
-    itemsUpdate.classed("highlighting",someselected);
 
     itemsUpdate.order();
 
@@ -1035,7 +1082,7 @@ function gallery(Graph){
     itemsUpdate.style("cursor","pointer")
       .on("click",function(n){
           d3.event.stopPropagation();
-          if(Tree || d3.event.ctrlKey || d3.event.metaKey){
+          if(d3.event.ctrlKey || d3.event.metaKey){
             displayData.forEach(function(n){ delete n.selected; });
             n.selected = true;
           }else if(d3.event.shiftKey){
@@ -1071,6 +1118,9 @@ function gallery(Graph){
               infoPanel.changeInfo(n[options.nodeInfo]);
             }
             body.select(".panel-template.auto-color").datum(n);
+            if(options.imageItems){
+              body.select(".panel-template img[src=_auto_]").attr("src",n[options.imageItems]);
+            }
           }
           if(options.ntextctrl && !(d3.event.ctrlKey || d3.event.metaKey)){
             body.selectAll(".tooltip").remove();
@@ -1079,9 +1129,15 @@ function gallery(Graph){
             displayTooltip(n);
           }
           if(Tree){
-            Tree.popButtons(n);
+            Tree.treeRelatives(n);
           }
           displayGraph();
+      })
+      .on("contextmenu",function(n){
+        d3.event.preventDefault();
+        if(Tree){
+          Tree.popButtons(n);
+        }
       })
 
     if(options.nodeBorder && Graph.nodenames.indexOf(options.nodeBorder)!=-1 && dataType(nodes,options.nodeBorder)=="number"){
@@ -1158,13 +1214,17 @@ function gallery(Graph){
     legendPanel.call(orderLegend);
 
     var emptylegend = true;
-    legendPanel.selectAll(".legends-content > .legend").each(function(){
-      if(d3.select(this).property("key")){
-        emptylegend = false;
-      }
-    });
+    if(options.rev){
+      emptylegend = false;
+    }else{
+      legendPanel.selectAll(".legends-content > .legend").each(function(){
+        if(d3.select(this).property("key")){
+          emptylegend = false;
+        }
+      });    
+    }
     if(!legendPanel.classed("hide-legend") && emptylegend){
-      legendPanel.select(".close-button").dispatch("click");
+      legendPanel.classed("hide-legend",true);
     }
 
     if(options.imageItems){
@@ -1193,7 +1253,11 @@ function gallery(Graph){
       frequencyBars(descriptionPanel.select(".description-content").html(""));
       descriptionPanel.select(".close-button").style("display","block");
     }
-  }
+
+    if(Tree && Tree.type == "extended"){
+      galleryBox.selectAll(".topbar .icon-selection").classed("disabled",selectedNames().length<2);
+    }
+  } // end of displayGraph
 
   function selectAllItems(){
     (itemsFiltered ? itemsFiltered : nodes).forEach(function(n){
@@ -2021,7 +2085,7 @@ function gallery(Graph){
     }
   }
 
-  function mousePosition(sel,invert){
+  function mousePosition(sel){
     var coor = d3.mouse(body.node());
 
     mgmtPosition();
@@ -2043,7 +2107,7 @@ function gallery(Graph){
       }else{
         sel.style("left",(coor[0]+10)+"px")
       }
-      if(coor[1]>(body.node().offsetHeight/2) ^ invert){
+      if(coor[1]>(body.node().offsetHeight/2)){
         sel.style("top",(coor[1]-sel.node().offsetHeight-10)+"px")
       }else{
         sel.style("top",(coor[1]+10)+"px")
@@ -2092,15 +2156,17 @@ function gallery(Graph){
 
     var template = tooltip.select(".info-template, .panel-template");
     if(!template.empty()){
-                template.selectAll("a[target=rightframe]").on("mousedown",function(){
-                  infoPanel.changeInfo('<iframe name="rightframe"></iframe>');
-
-                });
-                if(descriptionPanel){
-                  template.selectAll("a[target=leftframe]").on("mousedown",function(){
-                    displayInDescription('<iframe name="leftframe"></iframe>');
-                  });
-                }
+      template.selectAll("a[target=rightframe]").on("mousedown",function(){
+        infoPanel.changeInfo('<iframe name="rightframe"></iframe>');
+      });
+      if(descriptionPanel){
+        template.selectAll("a[target=leftframe]").on("mousedown",function(){
+          displayInDescription('<iframe name="leftframe"></iframe>');
+        });
+      }
+      if(options.imageItems){
+        template.select("img[src=_auto_]").attr("src",n[options.imageItems]);
+      }
     }
 
     tooltip.append("div")
