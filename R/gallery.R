@@ -317,8 +317,13 @@ treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat 
 
   if(name=="_name" && !is.null(gallery$options$nodeTypes)){
     for(ntype in rev(gallery$options$nodeTypes)){
-      gallery$nodes[[ntype]] <- NULL
-      gallery$nodes[[ntype]] <- NA
+      if(is.null(gallery$nodes[[ntype]])){
+        gallery$nodes[[ntype]] <- NA
+      }else{
+        col <- gallery$nodes[[ntype]]
+        gallery$nodes[[ntype]] <- NULL
+        gallery$nodes[[ntype]] <- col
+      }
       typematch <- vapply(gallery$nodes[["type"]],function(x){
         aux <- unlist(strsplit(x,"|",fixed=TRUE))
         if(length(aux)==1){
