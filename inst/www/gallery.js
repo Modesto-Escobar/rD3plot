@@ -326,6 +326,85 @@ function gallery(Graph){
         });
       }
     }
+
+    Tree.applyExtendedFilter = function(treeParent,typeFilter){
+        var parents = [],
+            children = [],
+
+            filter = function(){ return true },
+            getParents = function(name){
+              for(var i = 0; i<Graph.tree[0].length; i++){
+                if(Graph.tree[1][i]==name){
+                  parents.push(Graph.tree[0][i]);
+                  getParents(Graph.tree[0][i]);
+                }
+              }
+            },
+            getChildren = function(name){
+              for(var i = 0; i<Graph.tree[0].length; i++){
+                if(Graph.tree[0][i]==name){
+                  children.push(Graph.tree[1][i]);
+                  getChildren(Graph.tree[1][i]);
+                }
+              }
+            }
+        if(treeParent.length){
+
+          filter = function(d){
+            if(!Tree.intersection && treeParent.indexOf(d[options.nodeName])!=-1 && (!typeFilter || typeFilter==d.type || (Array.isArray(d.type) && d.type.indexOf(typeFilter)!=-1))){
+              return true;
+            }
+            parents = [];
+            children = [];
+            getParents(d[options.nodeName]);
+            getChildren(d[options.nodeName]);
+            var gparents = Graph.tree[0].filter(function(e,i){ return treeParent.indexOf(Graph.tree[1][i])!=-1; });
+            if(treeParent.length>1 && Tree.intersection){
+              gparents = d3.set(gparents).values().filter(function(e,i){
+                return gparents.filter(function(d){ return d==e; }).length==treeParent.length;
+              });
+              if(intersection(parents,treeParent).length!=treeParent.length && intersection(children,treeParent).length!=treeParent.length && !intersection(parents,gparents).length){
+                return false;
+              }
+            }else{
+              gparents = d3.set(gparents).values();
+              if(!intersection(parents,treeParent).length && !intersection(children,treeParent).length && !intersection(parents,gparents).length){
+                return false;
+              }
+            }
+            if(typeFilter){
+              var typesparent = Graph.tree[2].filter(function(e,i){ return treeParent.indexOf(Graph.tree[1][i])!=-1 && Graph.tree[0][i]==d[options.nodeName]; }),
+                  typeschildren = Graph.tree[3].filter(function(e,i){ return treeParent.indexOf(Graph.tree[0][i])!=-1 && Graph.tree[1][i]==d[options.nodeName]; }),
+                  typessiblings = Graph.tree[3].filter(function(e,i){ return gparents.indexOf(Graph.tree[0][i])!=-1 && Graph.tree[1][i]==d[options.nodeName]; }),
+                  types = d3.set(d3.merge([typesparent,typeschildren,typessiblings])).values();
+              if(types.indexOf(typeFilter)==-1){
+                return false;
+              }
+            }
+            if(Graph.tree[0].filter(function(e,i){ return (gparents.indexOf(e)!=-1 || parents.indexOf(e)!=-1) && Graph.tree[1][i]==d[options.nodeName]; }).length){
+              return true;
+            }
+
+            if(Graph.tree[1].filter(function(e,i){ return children.indexOf(e)!=-1 && Graph.tree[0][i]==d[options.nodeName]; }).length){
+
+              return true;
+            }
+            return false;
+          };
+        }else if(typeFilter){
+          filter = function(d){
+            var typesparent = Graph.tree[2].filter(function(e,i){ return Graph.tree[0][i]==d[options.nodeName]; }),
+                typeschildren = Graph.tree[3].filter(function(e,i){ return Graph.tree[1][i]==d[options.nodeName]; }),
+                types = d3.set(d3.merge([typesparent,typeschildren])).values();
+            if(types.indexOf(typeFilter)==-1){
+              return false;
+            }
+            return true;
+          }
+        }
+
+        return filter;
+    }
   }
 
   options.showTopbar = showControls(options,1);
@@ -546,31 +625,35 @@ function gallery(Graph){
           .attr("alt",name)
           .attr("title",name)
           .on("click",function(){
-            buttonsWindow(callback);
+            callback();
+            buttonsWindow();
           })
       }
 
-      function buttonsWindow(callback){
+      function buttonsWindow(){
         var names = selectedNames();
         if(names.length){
           var win = displayWindow();
           var div = win.append("div")
             .attr("class","type-buttons");
           options.nodeTypes.forEach(function(t,i){
-            div.append("button")
-            .attr("class","primary")
-            .text(t)
-            .on("click",function(){
-              topFilterInst.removeFilter();
-              callback();
-              Tree.treeParent = names;
-              Tree.typeFilter = t;
-              Tree.history.push([Tree.treeParent,Tree.typeFilter]);
-              updateSelectOptions();
-              d3.select(win.node().parentNode.parentNode).remove();
-              Tree.breadcrumbs.empty();
-              deselectAllItems();
-            })
+            var button = div.append("button")
+              .attr("class","primary")
+              .text(t)
+            if(nodes.filter(Tree.applyExtendedFilter(names,t)).length){
+              button.on("click",function(){
+                topFilterInst.removeFilter();
+                Tree.treeParent = names;
+                Tree.typeFilter = t;
+                Tree.history.push([Tree.treeParent,Tree.typeFilter]);
+                updateSelectOptions();
+                d3.select(win.node().parentNode.parentNode).remove();
+                Tree.breadcrumbs.empty();
+                deselectAllItems();
+              })
+            }else{
+              button.classed("disabled",true);
+            }
           })
         }
       }
@@ -920,74 +1003,8 @@ function gallery(Graph){
             });
           }
         }
-        var parents = [],
-            children = [],
-            filter = function(){ return true },
-            getParents = function(name){
-              for(var i = 0; i<Graph.tree[0].length; i++){
-                if(Graph.tree[1][i]==name){
-                  parents.push(Graph.tree[0][i]);
-                  getParents(Graph.tree[0][i]);
-                }
-              }
-            },
-            getChildren = function(name){
-              for(var i = 0; i<Graph.tree[0].length; i++){
-                if(Graph.tree[0][i]==name){
-                  children.push(Graph.tree[1][i]);
-                  getChildren(Graph.tree[1][i]);
-                }
-              }
-            }
-        if(Tree.treeParent.length){
-          filter = function(d){
-            parents = [];
-            children = [];
-            getParents(d[options.nodeName]);
-            getChildren(d[options.nodeName]);
-            var gparents = Graph.tree[0].filter(function(e,i){ return Tree.treeParent.indexOf(Graph.tree[1][i])!=-1; });
-            if(Tree.treeParent.length>1 && Tree.intersection){
-              gparents = d3.set(gparents).values().filter(function(e,i){
-                return gparents.filter(function(d){ return d==e; }).length==Tree.treeParent.length;
-              });
-              if(intersection(parents,Tree.treeParent).length!=Tree.treeParent.length && intersection(children,Tree.treeParent).length!=Tree.treeParent.length && !intersection(parents,gparents).length){
-                return false;
-              }
-            }else{
-              gparents = d3.set(gparents).values();
-              if(!intersection(parents,Tree.treeParent).length && !intersection(children,Tree.treeParent).length && !intersection(parents,gparents).length){
-                return false;
-              }
-            }
-            if(Tree.typeFilter){
-              var typesparent = Graph.tree[2].filter(function(e,i){ return Tree.treeParent.indexOf(Graph.tree[1][i])!=-1 && Graph.tree[0][i]==d[options.nodeName]; }),
-                  typeschildren = Graph.tree[3].filter(function(e,i){ return Tree.treeParent.indexOf(Graph.tree[0][i])!=-1 && Graph.tree[1][i]==d[options.nodeName]; }),
-                  typessiblings = Graph.tree[3].filter(function(e,i){ return gparents.indexOf(Graph.tree[0][i])!=-1 && Graph.tree[1][i]==d[options.nodeName]; }),
-                  types = d3.set(d3.merge([typesparent,typeschildren,typessiblings])).values();
-              if(types.indexOf(Tree.typeFilter)==-1){
-                return false;
-              }
-            }
-            if(Graph.tree[0].filter(function(e,i){ return (gparents.indexOf(e)!=-1 || parents.indexOf(e)!=-1) && Graph.tree[1][i]==d[options.nodeName]; }).length){
-              return true;
-            }
-            if(Graph.tree[1].filter(function(e,i){ return children.indexOf(e)!=-1 && Graph.tree[0][i]==d[options.nodeName]; }).length){
-              return true;
-            }
-            return false;
-          };
-        }else if(Tree.typeFilter){
-          filter = function(d){
-            var typesparent = Graph.tree[2].filter(function(e,i){ return Graph.tree[0][i]==d[options.nodeName]; }),
-                typeschildren = Graph.tree[3].filter(function(e,i){ return Graph.tree[1][i]==d[options.nodeName]; }),
-                types = d3.set(d3.merge([typesparent,typeschildren])).values();
-            if(types.indexOf(Tree.typeFilter)==-1){
-              return false;
-            }
-            return true;
-          }
-        }
-        filteredData = filteredData.filter(filter);
+
+        filteredData = filteredData.filter(Tree.applyExtendedFilter(Tree.treeParent,Tree.typeFilter));
 
       }else{ // Tree.type=="simple"
         if(Tree.breadcrumbs.isEmpty()){
@@ -2115,6 +2132,42 @@ function gallery(Graph){
     }
   }
 
+  function relocateTooltip(tooltip){
+    var tooltips = body.selectAll("body > .tooltip"),
+        x = false;
+
+    prev(tooltips.size()-2);
+
+    if(x!==false){
+      tooltip.transition()
+          .duration(500)
+          .style("left",x+"px")
+    }
+
+    function prev(i){
+      if(i==-1){
+        return;
+      }
+      var bounds = tooltip.node().getBoundingClientRect(),
+          prevtooltip = tooltips.filter(function (d, j) { return j === i; }),
+          prevbounds = prevtooltip.node().getBoundingClientRect(),
+          leftcollision = bounds.x >= prevbounds.x && bounds.x <= (prevbounds.x+prevbounds.width),
+          rightcollision = (bounds.x+bounds.width) >= prevbounds.x && (bounds.x+bounds.width) <= (prevbounds.x+prevbounds.width),
+          topcollision = bounds.y >= prevbounds.y && bounds.y <= (prevbounds.y+prevbounds.height),
+          bottomcollision = (bounds.y+bounds.height) >= prevbounds.y && (bounds.y+bounds.height) <= (prevbounds.y+prevbounds.height);
+      if(topcollision || bottomcollision){
+        if(leftcollision){
+          x = prevbounds.x+prevbounds.width;
+        }else if(rightcollision){
+          x = prevbounds.x-bounds.width;
+        }
+      }
+      if(x===false){
+        prev(i-1);
+      }
+    }
+  }
+
   function updateSelectOptions(){
     var opt = getSelectOptions(sortAsc);
     topOrderInst.datanames(opt);
@@ -2202,6 +2255,7 @@ function gallery(Graph){
               );
     mousePosition(tooltip);
     tooltipTemplateAutoColor(tooltip,applyColorScale(colorScale,n[options.nodeColor]));
+    relocateTooltip(tooltip);
   }
 
   function applyColorScale(scale, value, forceTypeFilter){
