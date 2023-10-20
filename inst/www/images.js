@@ -38,7 +38,7 @@ var b64Icons = {
 
   home: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 24 24"><path d="M6 19h3v-6h6v6h3v-9l-6-4.5L6 10Zm-2 2V9l8-6 8 6v12h-7v-6h-2v6Zm8-8.75Z"/></svg>'),
 
-  intersection: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 24 24"><rect x="4" y="4" width="12" height="12" style="fill:none;stroke-width:2;stroke:#2f7bee" /><rect x="7" y="7" width="12" height="12" style="fill:none;stroke-width:2;stroke:#2f7bee" /><rect x="8" y="8" width="8" height="8" style="fill:#2f7bee;stroke:none" /></svg>'),
+  intersection: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 24 24"><rect x="8" y="8" width="8" height="8" style="fill:#2f7bee;stroke:none" /><rect x="4" y="4" width="12" height="12" style="fill:none;stroke-width:1;stroke:#000000" /><rect x="7" y="7" width="12" height="12" style="fill:none;stroke-width:1;stroke:#000000" /></svg>'),
 
-  union: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 24 24">  <rect x="3" y="3" width="12" height="12" style="fill:#2f7bee;stroke:none" /><rect x="8" y="8" width="12" height="12" style="fill:#2f7bee;stroke:none" /></svg>')
+  union: "data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 24 24"><rect x="4" y="4" width="12" height="12" style="fill:#2f7bee;stroke:none" /><rect x="7" y="7" width="12" height="12" style="fill:#2f7bee;stroke:none" /><rect x="4" y="4" width="12" height="12" style="fill:none;stroke-width:1;stroke:#000000" /><rect x="7" y="7" width="12" height="12" style="fill:none;stroke-width:1;stroke:#000000" /></svg>')
 }

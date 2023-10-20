@@ -2904,6 +2904,31 @@ function tableWrapper(){
   function exports(tables){
     tableContainer = tables.select("div.table-container");
 
+    tableContainer.on("wheel",function(){
+      var idx = d3.event.deltaY > 0 ? 3 : 2;
+      tables.select(".table-pagination > button:nth-child("+idx+")").node().click();
+    })
+
+    d3.select("body").on("keydown.table-pagination-shortcut",function(){
+      var key = getKey(d3.event);
+      switch(key){
+        case "PageUp":
+          d3.event.preventDefault();
+          var btn = tables.select(".table-pagination > button:nth-child(2)");
+          if(!btn.empty()){
+            btn.node().click();
+          }
+          return;
+        case "PageDown":
+          d3.event.preventDefault();
+          var btn = tables.select(".table-pagination > button:nth-child(3)");
+          if(!btn.empty()){
+            btn.node().click();
+          }
+          return;
+      }
+    })
+
     if(tableContainer.empty()){
       return;
     }

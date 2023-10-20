@@ -1809,6 +1809,21 @@ pointer-events: none;
 /* breadcrumbs */
 .breadcrumbs {
   font-size: 1.2em;
+  max-width: 700px;
+  overflow: clip;
+  position: relative;
+  white-space: nowrap;
+  content: "";
+}
+.breadcrumbs:after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width:700px;
+  height:100%; 
+  background:linear-gradient(to right, transparent 90%, white);
+  pointer-events: none;
 }
 
 .buttons-popup,

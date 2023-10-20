@@ -349,6 +349,10 @@ treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat 
     }else{
       gallery$options$nodeNamesByType <- nodenamesbytype
     }
+
+    if(length(arguments$roundedItems)==length(nodenamesbytype) && is.logical(arguments$roundedItems)){
+      gallery$options$roundedItems <- arguments$roundedItems
+    }
   }
 
   if(!is.null(dir)){

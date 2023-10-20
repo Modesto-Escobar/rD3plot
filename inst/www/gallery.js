@@ -69,6 +69,12 @@ function gallery(Graph){
       }
     }
 
+    if(Array.isArray(options.roundedItems)){
+      roundedItems = function(){
+        return Tree.typeFilter ? options.roundedItems[options.nodeTypes.indexOf(Tree.typeFilter)] : false;
+      }
+    }
+
     Tree.resetOptions = function(){
       Tree.breadcrumbs.empty();
       ['path','treeParent','typeFilter','history'].forEach(function(k){
@@ -207,7 +213,7 @@ function gallery(Graph){
       if(tooltip.size()==1){
         tooltip.selectAll(".info-template .tree-relatives > span").each(function(){
           var self = d3.select(this),
-              n = nodes.filter(function(n){ return n[options.nodeName]==self.text(); })[0];
+              n = nodes.filter(function(n){ return n[options.nodeName]==self.attr("nodename"); })[0];
           if(n[options.nodeText]){
             self.style("cursor","pointer")
               .on("click",function(){
@@ -233,7 +239,6 @@ function gallery(Graph){
     function BreadCrumbs(sel){
       this.breadcrumbs = sel.append("div")
               .attr("class","breadcrumbs")
-              .style("padding","4px 12px");
     }
 
     BreadCrumbs.prototype = {
@@ -288,7 +293,10 @@ function gallery(Graph){
               if(j){
                 thiz.breadcrumbs.append("span").text(" | ");
               }
-              var text = thiz.breadcrumbs.append("span").text(parent);
+              var label = options.nodeLabel ? nodes.filter(function(dd){
+                    return dd[options.nodeName]==parent;
+                  })[0][options.nodeLabel] : parent,
+                  text = thiz.breadcrumbs.append("span").text(label);
               if(callback){
                 text.style("cursor","pointer")
                 .style("color",basicColors.mediumBlue)
@@ -654,7 +662,16 @@ function gallery(Graph){
             }else{
               button.classed("disabled",true);
             }
+          });
+          var window = d3.select(win.node().parentNode),
+              w1 = parseInt(window.style("width")),
+              w2 = 0;
+          div.selectAll("button").each(function(){
+            w2 = w2 + this.getBoundingClientRect().width + 4;
           })
+          if(w2 < w1){
+            window.style("width",w2+"px");
+          }
         }
       }
     }
@@ -775,7 +792,6 @@ function gallery(Graph){
 
   var galleryItems = gallery.append("div")
         .attr("class","gallery-items fade-labels")
-        .classed("rounded-items",options.roundedItems);
 
   if(options.cex){
     galleryItems.style("font-size", 10*options.cex + "px")
@@ -1046,6 +1062,8 @@ function gallery(Graph){
       displayData = orderedData.filter(function(d,i){ return i<pagination*limit; });
     }
 
+    galleryItems.classed("rounded-items",roundedItems());
+
     var items = galleryItems.selectAll(".item").data(displayData, function(d){ return d[options.nodeName]; });
 
     var itemsEnter = items.enter()
@@ -1057,7 +1075,7 @@ function gallery(Graph){
           .attr("class","img-wrapper")
     if(options.imageItems){
       imgWrapper.append("img")
-          .on("load", !options.imageRatio && !options.roundedItems && !options.itemsPerRow ? function(){
+          .on("load", !options.imageRatio && !roundedItems() && !options.itemsPerRow ? function(){
             this.ratio = 1;
             if(this.complete && this.naturalHeight!==0){
               this.ratio = this.naturalWidth / this.naturalHeight;
@@ -2158,8 +2176,14 @@ function gallery(Graph){
       if(topcollision || bottomcollision){
         if(leftcollision){
           x = prevbounds.x+prevbounds.width;
+          if((x+bounds.width) > width){
+            x = width-bounds.width;
+          }
         }else if(rightcollision){
           x = prevbounds.x-bounds.width;
+          if(x < 0){
+            x = 0;
+          }
         }
       }
       if(x===false){
@@ -2272,6 +2296,10 @@ function gallery(Graph){
         value = value[0];
       }
       return scale(value);
+  }
+
+  function roundedItems(){
+    return options.roundedItems;
   }
 
 } // gallery function end
