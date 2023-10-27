@@ -2899,7 +2899,9 @@ function tableWrapper(){
       pagination = false,
       pagelength = 25,
       paginationDiv,
-      columnwidths = [];
+      columnwidths = [],
+      id = false,
+      columnHidden;
 
   function exports(tables){
     tableContainer = tables.select("div.table-container");
@@ -2945,6 +2947,13 @@ function tableWrapper(){
           }
           return false;
         });
+
+    columnHidden = columns.map(function(d){
+      if(d.substring(0,1)=="_"){
+        return true;
+      }
+      return false;
+    });
 
     var tableTitle = tables.select("div.table-title")
     tableTitle.selectAll("span").remove();
@@ -3022,7 +3031,13 @@ function tableWrapper(){
         .classed("selected",function(dd){
           return currentData[dd]._selected;
         });
+      if(id && columns.indexOf(id)!=-1){
+        tr.attr("rowname",d[id]);
+      }
       columns.forEach(function(col,i){
+          if(columnHidden[i]){
+            return false;
+          }
           var txt = renderCell(d,col);
           tr.append("td")
               .classed("text-right",rightAlign[i] ? true : false)
@@ -3074,6 +3089,9 @@ function tableWrapper(){
             desc0 = columns.map(function(){ return false; }),
             desc = desc0.slice();
         columns.forEach(function(d,i){
+          if(columnHidden[i]){
+            return false;
+          }
           var sort1 = function(a,b){
                 if(a[d]==null) return 1;
                 if(b[d]==null) return -1;
@@ -3167,6 +3185,12 @@ function tableWrapper(){
   exports.onlySelectedData = function(x){
     if (!arguments.length) return onlySelectedData;
     onlySelectedData = x ? true : false;
+    return exports;
+  }
+
+  exports.id = function(x){
+    if (!arguments.length) return id;
+    id = x;
     return exports;
   }
 

@@ -16,7 +16,7 @@ galleryJSON <- function(gallery){
 galleryCreate <- function(gallery, dir){
   language <- getLanguageScript(gallery)
   styles <- c("reset.css","styles.css")
-  scripts <- c("d3.min.js","jspdf.min.js","jszip.min.js","html2canvas.min.js","images.js","colorScales.js","functions.js",language,"gallery.js")
+  scripts <- c("d3.min.js","images.js","colorScales.js","functions.js",language,"gallery.js")
   if(!is.null(gallery$options$frequencies)){
     scripts <- c(scripts,"d3.layout.cloud.js")
   }
@@ -38,7 +38,7 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
     showLegend = TRUE, frequencies = FALSE, labelTooltip = TRUE,
     help = NULL, helpOn = FALSE, tutorial = FALSE, description = NULL,
     descriptionWidth = NULL, roundedItems = FALSE, ntextctrl = FALSE,
-    controls = 1:6, cex = 1, defaultColor = "#1f77b4",
+    controls = 1:5, cex = 1, defaultColor = "#1f77b4",
     language = c("en", "es", "ca"), dir = NULL){
 
   if(is.null(name)){
@@ -59,9 +59,6 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
 
   if(is.character(infoFrame) && (infoFrame[1] %in% c("right","left"))){
     options[["infoFrame"]] <- infoFrame[1]
-    if(options[["infoFrame"]]=="left" && is.null(description)){
-      warning("infoFrame: you must add a description to use the left panel")
-    }
   }
 
   if(!(is.numeric(zoom) && zoom>=0.1 && zoom<=10)){
@@ -71,7 +68,7 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
   options[["zoom"]] <- zoom
 
   if(!is.null(itemsPerRow)){
-    if(!is.numeric(itemsPerRow) || itemsPerRow<=0){
+    if(!is.numeric(itemsPerRow) || any(itemsPerRow<=0)){
       warning("itemsPerRow: must be numeric greater than 0")
     }else{
       options[["itemsPerRow"]] <- itemsPerRow
@@ -204,6 +201,7 @@ treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat 
         name <- colnames(arguments$nodes)[1]
       }
       colnames(nodes)[1] <- name
+      nodeorder <- c(intersect(arguments$nodes[[name]],nodes[[name]]),setdiff(nodes[[name]],arguments$nodes[[name]]))
       nodes <- merge(nodes, arguments$nodes, by=name, all.x=TRUE)
     }else if(is.list(arguments$nodes)){
       if(is.null(name)){
@@ -216,12 +214,17 @@ treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat 
       nodenamesbytype <- list()
       allnodenames <- unlist(lapply(arguments$nodes,colnames))
       dupnames <- setdiff(unique(allnodenames[duplicated(as.vector(allnodenames))]),name)
+      initialnodes <- as.character(nodes[[name]])
+      nodeorder <- character()
       for(n in names(arguments$nodes)){
         nodenamesbytype[[n]] <- names(arguments$nodes[[n]])
         tochange <- colnames(arguments$nodes[[n]]) %in% dupnames
         colnames(arguments$nodes[[n]])[tochange] <- paste0(n,".",colnames(arguments$nodes[[n]])[tochange])
+        nodeorder <- c(nodeorder,arguments$nodes[[n]][[name]])
         nodes <- merge(nodes, arguments$nodes[[n]], by=name, all.x=TRUE)
       }
+      nodeorder <- unique(nodeorder)
+      nodeorder <- c(intersect(nodeorder,initialnodes),setdiff(initialnodes,nodeorder))
       for(d in dupnames){
         nodes[[d]] <- NA
         for(n in names(arguments$nodes)){
@@ -249,10 +252,7 @@ treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat 
       }
     }
 
-    mainitems <- unique(as.character(tree[,1]))
-    names <- as.character(nodes[[name]])
-    nodeorder <- c(mainitems,setdiff(names,mainitems))
-    rownames(nodes) <- names
+    rownames(nodes) <- as.character(nodes[[name]])
     nodes <- nodes[nodeorder,]
   }
 
@@ -262,9 +262,17 @@ treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat 
 
   name <- gallery$options$nodeName
 
+  typeList <- c("type","tipo","tipus")
+  names(typeList) <- c("en","es","ca")
+  nodeType <- typeList[1]
+  if(!is.null(gallery$options$language)){
+    nodeType <- typeList[gallery$options$language]
+  }
+  gallery$options$nodeType <- nodeType
+
   checkColumnType <- function(gallery){
-    if("type" %in% colnames(gallery$nodes)){
-      warning("nodes: Column named 'type' will be overwritten")
+    if(nodeType %in% colnames(gallery$nodes)){
+      warning(paste0("nodes: Column named '",nodeType,"' will be overwritten"))
     }
   }
 
@@ -286,7 +294,7 @@ treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat 
       gallery$options$deepTree <- TRUE
       gallery$tree <- as.data.frame(t(tree))
       checkColumnType(gallery)
-      gallery$nodes[["type"]] <- sapply(gallery$nodes[[name]],function(x){
+      gallery$nodes[[nodeType]] <- sapply(gallery$nodes[[name]],function(x){
         aux <- types[as.logical(apply(tree,2,function(y){ sum(x==y,na.rm=TRUE) }))]
         return(paste0(aux,collapse="|"))
       })
@@ -303,7 +311,7 @@ treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat 
           names <- c(tree[,1],tree[,2])
           types <- c(tree[,3],tree[,4])
           checkColumnType(gallery)
-          gallery$nodes[["type"]] <- sapply(gallery$nodes[[name]],function(x){
+          gallery$nodes[[nodeType]] <- sapply(gallery$nodes[[name]],function(x){
             aux <- unique(types[names==x])
             return(paste0(aux,collapse="|"))
           })
@@ -324,7 +332,7 @@ treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat 
         gallery$nodes[[ntype]] <- NULL
         gallery$nodes[[ntype]] <- col
       }
-      typematch <- vapply(gallery$nodes[["type"]],function(x){
+      typematch <- vapply(gallery$nodes[[nodeType]],function(x){
         aux <- unlist(strsplit(x,"|",fixed=TRUE))
         if(length(aux)==1){
           return(x==ntype)
