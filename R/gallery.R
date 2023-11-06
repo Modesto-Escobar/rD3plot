@@ -16,7 +16,7 @@ galleryJSON <- function(gallery){
 galleryCreate <- function(gallery, dir){
   language <- getLanguageScript(gallery)
   styles <- c("reset.css","styles.css")
-  scripts <- c("d3.min.js","images.js","colorScales.js","functions.js",language,"gallery.js")
+  scripts <- c("d3.min.js","jszip.min.js","images.js","colorScales.js","functions.js",language,"gallery.js")
   if(!is.null(gallery$options$frequencies)){
     scripts <- c(scripts,"d3.layout.cloud.js")
   }
