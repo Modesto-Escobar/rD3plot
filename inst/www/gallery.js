@@ -713,17 +713,15 @@ function gallery(Graph){
   var content = galleryBox.append("div")
         .attr("class","gallery-content");
 
-  var descriptionPanel = false;
-  if(options.description || frequencyBars){
-    var displayInDescription = function(info){
+  var displayInDescription = function(info){
         descriptionPanel.select(".description-content").html(info ? info : options.description);
         descriptionPanel.select(".close-button").style("display",info ? "block" : "none");
         content.classed("hide-description",false);
-    }
+  }
 
-    descriptionPanel = content.append("div")
+  var descriptionPanel = content.append("div")
         .attr("class","description-panel")
-    descriptionPanel.append("div")
+  descriptionPanel.append("div")
       .attr("class","close-button")
       .on("click",function(){
         if(options.description){
@@ -735,13 +733,12 @@ function gallery(Graph){
           options.frequencies = false;
         }
       })
-    descriptionPanel.append("div")
+  descriptionPanel.append("div")
       .attr("class","description-content");
-    if(options.description){
+  if(options.description){
       displayInDescription();
-    }else{
+  }else{
       content.classed("hide-description",true);
-    }
   }
 
   var gallery = content.append("div")
@@ -759,7 +756,7 @@ function gallery(Graph){
     })
   }
 
-  if(descriptionPanel && options.descriptionWidth){
+  if(options.descriptionWidth){
       descriptionPanel.style("width",options.descriptionWidth+"%")
       gallery.style("width",(100-options.descriptionWidth)+"%")
   }
@@ -1086,7 +1083,19 @@ function gallery(Graph){
         .text(function(d){ return d[options.nodeLabel]; })
 
     if(options.labelTooltip){
-      itemsEnter.attr("title",function(d){ return d[options.nodeLabel]; })
+      //itemsEnter.attr("title",function(d){ return d[options.nodeLabel]; })
+      itemsEnter.on("mouseenter",function(d){
+        var coor = d3.mouse(body.node());
+        body.append("div")
+          .attr("class","tooltip label-tooltip")
+          .style("top",(coor[1]+10)+"px")
+          .style("left",coor[0]+"px")
+          .style("font-size",10*(options.cex ? options.cex : 1) + "px")
+          .html(d[options.nodeLabel])
+      })
+      itemsEnter.on("mouseleave",function(){
+        body.select(".label-tooltip").remove()
+      })
     }
 
     items.exit().remove();
@@ -1132,7 +1141,7 @@ function gallery(Graph){
           }
           if(options.nodeInfo){
             if(options.infoFrame=="left"){
-              if(descriptionPanel && !options.frequencies){
+              if(!options.frequencies){
                 displayInDescription(n[options.nodeInfo]);
                 var template = descriptionPanel.select(".description-content > .panel-template, .description-content > .info-template");
                 if(!template.empty()){
@@ -1140,14 +1149,28 @@ function gallery(Graph){
                     infoPanel.changeInfo('<iframe name="rightframe"></iframe>');
                   });
                   template.selectAll("a[target=leftframe]").on("mousedown",function(){
-                    descriptionPanel.select(".description-content").append("iframe").attr("name","leftframe");
+                    descriptionPanel.select(".description-content").append("iframe").attr("name","leftframe").style("display","none");
                   }).on("mouseup",function(){
                     template.style("display","none");
+                    descriptionPanel.select("iframe[name=leftframe]").style("display",null);
                   })
                 }
               }
             }else{
-              infoPanel.changeInfo(n[options.nodeInfo]);
+                infoPanel.changeInfo(n[options.nodeInfo]);
+                var div = infoPanel.selection().select(".panel-content > div");
+                var template = div.select(".panel-template, .info-template");
+                if(!template.empty()){
+                  template.selectAll("a[target=rightframe]").on("mousedown",function(){
+                    div.append("iframe").attr("name","rightframe").style("display","none");
+                  }).on("mouseup",function(){
+                    template.style("display","none");
+                    div.select("iframe[name=rightframe]").style("display",null);
+                  })
+                  template.selectAll("a[target=leftframe]").on("mousedown",function(){
+                    displayInDescription('<iframe name="leftframe">');
+                  })
+                }
             }
             body.select(".panel-template.auto-color").datum(n);
             if(options.imageItems){
@@ -1297,7 +1320,7 @@ function gallery(Graph){
       return n ? applyColorScale(colorScale,n[options.nodeColor]) : options.defaultColor;
     });
 
-    if(descriptionPanel && frequencyBars && options.frequencies){
+    if(frequencyBars && options.frequencies){
       frequencyBars
             .nodes(orderedData)
             .nodeColor(options.nodeColor)
@@ -1322,7 +1345,7 @@ function gallery(Graph){
   function deselectAllItems(){
     nodes.forEach(function(n){ delete n.selected; });
     displayGraph();
-    if(descriptionPanel && options.description && !options.frequencies){
+    if(options.description && !options.frequencies){
       displayInDescription();
     }
     body.selectAll(".tooltip").remove();
@@ -1853,6 +1876,8 @@ function gallery(Graph){
             .attr("class","close-button")
             .on("click",closeTable)
 
+    var onlySelected = selectedNames().length ? true : false;
+
     var onlySelectedData = header.append("div")
       .attr("class","only-selected-data")
       .on("click",function(){
@@ -1863,7 +1888,7 @@ function gallery(Graph){
     onlySelectedData.append("span")
         .text(texts.showonlyselecteditems+" ")
     var onlySelectedCheck = onlySelectedData.append("div")
-        .attr("class","legend-check-box")
+        .attr("class","legend-check-box"+(onlySelected ? " checked" : ""))
 
     header = header.append("div")
           .attr("class","inline-elements")
@@ -1965,7 +1990,7 @@ function gallery(Graph){
 
     var tableInst = tableWrapper()
             .data(itemsFiltered ? itemsFiltered : nodes)
-            .onlySelectedData(false)
+            .onlySelectedData(onlySelected)
             .columns(Graph.nodenames.filter(filterColumns))
             .id(options.nodeName)
             .update(function(){
@@ -2233,11 +2258,9 @@ function gallery(Graph){
       template.selectAll("a[target=rightframe]").on("mousedown",function(){
         infoPanel.changeInfo('<iframe name="rightframe"></iframe>');
       });
-      if(descriptionPanel){
-        template.selectAll("a[target=leftframe]").on("mousedown",function(){
-          displayInDescription('<iframe name="leftframe"></iframe>');
-        });
-      }
+      template.selectAll("a[target=leftframe]").on("mousedown",function(){
+        displayInDescription('<iframe name="leftframe"></iframe>');
+      });
       if(options.imageItems){
         template.select("img[src=_auto_]").attr("src",n[options.imageItems]);
       }
@@ -2248,7 +2271,7 @@ function gallery(Graph){
               .on("click",function(){
                 d3.event.stopPropagation();
                 tooltip.remove();
-                if(Tree){
+                if(Tree && !options.ntextctrl){
                   infoPanel.close();
                   delete n.selected;
                   displayGraph();
