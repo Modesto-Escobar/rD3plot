@@ -149,6 +149,10 @@ evolvingWrapper <- function(multi,frame,speed,loop=FALSE,lineplots=NULL){
 rd3_multigraph <- function(..., mfrow = NULL, dir = NULL){
   graphs <- list(...)
 
+  if(!length(graphs)){
+    stop("no graphs have been passed")
+  }
+
   addGraph <- function(res,g,n){
     if(is.null(n)){
       n <- paste0("graph",length(res)+1)

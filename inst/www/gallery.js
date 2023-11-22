@@ -1090,7 +1090,7 @@ function gallery(Graph){
           .attr("class","tooltip label-tooltip")
           .style("top",(coor[1]+10)+"px")
           .style("left",coor[0]+"px")
-          .style("font-size",10*(options.cex ? options.cex : 1) + "px")
+          .style("font-size",10*(options.cexTooltip ? options.cexTooltip : 1) + "px")
           .html(d[options.nodeLabel])
       })
       itemsEnter.on("mouseleave",function(){

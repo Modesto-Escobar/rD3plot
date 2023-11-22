@@ -36,9 +36,9 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
     border = NULL, ntext = NULL, info = NULL, infoFrame = c("right","left"),
     image = NULL, zoom = 1, itemsPerRow = NULL, main = NULL, note = NULL,
     showLegend = TRUE, frequencies = FALSE, labelTooltip = TRUE,
-    help = NULL, helpOn = FALSE, tutorial = FALSE, description = NULL,
-    descriptionWidth = NULL, roundedItems = FALSE, ntextctrl = FALSE,
-    controls = 1:5, cex = 1, defaultColor = "#1f77b4",
+    cexTooltip = 1, help = NULL, helpOn = FALSE, tutorial = FALSE,
+    description = NULL, descriptionWidth = NULL, roundedItems = FALSE,
+    ntextctrl = FALSE, controls = 1:5, cex = 1, defaultColor = "#1f77b4",
     language = c("en", "es", "ca"), dir = NULL){
 
   if(is.null(name)){
@@ -97,6 +97,11 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
   options[["cex"]] <- check_cex(cex)
   options[["language"]] <- checkLanguage(language)
   options[["defaultColor"]] <- check_defaultColor(defaultColor)
+
+  if(!is.numeric(cexTooltip)){
+    cexTooltip <- 1
+  }
+  options[["cexTooltip"]] <- cexTooltip
 
   if (!is.null(image)){
     image <- image[1]
