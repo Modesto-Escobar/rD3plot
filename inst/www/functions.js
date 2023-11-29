@@ -769,10 +769,7 @@ function topFilter(){
 
     updateSelect();
 
-    var topbar = d3.select(div.node().parentNode.parentNode);
-    if(topbar.classed("topbar")){
-      filterTags = topbar.append("div").attr("class","filter-tags");
-    }
+    renderFilterTagsContainer(d3.select(div.node().parentNode.parentNode));
   }
 
   function displayTags(){
@@ -865,6 +862,16 @@ function topFilter(){
       });
     }
     return false;
+  }
+
+  function renderFilterTagsContainer(topbar){
+    if(!filterTags && topbar.classed("topbar")){
+      filterTags = topbar.append("div").attr("class","filter-tags");
+    }
+  }
+
+  exports.filterTagsTopbar = function(topbar){
+    renderFilterTagsContainer(topbar);
   }
 
   exports.removeFilter = function(){
@@ -2416,6 +2423,10 @@ function displayTopBar(){
     if (!arguments.length) return fixed;
     fixed = x ? true : false;
     return exports;
+  }
+
+  exports.topbar = function(){
+    return topbar;
   }
 
   exports.height = function(){

@@ -677,16 +677,16 @@ function gallery(Graph){
   // count elements
   topBar.addBox(elementsCountInst);
 
-  // node order
-  //topBar.addBox(topOrderInst);
+  if(options.showTopbarButtons){
+    // node order
+    topBar.addBox(topOrderInst);
 
-  // colors
-  //topBar.addBox(topColorSelectInst);
+    // colors
+    topBar.addBox(topColorSelectInst);
 
-  // node filter in topBar
-  //topBar.addBox(topFilterInst);
+    // node filter in topBar
+    topBar.addBox(topFilterInst);
 
-  if(options.showTopbarButtons && !Tree){
     // Select all / none
     topBar.addBox(function(box){
       box.append("button")
@@ -708,6 +708,8 @@ function gallery(Graph){
       .text(texts.filterselection)
       .on("click",filterSelection)
     });
+  }else{
+    topFilterInst.filterTagsTopbar(topBar.topbar());
   }
 
   var content = galleryBox.append("div")

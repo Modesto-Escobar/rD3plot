@@ -185,6 +185,10 @@ treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat 
     arguments$dir <- NULL
   }
 
+  if(is.null(arguments$controls)){
+    arguments$controls <- 1:4
+  }
+
   if(!deep && tableformat){
     tree <- table2links(tree)
   }
