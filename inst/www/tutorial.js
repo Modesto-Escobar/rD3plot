@@ -118,9 +118,10 @@ function tutorialTour(options){
   }
 
   // filter
-  if(topbar.select("h3.top-filter").node().offsetWidth){
+  var topFilter = topbar.select("h3.top-filter");
+  if(!topFilter.empty() && topFilter.node().offsetWidth){
     steps.push(function(){
-      var filterDim = topbar.select("h3.top-filter").node().getBoundingClientRect();
+      var filterDim = topFilter.node().getBoundingClientRect();
       tutorialContent.selectAll("*").remove()
       tutorialArrow.style("display",null)
         .style("transform",null)

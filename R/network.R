@@ -166,7 +166,7 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
         main = NULL, note = NULL, showCoordinates = FALSE, showArrows = FALSE,
         showLegend = TRUE, frequencies = FALSE, showAxes = FALSE,
         axesLabels = NULL, scenarios = NULL, help = NULL, helpOn = FALSE,
-        mode = c("network","heatmap"), roundedItems = FALSE, controls = 1:4,
+        mode = c("network","heatmap"), roundedItems = FALSE, controls = 1:8,
         cex = 1, background = NULL, defaultColor = "#1f77b4",
         language = c("en","es","ca"), dir = NULL)
 {
@@ -305,9 +305,23 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
 
   options <- showSomething(options,"showCoordinates",showCoordinates)
   options <- showSomething(options,"showArrows",showArrows)
-  options <- showSomething(options,"showLegend",showLegend)
   options <- showSomething(options,"showAxes",showAxes)
   options <- showSomething(options,"roundedItems",roundedItems)
+
+  if(showLegend){
+    if(is.null(options[["controls"]])){
+      options[["controls"]] <- 8
+    }else if(!sum(options[["controls"]]==0) && !sum(options[["controls"]]==-8) && !sum(options[["controls"]]==8)){
+      options[["controls"]] <- c(options[["controls"]],8)
+    }
+  }else{
+    if(sum(options[["controls"]]==8)){
+      options[["controls"]] <- options[["controls"]][options[["controls"]]!=8]
+      if(!length(options[["controls"]])){
+        options[["controls"]] <- NULL
+      }
+    }
+  }
 
   # node options
   if(is.null(label)){

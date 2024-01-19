@@ -93,9 +93,12 @@ function network(Graph){
       .attr("class", "sidebar")
       .style("width", (sidebarWidth) + "px")
 
-  var legendPanel = panel.append("div")
+  var legendPanel = false;
+  if(typeof options.showLegend != "undefined"){
+    legendPanel = panel.append("div")
       .attr("class", "legend-panel")
       .style("width", (sidebarWidth) + "px")
+  }
 
   if(typeof options.showNodes != "undefined" || typeof options.showLinks != "undefined"){
     panel.append("div")
@@ -621,6 +624,9 @@ function network(Graph){
     options.showExport = showControls(options,3);
     options.showNodes = showControls(options,4);
     options.showLinks = showControls(options,5);
+    options.showSearch = showControls(options,6);
+    options.showZoom = showControls(options,7);
+    options.showLegend = showControls(options,8);
 
     if(!GraphLinksLength){
       options.showLinks = undefined;
@@ -994,8 +1000,7 @@ function displayButton(sel,txt,clk,tooltip,enable,classes){
 
 function displaySidebar(){
 
-  if(sidebar.select(".subSearch").empty()){
-
+  if(options.showSearch && sidebar.select(".subSearch").empty()){
     sidebar.append("div")
       .attr("class","subSearch")
       .call(displayMultiSearch()
@@ -1005,7 +1010,7 @@ function displaySidebar(){
         .updateFilter(switchEgoNet));
 
   }else{
-    sidebar.selectAll("div.sidebar>div:not(.subSearch)").remove();
+    sidebar.selectAll("div.sidebar > div:not(.subSearch)").remove();
   }
 
   if(options.showSidebar){
@@ -1122,9 +1127,11 @@ function displaySidebar(){
     function subSidebarHeight(tab){
       subSidebar.selectAll(".tab").style("height",null);
       var maxHeight = height
-      - sidebar.select(".sidebar > .subSearch").node().offsetHeight
       - nav.node().offsetHeight
       - 60;
+      if(options.showSearch){
+        maxHeight = maxHeight - sidebar.select(".sidebar > .subSearch").node().offsetHeight;
+      }
       if(options.note){
         maxHeight = maxHeight - 24;
       }
@@ -1854,7 +1861,9 @@ function checkInitialFilters(){
 // draw canvas and svg environment for plot
 function drawSVG(){
 
-  legendPanel.style("left",(width - sidebarWidth + 10) + "px")
+  if(legendPanel){
+    legendPanel.style("left",(width - sidebarWidth + 10) + "px")
+  }
 
   adaptLayout();
 
@@ -2118,6 +2127,9 @@ function drawSVG(){
       })
       .append("title").text(texts.zoomout + " (ctrl + '-')")
 
+  if(!options.showZoom){
+    svg.selectAll(".zoombutton").style("display","none");
+  }
 
   if(frameControls){
     handleFrames(frameControls.frame);
@@ -2448,7 +2460,9 @@ function drawNet(){
 
   var ctx = d3.select(".plot canvas").node().getContext("2d");
 
-  legendPanel.selectAll("*").remove();
+  if(legendPanel){
+    legendPanel.selectAll("*").remove();
+  }
 
   if(Graph.tree){
     var hideChildren = function(d){
@@ -2874,11 +2888,19 @@ function drawNet(){
     }
 
     // display legends
-    var legendLegend = options.nodeLegend ? true : false,
-        legendColor = options.nodeColor && dataType(nodes,options.nodeColor,true)!='number',
-        legendShape = options.nodeShape ? true : false,
-        legendImage = (!options.heatmap && options.imageItem) && (options.imageItems && options.imageNames),
-        legendLcolor = options.linkColor && dataType(links,options.linkColor,true)!='number';
+    var legendLegend = false,
+        legendColor = false,
+        legendShape = false,
+        legendImage = false,
+        legendLcolor = false;
+
+    if(legendPanel){
+      legendLegend = options.nodeLegend ? true : false;
+      legendColor = options.nodeColor && dataType(nodes,options.nodeColor,true)!='number';
+      legendShape = options.nodeShape ? true : false;
+      legendImage = (!options.heatmap && options.imageItem) && (options.imageItems && options.imageNames);
+      legendLcolor = options.linkColor && dataType(links,options.linkColor,true)!='number';
+    }
 
     Legends = {};
     var data;
@@ -3450,7 +3472,7 @@ function drawNet(){
       doc.text(12, height-12, this.textContent);
     })
 
-    if(!legendPanel.empty()){
+    if(legendPanel && !legendPanel.empty()){
       // scale
       if(!legendPanel.select(".scale").empty()) {
           var gradient = legendPanel.select(".legend-scale-gradient");
@@ -3589,6 +3611,9 @@ function showTooltip(node,fixed){
              .datum(node)
              .html(node[options.nodeText])
         tooltipTemplateAutoColor(tooltip,options.nodeColor ? VisualHandlers.nodeColor(node) : options.defaultColor);
+        if(options.imageItems){
+          tooltip.select(".info-template, .panel-template").select("img[src=_auto_]").attr("src",node[options.imageItems]);
+        }
     }
 }
 
@@ -3620,6 +3645,9 @@ function clickNet(){
     if(options.nodeInfo){
       infoPanel.changeInfo(node[options.nodeInfo]);
       body.select(".panel-template.auto-color").datum(node);
+      if(options.imageItems){
+        body.select(".panel-template img[src=_auto_]").attr("src",node[options.imageItems]);
+      }
     }
   }else{
     if(d3.event.shiftKey && options.heatmap){
@@ -4066,7 +4094,7 @@ function setColorScale(){
   }
 
   config.exports.displayScale = function(){
-    if(config.scale && config.datatype == "number"){
+    if(legendPanel && config.scale && config.datatype == "number"){
       var selectionWindow = attrSelectionWindow()
             .visual("Color")
             .active(config.key)
@@ -4567,6 +4595,7 @@ function checkLegendKeyValue(d,key,value){
 }
 
 function displayBottomButton(sel,text,tooltip,nodesCallback,linksCallback){
+    if(legendPanel){
       sel.append("button")
         .attr("class","legend-bottom-button primary disabled")
         .text(texts[text])
@@ -4596,6 +4625,7 @@ function displayBottomButton(sel,text,tooltip,nodesCallback,linksCallback){
           }
         })
         .attr("title",tooltip)
+    }
 }
 
 function getImageName(path){
@@ -5259,7 +5289,6 @@ function svg2png(callback){
   ctx.fillStyle = basicColors.white;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  svg.selectAll(".zoombutton").style("display","none");
   if(options.main){
     svg.append("text")
       .attr("class","main")
@@ -5290,7 +5319,6 @@ function svg2png(callback){
 
   svg.select("svg>text.main").remove()
   svg.select("svg>text.note").remove()
-  svg.selectAll(".zoombutton").style("display",null);
 }
 
 function svg2pdf(){
