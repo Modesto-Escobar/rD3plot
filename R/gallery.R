@@ -15,8 +15,17 @@ galleryJSON <- function(gallery){
 
 galleryCreate <- function(gallery, dir){
   language <- getLanguageScript(gallery)
-  styles <- c("reset.css","styles.css")
-  scripts <- c("d3.min.js","jszip.min.js","images.js","colorScales.js","functions.js",language,"gallery.js")
+  script <- "gallery.js"
+  style <- "styles.css"
+  if(!is.null(gallery$options$mode) && gallery$options$mode==2){
+    script <- "gallery2.js"
+    style <- "styles2.css"
+  }
+  if(!is.null(gallery$tree)){
+    script <- c("gallerytree.js",script)
+  }
+  styles <- c("reset.css",style)
+  scripts <- c("d3.min.js","jszip.min.js","images.js","colorScales.js","functions.js",language,script)
   if(!is.null(gallery$options$frequencies)){
     scripts <- c(scripts,"d3.layout.cloud.js")
   }
@@ -124,6 +133,45 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
   return(gallery)
 }
 
+gallery2_rd3 <- function(nodes, name = NULL, label = NULL, ntext = NULL,
+    image = NULL, language = c("en", "es", "ca"), dir = NULL){
+
+  if(is.null(name)){
+    name <- colnames(nodes)[1]
+  }
+  rownames(nodes) <- nodes[[name]]
+
+  # options
+  options <- list(nodeName = name)
+  if(is.null(label)){
+    options[["nodeLabel"]] <- name
+  }else{
+    options <- checkColumn(options,"nodeLabel",label)
+  }
+  options <- checkColumn(options,"nodeText",ntext)
+
+  options[["language"]] <- checkLanguage(language)
+
+  if (!is.null(image)){
+    image <- image[1]
+    if(!image %in% colnames(nodes)){
+      warning("image: name must match in nodes colnames.")
+    }else{
+      options[["imageItems"]] <- image
+    }
+  }
+
+  options[["mode"]] <- 2
+
+  # create gallery
+  gallery <- structure(list(nodes=nodes,options=options),class="gallery_rd3")
+
+  if(!is.null(dir)){
+    galleryCreate(gallery,dir)
+  }
+  return(gallery)
+}
+
 table2links <- function(x){
       tree <- as.matrix(x)
       tree2 <- list()
@@ -174,7 +222,7 @@ links2table <- function(x){
   }
 }
 
-treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat = FALSE, ...){
+treeGalleryWrapper <- function(tree, deep, initialType, tableformat, gallery_mode, ...){
   arguments <- list(...)
 
   tree <- tree[rowSums(is.na(tree)) != ncol(tree), ]
@@ -185,7 +233,7 @@ treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat 
     arguments$dir <- NULL
   }
 
-  if(is.null(arguments$controls)){
+  if("controls" %in% names(formals(gallery_mode)) && is.null(arguments$controls)){
     arguments$controls <- 1:4
   }
 
@@ -267,7 +315,7 @@ treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat 
 
   arguments$nodes <- nodes
 
-  gallery <- do.call(gallery_rd3,arguments)
+  gallery <- do.call(gallery_mode,arguments)
 
   name <- gallery$options$nodeName
 
@@ -366,10 +414,10 @@ treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat 
     }else{
       gallery$options$nodeNamesByType <- nodenamesbytype
     }
+  }
 
-    if(length(arguments$roundedItems)==length(nodenamesbytype) && is.logical(arguments$roundedItems)){
-      gallery$options$roundedItems <- arguments$roundedItems
-    }
+  if(is.logical(arguments$roundedItems) && length(arguments$roundedItems)==length(gallery$options$nodeTypes)){
+    gallery$options$roundedItems <- arguments$roundedItems
   }
 
   if(!is.null(dir)){
@@ -378,6 +426,14 @@ treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat 
 
   class(gallery) <- c("treeGallery_rd3",class(gallery))
   return(gallery)
+}
+
+treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat = FALSE, ...){
+  return(treeGalleryWrapper(tree, deep, initialType, tableformat, gallery_rd3, ...))
+}
+
+treeGallery2_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat = FALSE, ...){
+  return(treeGalleryWrapper(tree, deep, initialType, tableformat, gallery2_rd3, ...))
 }
 
 add_tutorial_rd3 <- function(x, image=NULL, description=NULL){

@@ -3286,3 +3286,51 @@ function panelTemplateAutoColor(body,getColor){
       h2.style("color",d3.hsl(color).l > 0.75 ? basicColors.black : basicColors.white);
     }
 }
+
+function transposeNodes(Graphnodes,nodenames,options){
+  var splitMultiVariable = function(d){
+      for(var p in d) {
+        if(p!=options.nodeName && p!=options.nodeText && p!=options.nodeInfo){
+          if(typeof d[p] == "string" && d[p].indexOf("|")!=-1){
+            var aux = d[p].split("|");
+            d[p] = aux.map(function(d){ return d=="" ? null : (isNaN(parseInt(d)) ? d : +d); });
+          }
+        }
+      }
+  }
+
+  var nodes = [],
+      len = Graphnodes[0].length;
+  for(var i = 0; i<len; i++){
+      var node = {};
+      nodenames.forEach(function(d,j){
+        node[d] = Graphnodes[j][i];
+      })
+      splitMultiVariable(node);
+      node[options.nodeName] = String(node[options.nodeName]);
+      nodes.push(node);
+  }
+  return nodes;
+}
+
+function getSelectOptions(order,Graph,Tree){
+    return Graph.nodenames.filter(function(d){
+          if(d.substring(0,1)=="_"){
+            return false;
+          }
+          if(d==Graph.options.nodeName){
+            return true;
+          }
+          if(Graph.options.imageItems && d==Graph.options.imageItems){
+            return false;
+          }
+          if((d==Graph.options.nodeText || d==Graph.options.nodeInfo) && d!=Graph.options.nodeLabel){
+            return false;
+          }
+          if(Tree && Tree.typeFilter && Graph.options.nodeNamesByType && (!Graph.options.nodeNamesByType.hasOwnProperty(Tree.typeFilter) || Graph.options.nodeNamesByType[Tree.typeFilter].indexOf(d)==-1) && d!=Graph.options.nodeType){
+            return false;
+          }
+          return true;
+        })
+        .sort(order ? order : function(){ return 0; });
+}

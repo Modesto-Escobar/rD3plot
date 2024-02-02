@@ -32,7 +32,7 @@ createHTML <- function(directory, styles, dependencies, json){
   for(i in styles){
     scripts <- paste(scripts, paste0("<link rel=\"stylesheet\" type=\"text/css\" href=\"styles/",i,"\"></link>"), sep = "\n")
     file.copy(paste(www, i, sep = "/"), paste(directory, "styles", sep = "/"))
-    if(i=="styles.css"){
+    if(i=="styles.css" || i=="styles2.css"){
       for(font in c("Roboto-Regular-latin.woff2","Roboto-Regular-latin-ext.woff2")){
         file.copy(paste(www, font, sep = "/"), paste(directory, "styles", sep = "/"))
       }

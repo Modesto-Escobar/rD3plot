@@ -1,15 +1,15 @@
-\name{treeGallery_rd3}
-\alias{treeGallery_rd3}
+\name{treeGallery2_rd3}
+\alias{treeGallery2_rd3}
 \title{Images in a grid gallery.}
 \description{
-\code{treeGallery_rd3} produces an interactive image gallery. 
+\code{treeGallery2_rd3} produces an interactive image gallery (alternative display). 
 }
 \value{
 Object of class \code{treeGallery_rd3}.
 }
 
 \usage{
-treeGallery_rd3(tree, deep = FALSE, initialType = NULL, tableformat = FALSE, ...)
+treeGallery2_rd3(tree, deep = FALSE, initialType = NULL, tableformat = FALSE, ...)
 }
 \arguments{
 \item{tree}{a data frame with two columns: source and target, describing relationships between nodes. It indicates a hierarchy between nodes which can be dynamically explored. Optionally, another two columns describing types can be passed.}
@@ -28,7 +28,7 @@ tree <- data.frame(
   child=c("aa","ab","ba","bb","bc","aba","abb","abc","abd","baa","bab","baaa","aba")
 )
 
-gallery <- treeGallery_rd3(tree)
+gallery <- treeGallery2_rd3(tree)
 
 \dontrun{
 plot(gallery)
@@ -51,7 +51,7 @@ tree <- data.frame(
     "Elijah Wood|Viggo Mortensen|Ian McKellen", "Clint Eastwood|Eli Wallach|Lee Van Cleef")
 )
 
-gallery <- treeGallery_rd3(tree, initialType="film", tableformat=TRUE, color="type", zoom=2)
+gallery <- treeGallery2_rd3(tree, initialType="film", tableformat=TRUE)
 
 \dontrun{
 plot(gallery)
@@ -68,7 +68,7 @@ c("a4","b3|b4","c6|c7|c8")
 
 colnames(tree) <- c("a","b","c")
 
-gallery <- treeGallery_rd3(tree, deep=TRUE, color="type")
+gallery <- treeGallery2_rd3(tree, deep=TRUE)
 \dontrun{
 plot(gallery)
 }
