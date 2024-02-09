@@ -289,7 +289,7 @@ function mgmtTree(body, Graph, nodes, updateSelectOptions, deselectAllItems, mou
       addPath: function(path,callback){
         var thiz = this;
         path.forEach(function(parents,i){
-            thiz.breadcrumbs.append("span").text(" > ");
+            thiz.breadcrumbs.append("span").text(" : ");
             if(!Array.isArray(parents)){
               parents = [parents];
             }
@@ -302,8 +302,7 @@ function mgmtTree(body, Graph, nodes, updateSelectOptions, deselectAllItems, mou
                   })[0][options.nodeLabel] : parent,
                   text = thiz.breadcrumbs.append("span").text(label);
               if(callback){
-                text.style("cursor","pointer")
-                .style("color",basicColors.mediumBlue)
+                text
                 .attr("index",i)
                 .attr("index2",j)
                 .on("click",function(){
@@ -593,17 +592,17 @@ function mgmtTree(body, Graph, nodes, updateSelectOptions, deselectAllItems, mou
       });
 
       function appendButton(sel,name,callback){
-        sel.append("img")
-          .attr("class","icon-selection disabled")
+        sel.append("button")
+        .attr("class","icon-selection disabled")
+        .attr("title",name)
+        .on("click",function(){
+          callback();
+          buttonsWindow();
+        })
+        .append("svg")
           .attr("width",24)
           .attr("height",24)
-          .attr("src",b64Icons[name])
-          .attr("alt",name)
-          .attr("title",name)
-          .on("click",function(){
-            callback();
-            buttonsWindow();
-          })
+          .html(svgContent(name))
       }
 
       function buttonsWindow(){
@@ -641,6 +640,16 @@ function mgmtTree(body, Graph, nodes, updateSelectOptions, deselectAllItems, mou
             window.style("width",w2+"px");
           }
         }
+      }
+
+      function svgContent(name){
+        if(name=="intersection"){
+          return '<rect x="8" y="8" width="8" height="8" class="fill1" style="fill:#2f7bee;stroke:none" /><rect x="4" y="4" width="12" height="12" class="stroke1" style="fill:none;stroke-width:1;stroke:#000000" /><rect x="7" y="7" width="12" height="12" class="stroke1" style="fill:none;stroke-width:1;stroke:#000000" />';
+        }
+        if(name=="union"){
+          return '<rect x="4" y="4" width="12" height="12" class="fill1" style="fill:#2f7bee;stroke:none" /><rect x="7" y="7" width="12" height="12" class="fill1" style="fill:#2f7bee;stroke:none" /><rect x="4" y="4" width="12" height="12" class="stroke1" style="fill:none;stroke-width:1;stroke:#000000" /><rect x="7" y="7" width="12" height="12" class="stroke1" style="fill:none;stroke-width:1;stroke:#000000" />';
+        }
+        return '';
       }
       }
     }

@@ -1,5 +1,7 @@
 function gallery(Graph){
 
+  colorScheme(Graph.options.colorScheme);
+
   var nodes = transposeNodes(Graph.nodes,Graph.nodenames,Graph.options);
 
   var body = d3.select("body");
@@ -17,6 +19,10 @@ function gallery(Graph){
 
   var topbar = body.append("div")
         .attr("class","topbar");
+  var mainTitle = topbar.append("div").attr("class","topbar-container topbar-main");
+  if(Graph.options.main){
+    mainTitle.append("h1").text(Graph.options.main);
+  }
 
   // Tree union & intersection
   if(Tree){
@@ -44,12 +50,17 @@ function gallery(Graph){
       .append("button")
         .attr("class","filter-button")
         .attr("aria-label","Filter menu")
-        .append("img")
-      .attr("src",b64Icons.tune)
-      .on("click",function(){
+        .on("click",function(){
           body.classed("display-filterpanel",true);
           displaySideContent();
-      })
+        })
+        .append("svg")
+        .attr("height",24)
+        .attr("width",24)
+        .attr("viewBox","0 0 24 24")
+        .append("path")
+          .style("fill","#ffffff")
+          .attr("d","M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z")
 
   var filterpanel = body.append("div")
         .attr("class","filterpanel");
@@ -193,13 +204,6 @@ function gallery(Graph){
         itemback.html(orderedData[i][Graph.options.nodeText])
         itemback.append("div")
           .attr("class","card-check check-box")
-        var infotemplate = itemback.select(".item-card-back > .info-template");
-        if(!infotemplate.empty()){
-          infotemplate.style("overflow-y","auto")
-            .style("height", "100%")
-            .style("margin", null)
-            .style("width", null)
-        }
       }
 
       itemcard.datum(orderedData[i])
@@ -508,6 +512,50 @@ function gallery(Graph){
           }
     });
   });
+  }
+
+  function colorScheme(mode){
+    if(mode){
+      // headerback headertext galleryback gallerytext buttons
+      var pallete = [
+        ["#FF6319CC","#222C37","#222C37","#ffffff","#FF6319"],
+        ["#222C37","#ffffff","#FF63191A","#222C37","#FF6319"],
+        ["#222C37","#ffffff","#B83C8233","#222C37","#B83C82"],
+        ["#B83C82","#ffffff","#222C3733","#B83C82","#B83C82"],
+        ["#6639B7","#ffffff","#FF7F331A","#0066A1","#0066A1"],
+        ["#0066A1","#ffffff","#FF7F331A","#6639B7","#6639B7"],
+        ["#0066A1","#ffffff","#0066A133","#FF7F33","#FF7F33"],
+        ["#6585ED","#ffffff","#F5756C1A","#54616A","#54616A"],
+        ["#F5756C","#ffffff","#6585ED33","#54616A","#54616A"],
+        ["#3A7FA6","#ffffff","#5CADBF1A","#FF6319","#FF6319"],
+        ["#46475D","#ffffff","#3A7FA633","#FF6319","#FF6319"]
+      ][mode-1];
+      
+      d3.select("head")
+        .append("style")
+        .text(
+'.topbar { background-color: '+pallete[0]+'; color: '+pallete[1]+'; }' +
+'.grid-gallery-mode2 { background-color: '+pallete[2]+'; }' +
+'.filter-button { border-color: '+pallete[1]+'; }' +
+'.filter-button > svg > path { fill: '+pallete[1]+'!important; }' +
+'.icon-selection { border-color: '+pallete[1]+'; }' +
+'.multi-search > .search-box, .multi-search > .search-box > div.text-wrapper > div.text-content > textarea { background-color: '+pallete[1]+'; }' +
+'.multi-search > button.search-icon > svg > path { fill: '+pallete[0]+'; }' +
+'.icon-selection > svg > rect.fill1 { fill: '+pallete[1]+'!important; }' +
+'.icon-selection > svg > rect.stroke1 { stroke: '+pallete[1]+'!important; }' +
+'.grid-gallery-mode2 > .breadcrumbs { border-bottom-color: '+pallete[3]+'; }' +
+'.grid-gallery-mode2 > .breadcrumbs > button.primary { color: '+pallete[3]+'; }' +
+'.grid-gallery-mode2 > .breadcrumbs > button.primary.disabled { border-bottom-color: '+pallete[3]+'; }' +
+'button.primary { background-color: '+pallete[4]+'; }' +
+'button.primary-outline { color: '+pallete[4]+'; border-color: '+pallete[4]+'; }' +
+'a { color: '+pallete[4]+' }' +
+'button.switch-button.active { background-color: '+pallete[4]+'; }' +
+'button.switch-button.active:after { border-color: '+pallete[4]+'; }' +
+'.selected .check-box { background-color: '+pallete[4]+'; border-color: '+pallete[4]+'; }' +
+'.filterpanel > .filter-side-panel > .side-panel-content > div > .items-container > .radio-item.selected-item:before { border-color: '+pallete[4]+'; }' +
+'.grid-gallery-mode2 > .breadcrumbs > span[index] { color: '+pallete[4]+' }'
+        )
+    }
   }
 } // gallery function end
 

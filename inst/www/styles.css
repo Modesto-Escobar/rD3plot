@@ -102,7 +102,6 @@ button.primary.home {
   width: 2.2em;
 }
 button.primary.home {
-  color: transparent;
   overflow: hidden;
   white-space: nowrap;
   color: transparent;
@@ -337,11 +336,13 @@ img.icon {
   cursor: pointer;
   margin: 0 5px;
 }
-img.icon-selection {
-  vertical-align: middle;
+button.icon-selection {
   cursor: pointer;
+  border: none;
+  padding: 0;
+  vertical-align: middle;
 }
-img.icon-selection.disabled {
+button.icon-selection.disabled {
   opacity: 0.5;
   pointer-events: none;
 }
@@ -1824,6 +1825,10 @@ pointer-events: none;
   height:100%; 
   background:linear-gradient(to right, transparent 90%, white);
   pointer-events: none;
+}
+.breadcrumbs > span[index] {
+  color: #2f7bee;
+  cursor: pointer;
 }
 
 .buttons-popup,
