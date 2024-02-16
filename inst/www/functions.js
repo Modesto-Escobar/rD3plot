@@ -1234,6 +1234,9 @@ function displayMultiSearch(){
 
     var searchBoxInput = searchBox.append("div")
       .attr("class","text-wrapper")
+      .on("click",function(){
+        searchBoxInput.node().focus();
+      })
       .append("div")
       .attr("class","text-content")
       .append("textarea")

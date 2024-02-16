@@ -565,16 +565,8 @@ function mgmtTree(body, Graph, nodes, updateSelectOptions, deselectAllItems, mou
       if(Tree.type == "extended"){
         return function(){
           Tree.resetOptions();
-          var node = nodes.filter(function(n){
-              return n.selected;
-            });
-          if(node.length){
-            node = node[0];
-            Tree.typeFilter = node[options.nodeType];
-            Tree.history.push([Tree.treeParent,Tree.typeFilter]);
-            updateSelectOptions();
-            filterSelection();
-          }
+          updateSelectOptions();
+          filterSelection();
         }
       }
     }

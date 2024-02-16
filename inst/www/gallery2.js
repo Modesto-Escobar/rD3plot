@@ -19,24 +19,27 @@ function gallery(Graph){
 
   var topbar = body.append("div")
         .attr("class","topbar");
-  var mainTitle = topbar.append("div").attr("class","topbar-container topbar-main");
+  var topbarContent = topbar.append("div")
+        .attr("class","topbar-topcontent");
+  var mainTitle = topbarContent.append("div").attr("class","topbar-main");
   if(Graph.options.main){
     mainTitle.append("h1").text(Graph.options.main);
   }
 
+  var topbarButtons = topbarContent.append("div").attr("class","topbar-buttons");
+  topbarContent.append("div").attr("class","topbar-clear");
+
   // Tree union & intersection
   if(Tree){
     Tree.displayUnionIntersectionButtons(function(callback){
-      callback(topbar.append("div").attr("class","topbar-container"));
+      callback(topbarButtons.append("div"));
     });
   }
 
   // node multi search
   var searchFunction = Tree ? Tree.getSearchFunction(filterSelection,displayGraph) : filterSelection;
 
-  topbar.append("div")
-    .attr("class","topbar-container")
-      .append("div")
+  topbarButtons.append("div")
       .attr("class","topbar-search")
       .call(displayMultiSearch()
         .data(nodes)
@@ -45,14 +48,15 @@ function gallery(Graph){
         .updateFilter(searchFunction))
 
   // filter button
-  topbar.append("div")
-    .attr("class","topbar-container")
+  topbarButtons.append("div")
       .append("button")
         .attr("class","filter-button")
         .attr("aria-label","Filter menu")
         .on("click",function(){
+          window.scrollTo(0, 0);
           body.classed("display-filterpanel",true);
           displaySideContent();
+          updateFiltersMarkers();
         })
         .append("svg")
         .attr("height",24)
@@ -61,6 +65,20 @@ function gallery(Graph){
         .append("path")
           .style("fill","#ffffff")
           .attr("d","M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z")
+
+  // filter selection
+  topbarButtons.append("div")
+      .append("button")
+        .attr("class","filter-selection")
+        .attr("aria-label","Filter selection")
+        .on("click",filterSelection)
+        .append("svg")
+        .attr("height",24)
+        .attr("width",24)
+        .attr("viewBox","0 0 24 24")
+        .append("path")
+          .style("fill","#ffffff")
+          .attr("d","M7,6h10l-5.01,6.3L7,6z M4.25,5.61C6.27,8.2,10,13,10,13v6c0,0.55,0.45,1,1,1h2c0.55,0,1-0.45,1-1v-6 c0,0,3.72-4.8,5.74-7.39C20.25,4.95,19.78,4,18.95,4H5.04C4.21,4,3.74,4.95,4.25,5.61z")
 
   var filterpanel = body.append("div")
         .attr("class","filterpanel");
@@ -100,7 +118,7 @@ function gallery(Graph){
   var galleryItems = gallery.append("div")
         .attr("class","gallery-items")
 
-  pagestep = pagination = Math.floor(galleryItems.node().clientWidth / 385) * 3;
+  resetPagination();
 
   var viewMore = gallery.append("button")
         .attr("class","primary-outline")
@@ -109,6 +127,20 @@ function gallery(Graph){
           pagination = pagination + pagestep;
           displayGraph();
         })
+
+  window.addEventListener("scroll",function(){
+    if(window.pageYOffset==0){
+      resetPagination();
+      displayGraph();
+    }else if(window.innerHeight + window.pageYOffset >= document.body.offsetHeight - 10){
+      pagination = pagination + pagestep;
+      displayGraph();
+    }
+  })
+
+  function resetPagination(){
+    pagestep = pagination = Math.floor(galleryItems.node().clientWidth / 385) * 3;
+  }
 
   var footer = body.append("div")
     .attr("class","footer")
@@ -225,7 +257,7 @@ function gallery(Graph){
     }
 
     if(Tree && Tree.type == "extended"){
-      topbar.selectAll(".icon-selection").classed("disabled",selectedNames().length<2);
+      topbarContent.selectAll(".icon-selection").classed("disabled",selectedNames().length<2);
     }
 
     body.on("click.remove-buttons-popup",function(){
@@ -254,6 +286,11 @@ function gallery(Graph){
         });
   }
 
+  function roundNumeric(d){
+    d = +d;
+    return (d % 1 === 0) ? d : d.toFixed(1);
+  }
+
   function updateFiltersMarkers(){
     sidecontent.selectAll(".filter-container").each(function(){
       var div = d3.select(this),
@@ -261,7 +298,7 @@ function gallery(Graph){
           keysize = selectedValues.size(key),
           text = keysize;
       if(keytypes[key]=="number"){
-        text = selectedValues.values(key).join(" - ");
+        text = selectedValues.values(key).map(roundNumeric).join(" - ");
       }
       div.select(".filter-name > span").text(keysize ? " ("+text+")" : "");
     });
@@ -276,7 +313,7 @@ function gallery(Graph){
     container.selectAll(".tag").remove();
     selectedValues.keys().forEach(function(k){
       if(keytypes[k] == "number"){
-        renderTag(container,k + " (" + selectedValues.values(k).join(" - ") + ")",k);
+        renderTag(container,k + " (" + selectedValues.values(k).map(roundNumeric).join(" - ") + ")",k);
       }else{
         selectedValues.values(k).forEach(function(v){
           renderTag(container,v,k,v);
@@ -294,7 +331,7 @@ function gallery(Graph){
         container.selectAll(".tag").remove();
         selectedValues.keys().forEach(function(k){
           if(keytypes[k] == "number"){
-            renderTag(container,k + " (" + selectedValues.values(k).join(" - ") + ")",k);
+            renderTag(container,k + " (" + selectedValues.values(k).map(roundNumeric).join(" - ") + ")",k);
           }else{
             renderTag(container,k,k);
           }
@@ -467,11 +504,19 @@ function gallery(Graph){
               displayGraph();
             }));
           }else{
-            var dat = subNodes.map(function(d){ return d[col]; });
+            var dat = subNodes.map(function(d){ return d[col]; }),
+                crosstab = {};
             if(type != 'string'){
               dat = dat.reduce(function(a,b) { return b ? a.concat(b) : a; }, []);
             }
-            dat = d3.set(dat).values().sort();
+            dat.forEach(function(d){
+              if(!crosstab.hasOwnProperty(d)){
+                crosstab[d] = 1;
+              }else{
+                crosstab[d] += 1;
+              }
+            });
+            dat = d3.keys(crosstab).sort();
             if(dat.length>20){
               var simpleSearch = container.append("div")
                 .attr("class","simple-search")
@@ -498,7 +543,7 @@ function gallery(Graph){
 
                 var tag = container.append("span")
                   .attr("class","tag"+(selectedValues.has(col,d) ? " tag-selected" : ""))
-                  .text(d)
+                  .text(d+(crosstab[d]>1 ? " ("+crosstab[d]+")" : ""))
                   .on("click",function(){
                     tag.classed("tag-selected",!tag.classed("tag-selected"));
                     selectedValues[tag.classed("tag-selected") ? 'add' : 'remove'](col,d);
@@ -516,19 +561,19 @@ function gallery(Graph){
 
   function colorScheme(mode){
     if(mode){
-      // headerback headertext galleryback gallerytext buttons
+      // headerback headertext galleryback gallerytext buttons cardback
       var pallete = [
-        ["#FF6319CC","#222C37","#222C37","#ffffff","#FF6319"],
-        ["#222C37","#ffffff","#FF63191A","#222C37","#FF6319"],
-        ["#222C37","#ffffff","#B83C8233","#222C37","#B83C82"],
-        ["#B83C82","#ffffff","#222C3733","#B83C82","#B83C82"],
-        ["#6639B7","#ffffff","#FF7F331A","#0066A1","#0066A1"],
-        ["#0066A1","#ffffff","#FF7F331A","#6639B7","#6639B7"],
-        ["#0066A1","#ffffff","#0066A133","#FF7F33","#FF7F33"],
-        ["#6585ED","#ffffff","#F5756C1A","#54616A","#54616A"],
-        ["#F5756C","#ffffff","#6585ED33","#54616A","#54616A"],
-        ["#3A7FA6","#ffffff","#5CADBF1A","#FF6319","#FF6319"],
-        ["#46475D","#ffffff","#3A7FA633","#FF6319","#FF6319"]
+        ["#FF6319CC","#222C37","#222C37","#ffffff","#FF6319","#dee5ed"],
+        ["#222C37","#ffffff","#FF63191A","#222C37","#FF6319","#dee5ed"],
+        ["#222C37","#ffffff","#B83C8233","#222C37","#B83C82","#dee5ed"],
+        ["#B83C82","#ffffff","#222C3733","#B83C82","#B83C82","#dee5ed"],
+        ["#6639B7","#ffffff","#FF7F331A","#0066A1","#0066A1","#dee5ed"],
+        ["#0066A1","#ffffff","#FF7F331A","#6639B7","#6639B7","#dee5ed"],
+        ["#0066A1","#ffffff","#0066A133","#FF7F33","#FF7F33","#dee5ed"],
+        ["#6585ED","#ffffff","#F5756C1A","#54616A","#54616A","#dee5ed"],
+        ["#F5756C","#ffffff","#6585ED33","#54616A","#54616A","#dee5ed"],
+        ["#3A7FA6","#ffffff","#5CADBF1A","#FF6319","#FF6319","#dee5ed"],
+        ["#46475D","#ffffff","#3A7FA633","#FF6319","#FF6319","#dee5ed"]
       ][mode-1];
       
       d3.select("head")
@@ -536,25 +581,30 @@ function gallery(Graph){
         .text(
 '.topbar { background-color: '+pallete[0]+'; color: '+pallete[1]+'; }' +
 '.grid-gallery-mode2 { background-color: '+pallete[2]+'; }' +
-'.filter-button { border-color: '+pallete[1]+'; }' +
-'.filter-button > svg > path { fill: '+pallete[1]+'!important; }' +
-'.icon-selection { border-color: '+pallete[1]+'; }' +
-'.multi-search > .search-box, .multi-search > .search-box > div.text-wrapper > div.text-content > textarea { background-color: '+pallete[1]+'; }' +
+'.filter-button, .filter-selection, .icon-selection { border-color: '+pallete[1]+'; }' +
+'.filter-button > svg > path, .filter-selection > svg > path { fill: '+pallete[1]+'!important; }' +
+'.multi-search > .search-box, .multi-search > .search-box > div.text-wrapper > div.text-content > textarea { background-color: '+pallete[1]+'; color: '+pallete[3]+'; }' +
+'.multi-search > .search-box > div.check-container > span.yes::after { border-color: '+pallete[3]+'; }' +
 '.multi-search > button.search-icon > svg > path { fill: '+pallete[0]+'; }' +
 '.icon-selection > svg > rect.fill1 { fill: '+pallete[1]+'!important; }' +
 '.icon-selection > svg > rect.stroke1 { stroke: '+pallete[1]+'!important; }' +
 '.grid-gallery-mode2 > .breadcrumbs { border-bottom-color: '+pallete[3]+'; }' +
 '.grid-gallery-mode2 > .breadcrumbs > button.primary { color: '+pallete[3]+'; }' +
 '.grid-gallery-mode2 > .breadcrumbs > button.primary.disabled { border-bottom-color: '+pallete[3]+'; }' +
-'button.primary { background-color: '+pallete[4]+'; }' +
+'button.primary, .slider-extent, button.switch-button.active { background-color: '+pallete[4]+'; }' +
 'button.primary-outline { color: '+pallete[4]+'; border-color: '+pallete[4]+'; }' +
 'a { color: '+pallete[4]+' }' +
-'button.switch-button.active { background-color: '+pallete[4]+'; }' +
 'button.switch-button.active:after { border-color: '+pallete[4]+'; }' +
 '.selected .check-box { background-color: '+pallete[4]+'; border-color: '+pallete[4]+'; }' +
-'.filterpanel > .filter-side-panel > .side-panel-content > div > .items-container > .radio-item.selected-item:before { border-color: '+pallete[4]+'; }' +
-'.grid-gallery-mode2 > .breadcrumbs > span[index] { color: '+pallete[4]+' }'
+'.radio-item.selected-item:before { border-color: '+pallete[4]+'; }' +
+'.grid-gallery-mode2 > .breadcrumbs > span[index] { color: '+pallete[4]+' }' +
+'.grid-gallery-mode2 > .gallery-items > .item-card > .item-card-inner > .item-card-front, .grid-gallery-mode2 > .gallery-items > .item-card > .item-card-inner > .item-card-back { background-color: '+pallete[5]+'; color: '+contrast(pallete[5])+'; }' +
+'.grid-gallery-mode2 > .gallery-items > .item-card > .item-card-inner > .item-card-front > span:after { background: linear-gradient(to right, transparent 90%, '+pallete[5]+'); }'
         )
+    }
+
+    function contrast(color){
+      return d3.hsl(color).l > 0.66 ? '#000000' : '#ffffff';
     }
   }
 } // gallery function end
@@ -611,27 +661,22 @@ ValueSelector.prototype = {
       });
     }else{
       data.forEach(function(n){
-        var filtered = true;
         for(k in selectedValues){
           var type = keytypes[k];
           if(type=="number"){
             var values = selectedValues[k].values().map(Number);
             if(n[k] && values[0]<=n[k] && values[1]>=n[k]){
-              filtered = false;
-              break;
+              continue;
             }
           }else{
             if(n[k] && intersection(selectedValues[k].values().map(String),(Array.isArray(n[k]) ? n[k] : [n[k]])).length){
-              filtered = false;
-              break;
+              continue;
             }
           }
-        }
-        if(filtered){
           n['_filtered'] = true;
-        }else{
-          delete n['_filtered'];
+          return;
         }
+        delete n['_filtered'];
       });
     }
   },
