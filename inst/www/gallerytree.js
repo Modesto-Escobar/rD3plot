@@ -229,6 +229,21 @@ function mgmtTree(body, Graph, nodes, updateSelectOptions, deselectAllItems, mou
       }
     }
 
+    Tree.treeRelatives2 = function(treerelatives,callback){
+      if(!treerelatives.empty()){
+        treerelatives.selectAll(".tree-relatives > span").each(function(){
+          var self = d3.select(this),
+              n = nodes.filter(function(n){ return n[options.nodeName]==self.attr("nodename"); })[0];
+          if(n[options.nodeText]){
+            self.style("cursor","pointer")
+              .on("click",function(){
+                callback(n);
+              })
+          }
+        })
+      }
+    }
+
     Tree.cleanButtonsPopup = function(){
       var popup = body.select("body > .buttons-popup");
       if(!popup.empty()){

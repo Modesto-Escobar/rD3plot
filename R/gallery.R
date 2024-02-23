@@ -17,7 +17,9 @@ galleryCreate <- function(gallery, dir){
   language <- getLanguageScript(gallery)
   script <- "gallery.js"
   style <- "styles.css"
+  mode <- 1
   if(!is.null(gallery$options$mode) && gallery$options$mode==2){
+    mode <- 2
     script <- "gallery2.js"
     style <- "styles2.css"
   }
@@ -34,7 +36,7 @@ galleryCreate <- function(gallery, dir){
     styles <- c(styles,"tutorial.css")
   }
   createHTML(dir, styles, scripts, function(){ return(imgWrapper(gallery,galleryJSON,dir)) })
-  if(is.null(gallery$options$note)){
+  if(mode==1 && is.null(gallery$options$note)){
     dir.create(paste0(dir,"/images"),FALSE)
     www <- wwwDirectory()
     file.copy(paste0(www,"/acknowledgement.png"), paste0(dir,"/images"))

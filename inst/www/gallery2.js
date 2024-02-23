@@ -4,6 +4,10 @@ function gallery(Graph){
 
   var nodes = transposeNodes(Graph.nodes,Graph.nodenames,Graph.options);
 
+  nodes.forEach(function(node,i){
+    node['_index'] = i;
+  });
+
   var body = d3.select("body");
 
   var Tree = typeof mgmtTree != 'undefined' ? mgmtTree(body, Graph, nodes, updateSelectOptions, deselectAllItems, mousePosition, selectedNames, removeFilter) : false;
@@ -23,7 +27,10 @@ function gallery(Graph){
         .attr("class","topbar-topcontent");
   var mainTitle = topbarContent.append("div").attr("class","topbar-main");
   if(Graph.options.main){
-    mainTitle.append("h1").text(Graph.options.main);
+    mainTitle.append("a")
+      .attr("href","")
+      .append("h1")
+        .text(Graph.options.main);
   }
 
   var topbarButtons = topbarContent.append("div").attr("class","topbar-buttons");
@@ -83,19 +90,21 @@ function gallery(Graph){
   var filterpanel = body.append("div")
         .attr("class","filterpanel");
 
+  filterpanel.on("click",closeFilterPanel)
+
   var sidepanel = filterpanel.append("div")
     .attr("class","filter-side-panel")
+    .on("click",function(){
+       d3.event.stopPropagation();
+    })
 
   var sideheader = sidepanel.append("div")
     .attr("class","side-panel-header")
+  sideheader.html("&nbsp;")
   sideheader.append("button")
-    .attr("class","filter-close-button")
+    .attr("class","close-button")
     .attr("aria-label","Close")
-    .html("&times;")
-    .on("click",function(){
-      body.classed("display-filterpanel",false);
-      sidecontent.selectAll("*").remove();
-    });
+    .on("click",closeFilterPanel);
 
   var sidecontent = sidepanel.append("div")
     .attr("class","side-panel-content")
@@ -103,9 +112,14 @@ function gallery(Graph){
   var sidebottom = sidepanel.append("div")
     .attr("class","side-panel-bottom")
   sidebottom.append("button")
-    .attr("class","primary-outline")
+    .attr("class","primary")
     .text("Clear filters")
     .on("click",removeFilter)
+
+  function closeFilterPanel(){
+    body.classed("display-filterpanel",false);
+    sidecontent.selectAll("*").remove();
+  }
 
   var gallery = body.append("div")
         .attr("class","grid-gallery-mode2");
@@ -120,13 +134,9 @@ function gallery(Graph){
 
   resetPagination();
 
-  var viewMore = gallery.append("button")
-        .attr("class","primary-outline")
-        .text("View More")
-        .on("click",function(){
-          pagination = pagination + pagestep;
-          displayGraph();
-        })
+  var viewMore = gallery.append("div")
+    .attr("class","loading-icon")
+    .html(getLoadingSVG())
 
   window.addEventListener("scroll",function(){
     if(window.pageYOffset==0){
@@ -185,15 +195,18 @@ function gallery(Graph){
       orderedData.reverse();
     }
 
-    var showcount = 0;
+    var showcount = 0,
+        indices = [];
     for(var i = 0; i<orderedData.length; i++){
       if(orderedData[i]["_filtered"]){
         continue;
       }
 
+      indices.push(orderedData[i]['_index']);
+
       if(showcount >= pagination){
         viewMore.style("display",null);
-        break;
+        continue;
       }
 
       showcount++;
@@ -204,65 +217,64 @@ function gallery(Graph){
       var iteminner = itemcard.append("div")
         .attr("class","item-card-inner");
 
-      var itemfront = iteminner.append("div")
-        .attr("class","item-card-front")
-      itemfront.append("div")
+      iteminner.append("div")
         .attr("class","card-check check-box")
+        .on("click",function(n){
+          d3.event.stopPropagation();
+          var index = d3.select(this.parentNode.parentNode).attr("card-index");
+          selectItem(index);
+        })
       var text = orderedData[i][Graph.options.nodeLabel];
-      var span = itemfront.append("span")
+      var span = iteminner.append("span")
         .text(text)
         .attr("title",text)
-      var imgwrapper = itemfront.append("div")
+      var imgwrapper = iteminner.append("div")
         .attr("class","img-wrapper")
       var image = imgwrapper.append("img")
       if(Graph.options.imageItems){
         image.on("error",function(){
             d3.select(this).attr("src",b64Icons.image)
               .style("width","60px")
-              .style("height","60px")
           })
           .attr("src",orderedData[i][Graph.options.imageItems]);
       }else{
         image.attr("src",b64Icons.image)
           .style("width","60px")
-          .style("height","60px")
       }
 
-      var itemback = iteminner.append("div")
-        .attr("class","item-card-back")
-
-      if(Graph.options.nodeText){
-        itemcard.classed("flip",true)
-        itemback.html(orderedData[i][Graph.options.nodeText])
-        itemback.append("div")
-          .attr("class","card-check check-box")
-      }
-
-      itemcard.datum(orderedData[i])
-        .classed("selected",orderedData[i]["selected"])
+      itemcard.classed("selected",orderedData[i]["selected"])
         .attr("card-index",i)
-        .on("click",function(n){
+        .on("click",function(){
           var index = d3.select(this).attr("card-index");
-          if(!n["selected"]){
-            n["selected"] = true;
-          }else{
-            delete n["selected"];
+          selectItem(index);
+          if(Graph.options.nodeText){
+            openMainFrame(orderedData[index]['_index'],indices);
           }
-          displayGraph();
-        })  
+        })
 
       if(Tree){
+        itemcard.datum(orderedData[i]);
         Tree.popButtonsWrapper(itemcard);
       }
     }
 
+    var selectedlen = selectedNames().length;
     if(Tree && Tree.type == "extended"){
-      topbarContent.selectAll(".icon-selection").classed("disabled",selectedNames().length<2);
+      topbarContent.selectAll(".icon-selection").classed("disabled",selectedlen<2);
     }
 
-    body.on("click.remove-buttons-popup",function(){
-      body.select("body > .buttons-popup").remove();
-    })
+    topbarContent.select(".filter-selection")
+      .classed("disabled",!selectedlen || selectedlen==indices.length);
+
+    function selectItem(i){
+      var n = orderedData[i];
+      if(!n["selected"]){
+        n["selected"] = true;
+      }else{
+        delete n["selected"];
+      }
+      displayGraph();
+    }
   } // end of displayGraph
 
   function filterSelection(){
@@ -418,6 +430,11 @@ function gallery(Graph){
 
   function displaySideContent(){
     var selectedOptions = getSelectOptions(sortAsc,Graph,Tree);
+    if(Graph.options.nodeType){
+      selectedOptions = selectedOptions.filter(function(d){
+        return d!=Graph.options.nodeType;
+      })
+    }
 
     // order
   var ordercontainer = sidecontent.append("div")
@@ -560,28 +577,31 @@ function gallery(Graph){
   }
 
   function colorScheme(mode){
-    if(mode){
-      // headerback headertext galleryback gallerytext buttons cardback
-      var pallete = [
-        ["#FF6319CC","#222C37","#222C37","#ffffff","#FF6319","#dee5ed"],
-        ["#222C37","#ffffff","#FF63191A","#222C37","#FF6319","#dee5ed"],
-        ["#222C37","#ffffff","#B83C8233","#222C37","#B83C82","#dee5ed"],
-        ["#B83C82","#ffffff","#222C3733","#B83C82","#B83C82","#dee5ed"],
-        ["#6639B7","#ffffff","#FF7F331A","#0066A1","#0066A1","#dee5ed"],
-        ["#0066A1","#ffffff","#FF7F331A","#6639B7","#6639B7","#dee5ed"],
-        ["#0066A1","#ffffff","#0066A133","#FF7F33","#FF7F33","#dee5ed"],
-        ["#6585ED","#ffffff","#F5756C1A","#54616A","#54616A","#dee5ed"],
-        ["#F5756C","#ffffff","#6585ED33","#54616A","#54616A","#dee5ed"],
-        ["#3A7FA6","#ffffff","#5CADBF1A","#FF6319","#FF6319","#dee5ed"],
-        ["#46475D","#ffffff","#3A7FA633","#FF6319","#FF6319","#dee5ed"]
-      ][mode-1];
+    // headerback headertext galleryback gallerytext buttons cardback
+    var pallete = [
+        ["#A53F2B","#FFFFFF","#FFFFFF","#000000","#003366","#EFEFEF"],
+        ["#FF8247","#222C37","#222C37","#ffffff","#FF6319","#dee5ed"],
+        ["#222C37","#ffffff","#FFEFE7","#222C37","#FF6319","#dee5ed"],
+        ["#222C37","#ffffff","#F1D8E6","#222C37","#B83C82","#dee5ed"],
+        ["#B83C82","#ffffff","#D2D4D7","#B83C82","#B83C82","#dee5ed"],
+        ["#6639B7","#ffffff","#FFF2EA","#0066A1","#0066A1","#dee5ed"],
+        ["#0066A1","#ffffff","#FFF2EA","#6639B7","#6639B7","#dee5ed"],
+        ["#0066A1","#ffffff","#CCE0EC","#FF7F33","#FF7F33","#dee5ed"],
+        ["#6585ED","#ffffff","#FEF1F0","#54616A","#54616A","#dee5ed"],
+        ["#F5756C","#ffffff","#E0E7FC","#54616A","#54616A","#dee5ed"],
+        ["#3A7FA6","#ffffff","#EEF7F9","#FF6319","#FF6319","#dee5ed"],
+        ["#46475D","#ffffff","#D7E5ED","#FF6319","#FF6319","#dee5ed"]
+      ];
+
+    if(mode && mode<=pallete.length){
+      pallete = pallete[mode-1];
       
       d3.select("head")
         .append("style")
         .text(
 '.topbar { background-color: '+pallete[0]+'; color: '+pallete[1]+'; }' +
 '.grid-gallery-mode2 { background-color: '+pallete[2]+'; }' +
-'.filter-button, .filter-selection, .icon-selection { border-color: '+pallete[1]+'; }' +
+'.filter-button, .filter-selection, .icon-selection { border-color: '+pallete[1]+'; color: '+pallete[1]+' }' +
 '.filter-button > svg > path, .filter-selection > svg > path { fill: '+pallete[1]+'!important; }' +
 '.multi-search > .search-box, .multi-search > .search-box > div.text-wrapper > div.text-content > textarea { background-color: '+pallete[1]+'; color: '+pallete[3]+'; }' +
 '.multi-search > .search-box > div.check-container > span.yes::after { border-color: '+pallete[3]+'; }' +
@@ -598,13 +618,113 @@ function gallery(Graph){
 '.selected .check-box { background-color: '+pallete[4]+'; border-color: '+pallete[4]+'; }' +
 '.radio-item.selected-item:before { border-color: '+pallete[4]+'; }' +
 '.grid-gallery-mode2 > .breadcrumbs > span[index] { color: '+pallete[4]+' }' +
-'.grid-gallery-mode2 > .gallery-items > .item-card > .item-card-inner > .item-card-front, .grid-gallery-mode2 > .gallery-items > .item-card > .item-card-inner > .item-card-back { background-color: '+pallete[5]+'; color: '+contrast(pallete[5])+'; }' +
-'.grid-gallery-mode2 > .gallery-items > .item-card > .item-card-inner > .item-card-front > span:after { background: linear-gradient(to right, transparent 90%, '+pallete[5]+'); }'
+'.grid-gallery-mode2 > .gallery-items > .item-card > .item-card-inner, .grid-gallery-mode2 > .gallery-items > .item-card > .item-card-inner > .item-card-back { background-color: '+pallete[5]+'; color: '+contrast(pallete[5])+'; }' +
+'.grid-gallery-mode2 > .gallery-items > .item-card > .item-card-inner > span:after { background: linear-gradient(to right, transparent 90%, '+pallete[5]+'); }' +
+'.loading-icon > svg > g > rect { fill: '+contrast(pallete[2])+'; }'
         )
     }
 
     function contrast(color){
       return d3.hsl(color).l > 0.66 ? '#000000' : '#ffffff';
+    }
+  }
+
+  function openMainFrame(index,navigation,goback){
+    var leftindex = false,
+        rightindex = false;
+    if(typeof goback != 'undefined'){
+      leftindex = goback;
+    }else if(navigation){
+      leftindex = navigation.indexOf(index)-1;
+      rightindex = navigation.indexOf(index)+1;
+      if(leftindex<=-1){
+        leftindex = false;
+      }else{
+        leftindex = navigation[leftindex];
+      }
+      if(rightindex>=navigation.length){
+        rightindex = false;
+      }else{
+        rightindex = navigation[rightindex];
+      }
+    }
+
+    body.select(".mainframe-background").remove();
+    body.style("overflow","hidden");
+
+    var background = body.append("div")
+        .attr("class","mainframe-background");
+
+    background.on("click",closeMainFrame)
+
+    var mainframe = background.append("div")
+      .attr("class","mainframe")
+      .on("click",function(){
+         d3.event.stopPropagation();
+      })
+
+    mainframe.append("button")
+      .attr("class","close-button")
+      .attr("aria-label","Close")
+      .on("click",closeMainFrame);
+
+    if(leftindex!==false){
+      mainframe.append("button")
+      .attr("class","left-button")
+      .on("click",function(){
+        openMainFrame(leftindex,navigation);
+      })
+    }
+
+    if(rightindex!==false){
+      mainframe.append("button")
+      .attr("class","right-button")
+      .on("click",function(){
+        openMainFrame(rightindex,navigation);
+      })
+    }
+
+    mainframe.append("div")
+      .attr("class","mainframe-content")
+      .html(nodes[index][Graph.options.nodeText]);
+
+    if(Graph.options.imageItems){
+      mainframe.select(".info-template > div")
+        .insert("img",":first-child")
+        .attr("src",nodes[index][Graph.options.imageItems])
+    }
+
+    if(Tree){
+      Tree.treeRelatives2(mainframe.select(".info-template > div > .tree-relatives"),function(node){
+        openMainFrame(node['_index'],navigation,typeof goback != 'undefined' ? goback : index);
+      });
+    }
+
+    mainframe.selectAll("a[target=mainframe]").on("mousedown",function(){
+      mainframe.select(".mainframe-content").append("iframe").attr("name","mainframe").style("display","none");
+    }).on("mouseup",function(){
+      mainframe.select(".info-template").style("display","none");
+      mainframe.select("iframe[name=mainframe]").style("display",null);
+      mainframe.select("button.right-button").remove();
+      mainframe.select("button.left-button").on("click",function(){
+        openMainFrame(index,navigation);
+      })
+    })
+
+    var mt = 48, // margin-top
+        wh = window.innerHeight-(mt*2),
+        mh = parseInt(mainframe.style("max-height")),
+        h = wh<mh ? wh : mh;
+    mainframe.style("height",h+"px");
+
+    if(wh>mh){
+      var nmt = mt + ((wh-mh)/2);
+      mainframe.style("margin-top",nmt+"px")
+    }
+
+    function closeMainFrame(){
+      background.remove();
+      body.style("overflow",null);
     }
   }
 } // gallery function end
@@ -694,3 +814,54 @@ ValueSelector.prototype = {
   }
 }
 
+function getLoadingSVG(w,h){
+  if(!w){
+    w = 100;
+  }
+  if(!h){
+    h = 100;
+  }
+  var str = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 100 100">
+<g transform="rotate(0 50 50)">
+  <rect x="44" y="24" rx="6" ry="6" width="12" height="12" fill="#000000">
+    <animate attributeName="opacity" values="1;0" keyTimes="0;1" dur="1s" begin="-0.8s" repeatCount="indefinite"></animate>
+  </rect>
+</g><g transform="rotate(40 50 50)">
+  <rect x="44" y="24" rx="6" ry="6" width="12" height="12" fill="#000000">
+    <animate attributeName="opacity" values="1;0" keyTimes="0;1" dur="1s" begin="-0.7s" repeatCount="indefinite"></animate>
+  </rect>
+</g><g transform="rotate(80 50 50)">
+  <rect x="44" y="24" rx="6" ry="6" width="12" height="12" fill="#000000">
+    <animate attributeName="opacity" values="1;0" keyTimes="0;1" dur="1s" begin="-0.6s" repeatCount="indefinite"></animate>
+  </rect>
+</g><g transform="rotate(120 50 50)">
+  <rect x="44" y="24" rx="6" ry="6" width="12" height="12" fill="#000000">
+    <animate attributeName="opacity" values="1;0" keyTimes="0;1" dur="1s" begin="-0.5s" repeatCount="indefinite"></animate>
+  </rect>
+</g><g transform="rotate(160 50 50)">
+  <rect x="44" y="24" rx="6" ry="6" width="12" height="12" fill="#000000">
+    <animate attributeName="opacity" values="1;0" keyTimes="0;1" dur="1s" begin="-0.4s" repeatCount="indefinite"></animate>
+  </rect>
+</g><g transform="rotate(200 50 50)">
+  <rect x="44" y="24" rx="6" ry="6" width="12" height="12" fill="#000000">
+    <animate attributeName="opacity" values="1;0" keyTimes="0;1" dur="1s" begin="-0.3s" repeatCount="indefinite"></animate>
+  </rect>
+</g><g transform="rotate(240 50 50)">
+  <rect x="44" y="24" rx="6" ry="6" width="12" height="12" fill="#000000">
+    <animate attributeName="opacity" values="1;0" keyTimes="0;1" dur="1s" begin="-0.2s" repeatCount="indefinite"></animate>
+  </rect>
+</g><g transform="rotate(280 50 50)">
+  <rect x="44" y="24" rx="6" ry="6" width="12" height="12" fill="#000000">
+    <animate attributeName="opacity" values="1;0" keyTimes="0;1" dur="1s" begin="-0.1s" repeatCount="indefinite"></animate>
+  </rect>
+</g><g transform="rotate(320 50 50)">
+  <rect x="44" y="24" rx="6" ry="6" width="12" height="12" fill="#000000">
+    <animate attributeName="opacity" values="1;0" keyTimes="0;1" dur="1s" begin="0s" repeatCount="indefinite"></animate>
+  </rect>
+</g>
+</svg>
+`;
+
+  return str;
+}
