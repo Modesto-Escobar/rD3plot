@@ -154,6 +154,10 @@ button.switch-button.active:after {
   padding: 40px;
   text-align: center;
 }
+.grid-gallery-mode2 > .gallery-items > h3 {
+  font-size: 1.6em;
+  margin-top: 16px;
+}
 .grid-gallery-mode2 > .gallery-items > .item-card {
   margin: 40px;
   display: inline-block;
@@ -601,6 +605,8 @@ button.switch-button.active:after {
 .grid-gallery-mode2 > .breadcrumbs {
   border-bottom: 1px solid #1a202c;
   margin: 0 32px;
+  display: flex;
+  flex-direction: row;
 }
 .grid-gallery-mode2 > .breadcrumbs > button.primary {
   background: none;
@@ -609,6 +615,8 @@ button.switch-button.active:after {
   display: inline-block;
   opacity: 0.6;
   border-bottom: 4px solid transparent;
+  flex-grow: 1;
+  flex-basis: 0;
 }
 .grid-gallery-mode2 > .breadcrumbs > button.primary.disabled {
   opacity: 1;
@@ -705,10 +713,9 @@ p.window-message {
   right: 0;
   top: 0;
   cursor: pointer;
-  width: 30px;
-  height: 30px;
+  width: 48px;
+  height: 48px;
   padding: 0;
-  margin: 8px 0 0 0;
 }
 .close-button:before {
   position: absolute;
@@ -716,8 +723,9 @@ p.window-message {
   top: 0;
   content: '\D7';
   color: #000000;
-  line-height: 1;
-  font-size: 30px;
+  line-height: 1.5;
+  font-size: 32px;
+  margin-left: 15px;
 }
 
 /* main frame */
@@ -740,15 +748,15 @@ p.window-message {
   border-radius: 0 0 20px 0;
 }
 .mainframe-background > .mainframe > .mainframe-content {
-  padding: 40px;
+  padding: 40px 56px;
   height: calc(100% - 80px);
 }
 .mainframe-background > .mainframe > button.right-button,
 .mainframe-background > .mainframe > button.left-button {
   width: 24px;
-  height: 48px;
+  height: 32px;
   padding: 0;
-  margin: 0 8px;
+  margin: 0 16px;
   border: none;
   background-color: #000000;
   position: absolute;
@@ -762,11 +770,11 @@ p.window-message {
 }
 .mainframe-background > .mainframe > button.left-button {
   left: 0;
-  background-image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA2LjM1IDEyLjciIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZmlsbD0iI2ZmZmZmZiIgZD0iTTQuOTY1IDEwLjAxM2EuNTMuNTMgMCAwIDAgLjMyNi0uNDl2LTYuMzVhLjUzLjUzIDAgMCAwLS45MDItLjM3MkwxLjIxMyA1Ljk3NGEuNTMuNTMgMCAwIDAgMCAuNzQ4TDQuMzkgOS44OThhLjUzLjUzIDAgMCAwIC41NzYuMTE1WiIvPjwvc3ZnPg==)
+  background-image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCA2LjM1IDEyLjciIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZmlsbD0iI2ZmZmZmZiIgZD0iTTQuOTY1IDEwLjAxM2EuNTMuNTMgMCAwIDAgLjMyNi0uNDl2LTYuMzVhLjUzLjUzIDAgMCAwLS45MDItLjM3MkwxLjIxMyA1Ljk3NGEuNTMuNTMgMCAwIDAgMCAuNzQ4TDQuMzkgOS44OThhLjUzLjUzIDAgMCAwIC41NzYuMTE1WiIvPjwvc3ZnPg==)
 }
 .mainframe-background > .mainframe > button.right-button {
   right: 0;
-  background-image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA2LjM1IDEyLjciIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZmlsbD0iI2ZmZmZmZiIgZD0iTTEuMzg1IDIuNjg2YS41My41MyAwIDAgMC0uMzI2LjQ5djYuMzVhLjUzLjUzIDAgMCAwIC45MDIuMzcybDMuMTc2LTMuMTczYS41My41MyAwIDAgMCAwLS43NDhMMS45NiAyLjhhLjUzLjUzIDAgMCAwLS41NzYtLjExNVoiLz48L3N2Zz4=);
+  background-image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCA2LjM1IDEyLjciIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZmlsbD0iI2ZmZmZmZiIgZD0iTTEuMzg1IDIuNjg2YS41My41MyAwIDAgMC0uMzI2LjQ5djYuMzVhLjUzLjUzIDAgMCAwIC45MDIuMzcybDMuMTc2LTMuMTczYS41My41MyAwIDAgMCAwLS43NDhMMS45NiAyLjhhLjUzLjUzIDAgMCAwLS41NzYtLjExNVoiLz48L3N2Zz4=);
 }
 .mainframe-background > .mainframe:hover > button.right-button,
 .mainframe-background > .mainframe:hover > button.left-button {
@@ -792,4 +800,18 @@ p.window-message {
   float: right;
   margin: 0 0 16px 16px;
   width: 50%;
+}
+.info-template > div > .tree-relatives > span.linked {
+  color: #2f7bee;
+  cursor: pointer;
+}
+
+/* loading icon */
+.loading-icon > span,
+.loading-icon > svg {
+  display: inline-block;
+  width: 33%;
+}
+.loading-icon > span:last-child {
+  text-align: right;
 }

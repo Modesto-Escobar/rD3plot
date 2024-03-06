@@ -443,8 +443,15 @@ treeGallery_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat 
   return(treeGalleryWrapper(tree, deep, initialType, tableformat, gallery_rd3, ...))
 }
 
-treeGallery2_rd3 <- function(tree, deep = FALSE, initialType = NULL, tableformat = FALSE, ...){
-  return(treeGalleryWrapper(tree, deep, initialType, tableformat, gallery2_rd3, ...))
+treeGallery2_rd3 <- function(tree, initialType = NULL, tableformat = FALSE, ...){
+  if(ncol(tree)==2 && !tableformat){
+    if(is.null(colnames(tree))){
+      colnames(tree) <- c("Parent","Children")
+    }
+    tree[,3] <- colnames(tree)[1]
+    tree[,4] <- colnames(tree)[2]
+  }
+  return(treeGalleryWrapper(tree, FALSE, initialType, tableformat, gallery2_rd3, ...))
 }
 
 add_tutorial_rd3 <- function(x, image=NULL, description=NULL){

@@ -451,6 +451,7 @@ function gallery(Graph){
     var filteredData = itemsFiltered ? itemsFiltered : nodes;
 
     if(Tree){
+      Tree.displayTreeMenu();
       filteredData = Tree.treeFilteredData(filteredData);
     }
 
