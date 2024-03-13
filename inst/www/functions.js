@@ -956,16 +956,16 @@ function sortAsc(a,b){
 }
 
 function compareFunction(a,b,rev){
-  if(rev){
-    var aux = b;
-    b = a;
-    a = aux;
-  }
   if(a===null){
     return 1;
   }
   if(b===null){
     return -1;
+  }
+  if(rev){
+    var aux = b;
+    b = a;
+    a = aux;
   }
   if(!isNaN(+a) && !isNaN(+b)){
     a = +a;
@@ -1216,7 +1216,8 @@ function displayMultiSearch(){
   var data = [],
       column = "name",
       updateSelection = function(){},
-      updateFilter = function(){};
+      updateFilter = function(){},
+      help = true;
 
   function exports(sel){
 
@@ -1268,7 +1269,9 @@ function displayMultiSearch(){
           typingTimer = setTimeout(doneTyping, typingInterval);
         })
 
-    searchBox.append("p").text("shift + Enter to filter")
+    if(help){
+      searchBox.append("p").text("shift + Enter to filter");
+    }
 
     var searchIcon = searchSel.append("button")
       .attr("class","search-icon disabled")
@@ -1331,6 +1334,12 @@ function displayMultiSearch(){
   exports.updateFilter = function(x) {
     if (!arguments.length) return updateFilter;
     updateFilter = x;
+    return exports;
+  };
+
+  exports.help = function(x) {
+    if (!arguments.length) return help;
+    help = x ? true : false;
     return exports;
   };
 

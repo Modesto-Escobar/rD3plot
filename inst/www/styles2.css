@@ -241,14 +241,38 @@ button.switch-button.active:after {
   transform: rotate(45deg);
 }
 
+.fixed-topbar > .topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: calc(100% - 32px);
+  z-index: 1;
+  padding: 8px 16px;
+}
+.fixed-topbar > .topbar > .topbar-topcontent {
+  float: right;
+  padding: 0;
+}
+.fixed-topbar > .topbar > .topbar-topcontent > .topbar-main {
+  display: none;
+}
+.fixed-topbar > .topbar > .topbar-topcontent > .topbar-buttons {
+  margin: 0;
+}
+.fixed-topbar > .topbar > .breadcrumbs {
+  float: left;
+}
 .topbar {
-  padding: 48px 144px;
+  padding: 16px;
   background-color: #2f7bee;
   color: #ffffff;
 }
+.topbar > .topbar-topcontent {
+  padding: 24px 0;
+}
 .topbar > .topbar-topcontent > .topbar-main {
   float: left;
-  margin-bottom: 16px;
+  margin: 16px 0;
 }
 .topbar > .topbar-topcontent > .topbar-main > a > h1 {
   font-size: 2em;
@@ -256,7 +280,7 @@ button.switch-button.active:after {
 }
 .topbar > .topbar-topcontent > .topbar-buttons {
   float: right;
-  margin-bottom: -8px;
+  margin: 8px 0;
 }
 .topbar > .topbar-topcontent > .topbar-buttons > div {
   display: inline-block;
@@ -282,7 +306,7 @@ button.switch-button.active:after {
   border-radius: 8px;
   display: inline-block;
   padding: 8px 16px;
-  margin: 0 8px 8px 0;
+  margin-right: 8px;
   cursor: pointer;
 }
 .topbar > .topbar-tag-container > .tag:after {
@@ -405,24 +429,29 @@ button.switch-button.active:after {
 }
 
 .footer {
-  background-color: #eaeaea;
+  background-color: #2f7bee;
   padding: 72px 144px;
+  color: #ffffff;
 }
 .footer > .footer-logo1 {
   text-align: center;
-  font-size: 2.5em;
 }
-.footer > .footer-logo2 > img {
+.footer > .footer-logo2 > svg {
   width: 64px;
+  height: 48px;
   margin-bottom: -16px;
 }
 .footer > .footer-logo2 {
   text-align: center;
-  color: #2f7bee;
   font-size: 2em;
   margin-top: 24px;
 }
+
 @media (min-width: 768px) {
+  .topbar {
+    padding: 16px 144px;
+  }
+
   .footer > .footer-logo1,
   .footer > .footer-logo2 {
     display: inline-block;
@@ -602,38 +631,39 @@ button.switch-button.active:after {
   left: 1px;
 }
 
-.grid-gallery-mode2 > .breadcrumbs {
-  border-bottom: 1px solid #1a202c;
-  margin: 0 32px;
+.topbar > .breadcrumbs {
+  border-bottom: 1px solid #ffffff;
   display: flex;
   flex-direction: row;
 }
-.grid-gallery-mode2 > .breadcrumbs > button.primary {
+.topbar > .breadcrumbs > button.primary {
   background: none;
-  color: #1a202c;
   border-radius: 0;
   display: inline-block;
   opacity: 0.6;
   border-bottom: 4px solid transparent;
   flex-grow: 1;
   flex-basis: 0;
+  color: #ffffff;
+  white-space: nowrap;
+  font-weight: bold;
 }
-.grid-gallery-mode2 > .breadcrumbs > button.primary.disabled {
+.topbar > .breadcrumbs > button.primary.disabled {
   opacity: 1;
-  border-bottom-color: #1a202c;
+  border-bottom-color: #ffffff;
 }
-.grid-gallery-mode2 > .breadcrumbs > span {
+.topbar > .breadcrumbs > span {
   display: inline-block;
   padding: 16px 24px;
 }
-.grid-gallery-mode2 > .breadcrumbs > button.primary.return {
+.topbar > .breadcrumbs > button.primary.return {
   background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGVuYWJsZS1iYWNrZ3JvdW5kPSJuZXcgMCAwIDI0IDI0IiBoZWlnaHQ9IjI0cHgiIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0cHgiIGZpbGw9IiMwMDAwMDAiPjxnPjxyZWN0IGZpbGw9Im5vbmUiIGhlaWdodD0iMjQiIHdpZHRoPSIyNCIvPjwvZz48Zz48cGF0aCBkPSJNMiwxMmMwLDUuNTIsNC40OCwxMCwxMCwxMHMxMC00LjQ4LDEwLTEwYzAtNS41Mi00LjQ4LTEwLTEwLTEwQzYuNDgsMiwyLDYuNDgsMiwxMnogTTEyLDExbDQsMHYybC00LDBsMCwzbC00LTRsNC00TDEyLDExIHoiLz48L2c+PC9zdmc+);
 }
-.grid-gallery-mode2 > .breadcrumbs > button.primary.home {
+.topbar > .breadcrumbs > button.primary.home {
   background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAwIDI0IDI0IiB3aWR0aD0iMjRweCIgZmlsbD0iIzAwMDAwMCI+PHBhdGggZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik0xMCAyMHYtNmg0djZoNXYtOGgzTDEyIDMgMiAxMmgzdjh6Ii8+PC9zdmc+);
 }
-.grid-gallery-mode2 > .breadcrumbs > button.primary.return,
-.grid-gallery-mode2 > .breadcrumbs > button.primary.home {
+.topbar > .breadcrumbs > button.primary.return,
+.topbar > .breadcrumbs > button.primary.home {
   overflow: hidden;
   white-space: nowrap;
   color: transparent;
@@ -642,13 +672,14 @@ button.switch-button.active:after {
   opacity: 0.6;
   transition: all 0.2s ease-in-out;
 }
-.grid-gallery-mode2 > .breadcrumbs > button.primary.return:hover,
-.grid-gallery-mode2 > .breadcrumbs > button.primary.home:hover {
+.topbar > .breadcrumbs > button.primary.return:hover,
+.topbar > .breadcrumbs > button.primary.home:hover {
   opacity: 1;
 }
-.grid-gallery-mode2 > .breadcrumbs > span[index] {
-  color: #2f7bee;
-  cursor: pointer;
+
+.breadcrumbs + .topbar-tag-container {
+  width: 100%;
+  margin-top: 8px;
 }
 
 .buttons-popup,

@@ -136,7 +136,7 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
 }
 
 gallery2_rd3 <- function(nodes, name = NULL, label = NULL, ntext = NULL,
-    image = NULL, main = NULL, colorScheme = 0, language = c("en", "es", "ca"), dir = NULL){
+    image = NULL, main = NULL, note = NULL, colorScheme = 0, language = c("en", "es", "ca"), dir = NULL){
 
   if(is.null(name)){
     name <- colnames(nodes)[1]
@@ -159,6 +159,7 @@ gallery2_rd3 <- function(nodes, name = NULL, label = NULL, ntext = NULL,
       warning("main: too large")
     }
   }
+  if (!is.null(note)) options[["note"]] <- note
 
   options[["colorScheme"]] <- as.numeric(colorScheme)
   options[["language"]] <- checkLanguage(language)

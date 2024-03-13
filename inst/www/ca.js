@@ -124,5 +124,8 @@ var texts = {
     showonlyselecteditems: "Mostra només ítems seleccionats",
     Variable: "Variable",
     Value: "Valor",
-    highlightneighbors: "Ressaltar veïns"
+    highlightneighbors: "Ressaltar veïns",
+    clearfilters: "Filtres nets",
+    close: "tancar",
+    filtermenu: "Menu de filtres"
   };

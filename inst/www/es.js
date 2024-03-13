@@ -124,5 +124,8 @@ var texts = {
     showonlyselecteditems: "Mostrar solo items seleccionados",
     Variable: "Variable",
     Value: "Valor",
-    highlightneighbors: "Resaltar vecinos"
+    highlightneighbors: "Resaltar vecinos",
+    clearfilters: "Limpiar filtros",
+    close: "Cerrar",
+    filtermenu: "Menu de filtros"
   };

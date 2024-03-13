@@ -356,78 +356,106 @@ function mgmtTree(body, Graph, nodes, updateSelectOptions, deselectAllItems, mou
     }
 
     Tree.applyExtendedFilter = function(treeParent,typeFilter){
+        if(Tree.treeParentType && typeFilter==Tree.treeParentType && treeParent && treeParent.length){
+          return function(d){
+            return treeParent.indexOf(d[options.nodeName])!=-1;
+          }
+        }
+
         var parents = [],
             children = [],
-
             filter = function(){ return true },
-            getParents = function(name){
+            onlyUnique = function(value, index, array) {
+                return array.indexOf(value) === index;
+            },
+            getRelatives = function(name){
               for(var i = 0; i<Graph.tree[0].length; i++){
                 if(Graph.tree[1][i]==name){
                   parents.push(Graph.tree[0][i]);
-                  getParents(Graph.tree[0][i]);
                 }
-              }
-            },
-            getChildren = function(name){
-              for(var i = 0; i<Graph.tree[0].length; i++){
                 if(Graph.tree[0][i]==name){
                   children.push(Graph.tree[1][i]);
-                  getChildren(Graph.tree[1][i]);
                 }
               }
-            }
+              parents = parents.filter(onlyUnique);
+              children = children.filter(onlyUnique);
+            };
+
         if(treeParent && treeParent.length){
+          var gparents = [],
+              typeFilterFound = function(d,i){
+                if(!typeFilter){
+                  return true;
+                }
+                if(Graph.tree[0][i]==d[options.nodeName] && Graph.tree[2][i]==typeFilter && treeParent.indexOf(Graph.tree[1][i])!=-1){
+                  return true;
+                }
+                if(Graph.tree[3][i]==typeFilter &&
+                      ((Graph.tree[1][i]==d[options.nodeName] && treeParent.indexOf(Graph.tree[0][i])!=-1) ||
+                      (Graph.tree[1][i]==d[options.nodeName] && gparents.indexOf(Graph.tree[0][i])!=-1))){
+                  return true;
+                }
+                return false;
+              }
+
+          for(var i = 0; i<Graph.tree[0].length; i++){
+            if(treeParent.indexOf(Graph.tree[1][i])!=-1){
+              gparents.push(Graph.tree[0][i]);
+            }
+          }
+          gparents = gparents.filter(onlyUnique);
+          if(treeParent.length>1 && Tree.intersection){
+            gparents = gparents.filter(function(e,i){
+              return gparents.filter(function(d){ return d==e; }).length==treeParent.length;
+            });
+          }
 
           filter = function(d){
             if(!Tree.intersection && treeParent.indexOf(d[options.nodeName])!=-1 && (!typeFilter || typeFilter==d[options.nodeType] || (Array.isArray(d[options.nodeType]) && d[options.nodeType].indexOf(typeFilter)!=-1))){
               return true;
             }
+
             parents = [];
             children = [];
-            getParents(d[options.nodeName]);
-            getChildren(d[options.nodeName]);
-            var gparents = Graph.tree[0].filter(function(e,i){ return treeParent.indexOf(Graph.tree[1][i])!=-1; });
+            getRelatives(d[options.nodeName]);
+
             if(treeParent.length>1 && Tree.intersection){
-              gparents = d3.set(gparents).values().filter(function(e,i){
-                return gparents.filter(function(d){ return d==e; }).length==treeParent.length;
-              });
               if(intersection(parents,treeParent).length!=treeParent.length && intersection(children,treeParent).length!=treeParent.length && !intersection(parents,gparents).length){
                 return false;
               }
             }else{
-              gparents = d3.set(gparents).values();
               if(!intersection(parents,treeParent).length && !intersection(children,treeParent).length && !intersection(parents,gparents).length){
                 return false;
               }
             }
-            if(typeFilter){
-              var typesparent = Graph.tree[2].filter(function(e,i){ return treeParent.indexOf(Graph.tree[1][i])!=-1 && Graph.tree[0][i]==d[options.nodeName]; }),
-                  typeschildren = Graph.tree[3].filter(function(e,i){ return treeParent.indexOf(Graph.tree[0][i])!=-1 && Graph.tree[1][i]==d[options.nodeName]; }),
-                  typessiblings = Graph.tree[3].filter(function(e,i){ return gparents.indexOf(Graph.tree[0][i])!=-1 && Graph.tree[1][i]==d[options.nodeName]; }),
-                  types = d3.set(d3.merge([typesparent,typeschildren,typessiblings])).values();
-              if(types.indexOf(typeFilter)==-1){
-                return false;
+
+            for(var i = 0; i<Graph.tree[0].length; i++){
+              if(!typeFilterFound(d,i)){
+                continue;
+              }
+              if((Graph.tree[1][i]==d[options.nodeName] &&
+                  (gparents.indexOf(Graph.tree[0][i])!=-1 || parents.indexOf(Graph.tree[0][i])!=-1)) ||
+                  (Graph.tree[0][i]==d[options.nodeName] && children.indexOf(Graph.tree[1][i])!=-1)){
+                return true;
               }
             }
-            if(Graph.tree[0].filter(function(e,i){ return (gparents.indexOf(e)!=-1 || parents.indexOf(e)!=-1) && Graph.tree[1][i]==d[options.nodeName]; }).length){
-              return true;
-            }
 
-            if(Graph.tree[1].filter(function(e,i){ return children.indexOf(e)!=-1 && Graph.tree[0][i]==d[options.nodeName]; }).length){
-
-              return true;
-            }
             return false;
           };
         }else if(typeFilter){
           filter = function(d){
-            var typesparent = Graph.tree[2].filter(function(e,i){ return Graph.tree[0][i]==d[options.nodeName]; }),
-                typeschildren = Graph.tree[3].filter(function(e,i){ return Graph.tree[1][i]==d[options.nodeName]; }),
-                types = d3.set(d3.merge([typesparent,typeschildren])).values();
-            if(types.indexOf(typeFilter)==-1){
-              return false;
+            var found = false;
+            for(var i = 0; i<Graph.tree[0].length; i++){
+                if(Graph.tree[0][i]==d[options.nodeName] && Graph.tree[2][i]==typeFilter){
+                  found = true;
+                  break;
+                }
+                if(Graph.tree[1][i]==d[options.nodeName] && Graph.tree[3][i]==typeFilter){
+                  found = true;
+                  break;
+                }
             }
-            return true;
+            return found;
           }
         }
 
@@ -519,29 +547,24 @@ function mgmtTree(body, Graph, nodes, updateSelectOptions, deselectAllItems, mou
     Tree.displayTreeMenu2 = function(filteredData){
       Tree.breadcrumbs.empty();
       if(Tree.type=="extended"){
-          var names = filteredData.filter(function(n){ return !n['_filtered']; })
+          if(!Tree.treeParent.length){
+            var names = filteredData.filter(function(n){ return !n['_filtered']; })
                   .map(function(n){ return n[Graph.options.nodeName]; });
-          if(names.length==filteredData.length){
-            names = [];
-          }
-          if(!names.length && Tree.treeParent){
-            names = Tree.treeParent;
-            if(!Tree.treeParentType){
+            if(names.length && names.length!=filteredData.length){
+              Tree.treeParent = names;
               Tree.treeParentType = Tree.typeFilter;
             }
-          }else{
-            delete Tree.treeParentType;
           }
           options.nodeTypes.forEach(function(type){
-              var n = nodes.filter(Tree.applyExtendedFilter(names,type)).length;
+              var n = nodes.filter(Tree.applyExtendedFilter(Tree.treeParent,type)).length;
               Tree.breadcrumbs.addButton(type + " ("+n+")",type,function(){
-                Tree.treeParent = names;
                 Tree.typeFilter = type;
                 updateSelectOptions();
               });
           });
 
-          if(Tree.treeParent.length){
+          if(Tree.treeParent.length && Tree.treeParent.length<50 && Tree.treeParentType!=Tree.typeFilter){
+            Tree.relatives = true;
             filteredData.forEach(function(n){
               n['_relatives'] = [];
               Tree.treeParent.forEach(function(e){
@@ -551,6 +574,8 @@ function mgmtTree(body, Graph, nodes, updateSelectOptions, deselectAllItems, mou
               });
               n['_relatives'] = n['_relatives'].join(" & ");
             })
+          }else{
+            delete Tree.relatives;
           }
       }
     }

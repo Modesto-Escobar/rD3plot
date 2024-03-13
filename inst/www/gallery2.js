@@ -30,7 +30,7 @@ function gallery(Graph){
     mainTitle.append("a")
       .attr("href","")
       .append("h1")
-        .text(Graph.options.main);
+        .html(Graph.options.main);
   }
 
   var topbarButtons = topbarContent.append("div").attr("class","topbar-buttons");
@@ -45,13 +45,15 @@ function gallery(Graph){
         .data(nodes)
         .column(Graph.options.nodeLabel)
         .updateSelection(displayGraph)
-        .updateFilter(searchFunction))
+        .updateFilter(searchFunction)
+        .help(false))
 
   // filter button
   topbarButtons.append("div")
       .append("button")
         .attr("class","filter-button")
-        .attr("aria-label","Filter menu")
+        .attr("aria-label",texts.filtermenu)
+        .attr("title",texts.filtermenu)
         .on("click",function(){
           window.scrollTo(0, 0);
           body.classed("display-filterpanel",true);
@@ -70,7 +72,8 @@ function gallery(Graph){
   topbarButtons.append("div")
       .append("button")
         .attr("class","filter-selection")
-        .attr("aria-label","Filter selection")
+        .attr("aria-label",texts.filterselection)
+        .attr("title",texts.filterselection)
         .on("click",filterSelection)
         .append("svg")
         .attr("height",24)
@@ -96,7 +99,8 @@ function gallery(Graph){
   sideheader.html("&nbsp;")
   sideheader.append("button")
     .attr("class","close-button")
-    .attr("aria-label","Close")
+    .attr("aria-label",texts.close)
+    .attr("title",texts.close)
     .on("click",closeFilterPanel);
 
   var sidecontent = sidepanel.append("div")
@@ -106,21 +110,28 @@ function gallery(Graph){
     .attr("class","side-panel-bottom")
   sidebottom.append("button")
     .attr("class","primary")
-    .text("Clear filters")
-    .on("click",removeFilter)
+    .text(texts.clearfilters)
+    .on("click",function(){
+      selectedValues.clear();
+      selectedValues.applyFilter();
+      clearTreeParent();
+      displayGraph();
+      updateFiltersMarkers();
+      sidecontent.selectAll(".plus-minus-button.expanded").dispatch("click");
+    })
 
   function closeFilterPanel(){
     body.classed("display-filterpanel",false);
     sidecontent.selectAll("*").remove();
   }
 
-  var gallery = body.append("div")
-        .attr("class","grid-gallery-mode2");
-
   // breadCrumbs
   if(Tree){
-    Tree.breadcrumbs = new Tree.BreadCrumbs(gallery);
+    Tree.breadcrumbs = new Tree.BreadCrumbs(topbar);
   }
+
+  var gallery = body.append("div")
+        .attr("class","grid-gallery-mode2");
 
   var galleryItems = gallery.append("div")
         .attr("class","gallery-items")
@@ -135,9 +146,15 @@ function gallery(Graph){
 
   window.addEventListener("scroll",function(){
     if(window.pageYOffset==0){
-      resetPagination();
-      displayGraph();
-    }else if(window.innerHeight + window.pageYOffset >= document.body.offsetHeight - 250){
+      body.style("margin-top",null)
+      body.classed("fixed-topbar",false);
+      updateTopbarTags();
+    }else if(!body.classed("fixed-topbar")){
+      body.style("margin-top",topbar.node().offsetHeight+"px")
+      body.classed("fixed-topbar",true);
+      updateTopbarTags();
+    }
+    if(window.innerHeight + window.pageYOffset >= document.body.offsetHeight - 250){
       pagination = pagination + pagestep;
       displayGraph();
     }
@@ -151,24 +168,16 @@ function gallery(Graph){
     .attr("class","footer")
   var footer1 = footer.append("div")
     .attr("class","footer-logo1")
-  footer1.append("span").text("Net")
-    .style("color","#2f7bee")
-  footer1.append("span").text("Gallery")
+  footer1.html(Graph.options.note ? Graph.options.note : '<span style="font-size:2.5em;">NetGallery</span>')
   var footer2 = footer.append("div")
     .attr("class","footer-logo2")
-  footer2.append("img")
-      .attr("src",b64Icons.netcoin)
+  footer2.html('<svg xmlns="http://www.w3.org/2000/svg" width="40" height="30" viewBox="0 0 40 30"><g stroke-linejoin="round" stroke="#c1c1c1" stroke-width="2" fill="none"><path d="M11.975 9.6 10 7.475M11.8 12.175l-2.375 3.55M18.175 17.125l-7 1M21.525 13.6l-.275-4.625M24.275 18.6l9.775 6.7M13.05 11.175l7.9-5.925" stroke-width=".5"/></g><g fill="#fff" transform="matrix(.25 0 0 .25 -19.05 35.825)"><circle cy="-123.8" cx="158.8" r="16.5"/><circle cy="-119.8" cx="108.7" r="9.9"/><circle cy="-67.8" cx="106.7" r="14.5"/><circle cy="-99.4" cx="127.8" r="6.6"/><circle cy="-75.7" cx="162.1" r="13.2"/><circle cy="-36.3" cx="219.2" r="9"/></g></svg>');
   footer2.append("span")
     .text("netCoin")
 
   displayGraph();
 
   function displayGraph(){
-    updateTopbarTags();
-
-    galleryItems.selectAll("div.item-card, h3.parent-separator").remove();
-    viewMore.style("display","none");
-
     var filteredData = nodes;
     if(Tree){
       filteredData = Tree.treeFilteredData(filteredData);
@@ -176,7 +185,7 @@ function gallery(Graph){
     }
 
     var orderedData = filteredData.slice();
-    if(Tree && Tree.treeParent && Tree.treeParent.length){
+    if(Tree && Tree.relatives){
       orderedData.sort(function(a,b){
         var aa = a['_relatives'],
             bb = b['_relatives'];
@@ -212,6 +221,10 @@ function gallery(Graph){
       }
     }
 
+    updateTopbarTags();
+    galleryItems.selectAll("div.item-card, h3.parent-separator").remove();
+    viewMore.style("display","none");
+
     var showcount = 0,
         indices = [];
     for(var i = 0; i<orderedData.length; i++){
@@ -224,20 +237,19 @@ function gallery(Graph){
       if(showcount >= pagination){
         if(viewMore.style("display")=="none"){
           viewMore.style("display",null);
-          viewMore.select("span:last-child").text(pagination+" / "+orderedData.length);
+          viewMore.select("span:last-child").text(pagination+" / "+orderedData.filter(function(d){ return !d['_filtered'] }).length);
         }
         continue;
       }
 
       showcount++;
 
-      if(orderedData[i]['_relatives'] && !galleryItems.selectAll("h3.parent-separator").filter(function(){
+      if(Tree && Tree.relatives && orderedData[i]['_relatives'] && !galleryItems.selectAll("h3.parent-separator").filter(function(){
         return this.textContent==orderedData[i]['_relatives'];
       }).size()){
         galleryItems.append("h3")
           .attr("class","parent-separator")
           .text(orderedData[i]['_relatives'])
-        delete orderedData[i]['_relatives'];
       }
 
       var itemcard = galleryItems.append("div")
@@ -273,10 +285,6 @@ function gallery(Graph){
 
       itemcard.classed("selected",orderedData[i]["selected"])
         .attr("card-index",i)
-        .on("click",function(){
-          var index = d3.select(this).attr("card-index");
-          selectItem(index);
-        })
 
       if(Graph.options.nodeText && orderedData[i][Graph.options.nodeText]){
         itemcard.style("cursor","pointer")
@@ -287,13 +295,20 @@ function gallery(Graph){
       }
     }
 
+    if(Tree && Tree.relatives){
+      orderedData.forEach(function(d){
+        delete d['_relatives'];
+      })
+      delete Tree.relatives;
+    }
+
     var selectedlen = selectedNames().length;
     if(Tree && Tree.type == "extended"){
       topbarContent.selectAll(".icon-selection").classed("disabled",selectedlen<2);
     }
 
     topbarContent.select(".filter-selection")
-      .classed("disabled",!selectedlen || selectedlen==indices.length);
+      .classed("disabled",!selectedlen);
 
     function selectItem(i){
       var n = orderedData[i];
@@ -314,6 +329,7 @@ function gallery(Graph){
         }
       });
       selectedValues.applyFilter();
+      clearTreeParent();
       displayGraph();
   }
 
@@ -361,13 +377,15 @@ function gallery(Graph){
         });
       }
     });
-    var tagsWidth = 0;
-    container.selectAll(".tag").each(function(){
-      tagsWidth += (this.offsetWidth + 8);
-    })
-    if(!tagsWidth){
+    changeSearchIcon();
+    var tags = container.selectAll(".tag");
+    if(tags.size()==0){
       container.remove();
     }else{
+      var tagsWidth = 0;
+      tags.each(function(){
+        tagsWidth += (this.offsetWidth + 8);
+      })
       if(tagsWidth > container.node().offsetWidth){
         container.selectAll(".tag").remove();
         renderParentTag(container);
@@ -378,7 +396,20 @@ function gallery(Graph){
             renderTag(container,k,k);
           }
         })
+        changeSearchIcon();
       }
+    }
+
+    function changeSearchIcon(){
+      container.selectAll(".tag").each(function(){
+        var self = d3.select(this);
+        if(!self.text() || self.text().indexOf("_")===0){
+          self.text("")
+          self.call(getSVG()
+            .d(d4paths.search)
+            .width(16).height(16))
+        }
+      });
     }
 
     function renderTag(container,text,k,v){
@@ -400,20 +431,28 @@ function gallery(Graph){
         selectedValues.remove(self.attr("filter-key"));
       }
       selectedValues.applyFilter();
+      clearTreeParent();
       updateFiltersMarkers();
       displayGraph();
     }
 
     function renderParentTag(container){
-      if(Tree && Tree.treeParent && Tree.treeParent.length){
-        container.append("span")
+      if(Tree && Tree.treeParent && Tree.treeParent.length && !selectedValues.keys().length){
+        var span = container.append("span")
         .attr("class","tag")
         .text(Tree.treeParentType)
         .on("click",function(){
-          Tree.treeParent = [];
+          clearTreeParent();
           displayGraph();
-        })
+        })      
       }
+    }
+  }
+
+  function clearTreeParent(){
+    if(Tree && Tree.treeParent){
+      Tree.treeParent = [];
+      delete Tree.treeParentType;
     }
   }
 
@@ -463,10 +502,6 @@ function gallery(Graph){
       selectedValues.clear();
       selectedValues.applyFilter();
       displayGraph();
-      if(body.classed("display-filterpanel")){
-        updateFiltersMarkers();
-        sidecontent.selectAll(".plus-minus-button.expanded").dispatch("click");
-      }
   }
 
   function displaySideContent(){
@@ -558,6 +593,7 @@ function gallery(Graph){
               selectedValues.add(col,s[0]);
               selectedValues.add(col,s[1]);
               selectedValues.applyFilter();
+              clearTreeParent();
               updateFiltersMarkers();
               displayGraph();
             }));
@@ -606,6 +642,7 @@ function gallery(Graph){
                     tag.classed("tag-selected",!tag.classed("tag-selected"));
                     selectedValues[tag.classed("tag-selected") ? 'add' : 'remove'](col,d);
                     selectedValues.applyFilter();
+                    clearTreeParent();
                     updateFiltersMarkers();
                     displayGraph();
                   })
@@ -617,20 +654,20 @@ function gallery(Graph){
   }
 
   function colorScheme(mode){
-    // headerback headertext galleryback gallerytext buttons cardback
+    // headerback headertext galleryback buttons cardback
     var pallete = [
-        ["#A53F2B","#FFFFFF","#FFFFFF","#000000","#003366","#EFEFEF"],
-        ["#FF8247","#222C37","#222C37","#ffffff","#FF6319","#dee5ed"],
-        ["#222C37","#ffffff","#FFEFE7","#222C37","#FF6319","#dee5ed"],
-        ["#222C37","#ffffff","#F1D8E6","#222C37","#B83C82","#dee5ed"],
-        ["#B83C82","#ffffff","#D2D4D7","#B83C82","#B83C82","#dee5ed"],
-        ["#6639B7","#ffffff","#FFF2EA","#0066A1","#0066A1","#dee5ed"],
-        ["#0066A1","#ffffff","#FFF2EA","#6639B7","#6639B7","#dee5ed"],
-        ["#0066A1","#ffffff","#CCE0EC","#FF7F33","#FF7F33","#dee5ed"],
-        ["#6585ED","#ffffff","#FEF1F0","#54616A","#54616A","#dee5ed"],
-        ["#F5756C","#ffffff","#E0E7FC","#54616A","#54616A","#dee5ed"],
-        ["#3A7FA6","#ffffff","#EEF7F9","#FF6319","#FF6319","#dee5ed"],
-        ["#46475D","#ffffff","#D7E5ED","#FF6319","#FF6319","#dee5ed"]
+        ["#A53F2B","#FFFFFF","#FFFFFF","#003366","#EFEFEF"],
+        ["#FF8247","#222C37","#222C37","#FF6319","#DEE5ED"],
+        ["#222C37","#FFFFFF","#FFEFE7","#FF6319","#DEE5ED"],
+        ["#222C37","#FFFFFF","#F1D8E6","#B83C82","#DEE5ED"],
+        ["#B83C82","#FFFFFF","#D2D4D7","#B83C82","#DEE5ED"],
+        ["#6639B7","#FFFFFF","#FFF2EA","#0066A1","#DEE5ED"],
+        ["#0066A1","#FFFFFF","#FFF2EA","#6639B7","#DEE5ED"],
+        ["#0066A1","#FFFFFF","#CCE0EC","#FF7F33","#DEE5ED"],
+        ["#6585ED","#FFFFFF","#FEF1F0","#54616A","#DEE5ED"],
+        ["#F5756C","#FFFFFF","#E0E7FC","#54616A","#DEE5ED"],
+        ["#3A7FA6","#FFFFFF","#EEF7F9","#FF6319","#DEE5ED"],
+        ["#46475D","#FFFFFF","#D7E5ED","#FF6319","#DEE5ED"]
       ];
 
     if(mode && mode<=pallete.length){
@@ -639,29 +676,30 @@ function gallery(Graph){
       d3.select("head")
         .append("style")
         .text(
-'.topbar { background-color: '+pallete[0]+'; color: '+pallete[1]+'; }' +
+'.topbar, .footer { background-color: '+pallete[0]+'; color: '+pallete[1]+'; }' +
 '.grid-gallery-mode2 { background-color: '+pallete[2]+'; }' +
 '.filter-button, .filter-selection, .icon-selection { border-color: '+pallete[1]+'; color: '+pallete[1]+' }' +
 '.filter-button > svg > path, .filter-selection > svg > path { fill: '+pallete[1]+'!important; }' +
-'.multi-search > .search-box, .multi-search > .search-box > div.text-wrapper > div.text-content > textarea { background-color: '+pallete[1]+'; color: '+pallete[3]+'; }' +
-'.multi-search > .search-box > div.check-container > span.yes::after { border-color: '+pallete[3]+'; }' +
+'.multi-search > .search-box, .multi-search > .search-box > div.text-wrapper > div.text-content > textarea { background-color: '+pallete[1]+'; color: '+contrast(pallete[1])+'; }' +
+'.multi-search > .search-box > div.check-container > span.yes::after { border-color: '+contrast(pallete[1])+'; }' +
 '.multi-search > button.search-icon > svg > path { fill: '+pallete[0]+'; }' +
 '.icon-selection > svg > rect.fill1 { fill: '+pallete[1]+'!important; }' +
 '.icon-selection > svg > rect.stroke1 { stroke: '+pallete[1]+'!important; }' +
-'.grid-gallery-mode2 > .breadcrumbs { border-bottom-color: '+pallete[3]+'; }' +
-'.grid-gallery-mode2 > .breadcrumbs > button.primary { color: '+pallete[3]+'; }' +
-'.grid-gallery-mode2 > .breadcrumbs > button.primary.disabled { border-bottom-color: '+pallete[3]+'; }' +
-'button.primary, .slider-extent, button.switch-button.active { background-color: '+pallete[4]+'; }' +
-'button.primary-outline { color: '+pallete[4]+'; border-color: '+pallete[4]+'; }' +
-'a { color: '+pallete[4]+' }' +
-'button.switch-button.active:after { border-color: '+pallete[4]+'; }' +
-'.selected .check-box { background-color: '+pallete[4]+'; border-color: '+pallete[4]+'; }' +
-'.radio-item.selected-item:before { border-color: '+pallete[4]+'; }' +
-'.grid-gallery-mode2 > .breadcrumbs > span[index] { color: '+pallete[4]+' }' +
-'.grid-gallery-mode2 > .gallery-items > .item-card > .item-card-inner, .grid-gallery-mode2 > .gallery-items > .item-card > .item-card-inner > .item-card-back { background-color: '+pallete[5]+'; color: '+contrast(pallete[5])+'; }' +
-'.grid-gallery-mode2 > .gallery-items > .item-card > .item-card-inner > span:after { background: linear-gradient(to right, transparent 90%, '+pallete[5]+'); }' +
+'.topbar > .breadcrumbs { border-bottom-color: '+pallete[1]+'; }' +
+'.topbar > .breadcrumbs > button.primary { color: '+pallete[1]+'; }' +
+'.topbar > .breadcrumbs > button.primary.disabled { border-bottom-color: '+pallete[1]+'; }' +
+'button.primary, .slider-extent, button.switch-button.active { background-color: '+pallete[3]+'; }' +
+'button.primary-outline { color: '+pallete[3]+'; border-color: '+pallete[3]+'; }' +
+'a { color: '+pallete[3]+' }' +
+'button.switch-button.active:after { border-color: '+pallete[3]+'; }' +
+'.selected .check-box { background-color: '+pallete[3]+'; border-color: '+pallete[3]+'; }' +
+'.radio-item.selected-item:before { border-color: '+pallete[3]+'; }' +
+'.grid-gallery-mode2 > .gallery-items > .item-card > .item-card-inner, .grid-gallery-mode2 > .gallery-items > .item-card > .item-card-inner > .item-card-back { background-color: '+pallete[4]+'; color: '+contrast(pallete[4])+'; }' +
+'.grid-gallery-mode2 > .gallery-items > .item-card > .item-card-inner > span:after { background: linear-gradient(to right, transparent 90%, '+pallete[4]+'); }' +
 '.loading-icon > svg > g > rect { fill: '+contrast(pallete[2])+'; }' +
-'.info-template > div > .tree-relatives > span.linked { color: '+pallete[4]+' }'
+'.info-template > div > .tree-relatives > span.linked { color: '+pallete[3]+' }' +
+'.topbar > .topbar-topcontent > .topbar-main > a > h1 { color: '+pallete[1]+'; }' +
+'.footer > .footer-logo2 > svg > g[transform] { fill: '+pallete[1]+'; }'
         )
     }
 
@@ -706,7 +744,8 @@ function gallery(Graph){
 
     mainframe.append("button")
       .attr("class","close-button")
-      .attr("aria-label","Close")
+      .attr("aria-label",texts.close)
+      .attr("title",texts.close)
       .on("click",closeMainFrame);
 
     if(leftindex!==false){
