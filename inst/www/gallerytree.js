@@ -1,4 +1,4 @@
-function mgmtTree(body, Graph, nodes, updateSelectOptions, deselectAllItems, mousePosition, selectedNames, removeFilter, displayTooltip, resetZoom){
+function mgmtTree(body, Graph, nodes, updateSelectOptions, deselectAllItems, mousePosition, selectedNames, removeFilter, displayTooltip, resetZoom, mode){
   if(!updateSelectOptions){
     updateSelectOptions = function(){};
   }
@@ -19,6 +19,9 @@ function mgmtTree(body, Graph, nodes, updateSelectOptions, deselectAllItems, mou
   }
   if(!resetZoom){
     resetZoom = function(){};
+  }
+  if(!mode){
+    mode = 1;
   }
 
   var Tree = false,
@@ -210,6 +213,22 @@ function mgmtTree(body, Graph, nodes, updateSelectOptions, deselectAllItems, mou
       }
     }
 
+  if(mode == 2){
+    Tree.treeRelatives = function(treerelatives,callback){
+      if(!treerelatives.empty()){
+        treerelatives.selectAll(".tree-relatives > span").each(function(){
+          var self = d3.select(this),
+              n = nodes.filter(function(n){ return n[options.nodeName]==self.attr("nodename"); })[0];
+          if(n[options.nodeText]){
+            self.attr("class","linked")
+              .on("click",function(){
+                callback(n);
+              })
+          }
+        })
+      }
+    }
+  }else{
     Tree.treeRelatives = function(node){
       var name = node[options.nodeName];
 
@@ -228,21 +247,7 @@ function mgmtTree(body, Graph, nodes, updateSelectOptions, deselectAllItems, mou
         })
       }
     }
-
-    Tree.treeRelatives2 = function(treerelatives,callback){
-      if(!treerelatives.empty()){
-        treerelatives.selectAll(".tree-relatives > span").each(function(){
-          var self = d3.select(this),
-              n = nodes.filter(function(n){ return n[options.nodeName]==self.attr("nodename"); })[0];
-          if(n[options.nodeText]){
-            self.attr("class","linked")
-              .on("click",function(){
-                callback(n);
-              })
-          }
-        })
-      }
-    }
+  }
 
     Tree.cleanButtonsPopup = function(){
       var popup = body.select("body > .buttons-popup");
@@ -356,9 +361,26 @@ function mgmtTree(body, Graph, nodes, updateSelectOptions, deselectAllItems, mou
     }
 
     Tree.applyExtendedFilter = function(treeParent,typeFilter){
-        if(Tree.treeParentType && typeFilter==Tree.treeParentType && treeParent && treeParent.length){
-          return function(d){
-            return treeParent.indexOf(d[options.nodeName])!=-1;
+        if(mode == 2 && typeFilter && treeParent && treeParent.length){
+          if(Tree.treeParentType){
+            if(typeFilter==Tree.treeParentType){
+              return function(d){
+                return treeParent.indexOf(d[options.nodeName])!=-1;
+              }
+            }
+          }else{
+            return function(d){
+              if(treeParent.indexOf(d[options.nodeName])==-1){
+                return false;
+              }
+              for(var i = 0; i<Graph.tree[0].length; i++){
+                if((Graph.tree[0][i]==d[options.nodeName] && Graph.tree[2][i]==typeFilter) ||
+                   (Graph.tree[1][i]==d[options.nodeName] && Graph.tree[3][i]==typeFilter)){
+                  return true;
+                }
+              }
+              return false;
+            }
           }
         }
 
@@ -469,6 +491,46 @@ function mgmtTree(body, Graph, nodes, updateSelectOptions, deselectAllItems, mou
       return nodes;
     }
 
+  if(mode == 2){
+    Tree.displayTreeMenu = function(filteredData){
+      Tree.breadcrumbs.empty();
+      if(Tree.type=="extended"){
+          if(!Tree.treeParent.length){
+            var names = filteredData.filter(function(n){ return !n['_filtered']; })
+                  .map(function(n){ return n[Graph.options.nodeName]; });
+            if(names.length && names.length!=filteredData.length){
+              Tree.treeParent = names;
+              Tree.treeParentType = Tree.typeFilter;
+            }
+          }
+          options.nodeTypes.forEach(function(type){
+              var n = nodes.filter(Tree.applyExtendedFilter(Tree.treeParent,type)).length;
+              Tree.breadcrumbs.addButton(type + " ("+n+")",type,function(){
+                Tree.typeFilter = type;
+                updateSelectOptions();
+              });
+              if(!n){
+                Tree.breadcrumbs.breadcrumbs.select("button[content="+type+"]").style("pointer-events","none");
+              }
+          });
+
+          if(Tree.treeParent.length && Tree.treeParent.length<50 && Tree.treeParentType && Tree.treeParentType!=Tree.typeFilter){
+            Tree.relatives = true;
+            filteredData.forEach(function(n){
+              n['_relatives'] = [];
+              Tree.treeParent.forEach(function(e){
+                if([n].filter(Tree.applyExtendedFilter([e],Tree.typeFilter)).length){
+                  n['_relatives'].push(e);
+                }
+              });
+              n['_relatives'] = n['_relatives'].join(" & ");
+            })
+          }else{
+            delete Tree.relatives;
+          }
+      }
+    }
+  }else{
     Tree.displayTreeMenu = function(){
       Tree.cleanButtonsPopup();
       if(!Tree.breadcrumbs.isEmpty()){
@@ -543,42 +605,7 @@ function mgmtTree(body, Graph, nodes, updateSelectOptions, deselectAllItems, mou
           }
       }
     }
-
-    Tree.displayTreeMenu2 = function(filteredData){
-      Tree.breadcrumbs.empty();
-      if(Tree.type=="extended"){
-          if(!Tree.treeParent.length){
-            var names = filteredData.filter(function(n){ return !n['_filtered']; })
-                  .map(function(n){ return n[Graph.options.nodeName]; });
-            if(names.length && names.length!=filteredData.length){
-              Tree.treeParent = names;
-              Tree.treeParentType = Tree.typeFilter;
-            }
-          }
-          options.nodeTypes.forEach(function(type){
-              var n = nodes.filter(Tree.applyExtendedFilter(Tree.treeParent,type)).length;
-              Tree.breadcrumbs.addButton(type + " ("+n+")",type,function(){
-                Tree.typeFilter = type;
-                updateSelectOptions();
-              });
-          });
-
-          if(Tree.treeParent.length && Tree.treeParent.length<50 && Tree.treeParentType!=Tree.typeFilter){
-            Tree.relatives = true;
-            filteredData.forEach(function(n){
-              n['_relatives'] = [];
-              Tree.treeParent.forEach(function(e){
-                if([n].filter(Tree.applyExtendedFilter([e],Tree.typeFilter)).length){
-                  n['_relatives'].push(e);
-                }
-              });
-              n['_relatives'] = n['_relatives'].join(" & ");
-            })
-          }else{
-            delete Tree.relatives;
-          }
-      }
-    }
+  }
 
     Tree.treeFilteredData = function(filteredData){
       if(Tree.type=="deepextended"){

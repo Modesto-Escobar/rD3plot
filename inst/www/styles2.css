@@ -324,6 +324,26 @@ button.switch-button.active:after {
   margin: 0 0 0 16px;
   padding: 14px 16px;
 }
+.filter-selection {
+  position: relative;
+}
+.filter-selection > span {
+  border-radius: 50%;
+  background-color: #2f7bee;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  margin: 8px;
+  display: inline-block;
+  text-align: center;
+  width: 16px;
+  height: 16px;
+  font-size: 0.8em;
+  display: none;
+}
+.filter-selection.disabled > span {
+  display: none;
+}
 .icon-selection {
   display: inline-block;
   cursor: pointer;

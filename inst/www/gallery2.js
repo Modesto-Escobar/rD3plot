@@ -10,7 +10,7 @@ function gallery(Graph){
 
   var body = d3.select("body");
 
-  var Tree = typeof mgmtTree != 'undefined' ? mgmtTree(body, Graph, nodes, updateSelectOptions, deselectAllItems, mousePosition, selectedNames, removeFilter) : false;
+  var Tree = typeof mgmtTree != 'undefined' ? mgmtTree(body, Graph, nodes, updateSelectOptions, deselectAllItems, mousePosition, selectedNames, removeFilter, false, false, 2) : false;
 
   var keytypes = {};
   Graph.nodenames.forEach(function(col){
@@ -48,6 +48,23 @@ function gallery(Graph){
         .updateFilter(searchFunction)
         .help(false))
 
+  // filter selection
+  var filterSelectionButton = topbarButtons.append("div")
+      .append("button")
+        .attr("class","filter-selection")
+        .attr("aria-label",texts.filterselection)
+        .attr("title",texts.filterselection)
+        .on("click",filterSelection)
+  filterSelectionButton.append("svg")
+        .attr("height",24)
+        .attr("width",24)
+        .attr("viewBox","0 0 24 24")
+        .append("path")
+          .style("fill","#ffffff")
+          .attr("d","M7,6h10l-5.01,6.3L7,6z M4.25,5.61C6.27,8.2,10,13,10,13v6c0,0.55,0.45,1,1,1h2c0.55,0,1-0.45,1-1v-6 c0,0,3.72-4.8,5.74-7.39C20.25,4.95,19.78,4,18.95,4H5.04C4.21,4,3.74,4.95,4.25,5.61z")
+  filterSelectionButton.append("span")
+
+
   // filter button
   topbarButtons.append("div")
       .append("button")
@@ -67,21 +84,6 @@ function gallery(Graph){
         .append("path")
           .style("fill","#ffffff")
           .attr("d","M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z")
-
-  // filter selection
-  topbarButtons.append("div")
-      .append("button")
-        .attr("class","filter-selection")
-        .attr("aria-label",texts.filterselection)
-        .attr("title",texts.filterselection)
-        .on("click",filterSelection)
-        .append("svg")
-        .attr("height",24)
-        .attr("width",24)
-        .attr("viewBox","0 0 24 24")
-        .append("path")
-          .style("fill","#ffffff")
-          .attr("d","M7,6h10l-5.01,6.3L7,6z M4.25,5.61C6.27,8.2,10,13,10,13v6c0,0.55,0.45,1,1,1h2c0.55,0,1-0.45,1-1v-6 c0,0,3.72-4.8,5.74-7.39C20.25,4.95,19.78,4,18.95,4H5.04C4.21,4,3.74,4.95,4.25,5.61z")
 
   var filterpanel = body.append("div")
         .attr("class","filterpanel");
@@ -181,7 +183,7 @@ function gallery(Graph){
     var filteredData = nodes;
     if(Tree){
       filteredData = Tree.treeFilteredData(filteredData);
-      Tree.displayTreeMenu2(filteredData);
+      Tree.displayTreeMenu(filteredData);
     }
 
     var orderedData = filteredData.slice();
@@ -307,8 +309,8 @@ function gallery(Graph){
       topbarContent.selectAll(".icon-selection").classed("disabled",selectedlen<2);
     }
 
-    topbarContent.select(".filter-selection")
-      .classed("disabled",!selectedlen);
+    filterSelectionButton.classed("disabled",!selectedlen);
+    filterSelectionButton.select("span").text(selectedlen);
 
     function selectItem(i){
       var n = orderedData[i];
@@ -699,7 +701,8 @@ function gallery(Graph){
 '.loading-icon > svg > g > rect { fill: '+contrast(pallete[2])+'; }' +
 '.info-template > div > .tree-relatives > span.linked { color: '+pallete[3]+' }' +
 '.topbar > .topbar-topcontent > .topbar-main > a > h1 { color: '+pallete[1]+'; }' +
-'.footer > .footer-logo2 > svg > g[transform] { fill: '+pallete[1]+'; }'
+'.footer > .footer-logo2 > svg > g[transform] { fill: '+pallete[1]+'; }' +
+'.filter-selection > span { background-color: '+pallete[3]+'; }'
         )
     }
 
@@ -778,7 +781,7 @@ function gallery(Graph){
       }
 
       if(Tree){
-        Tree.treeRelatives2(mainframe.select(".info-template > div > .tree-relatives"),function(node){
+        Tree.treeRelatives(mainframe.select(".info-template > div > .tree-relatives"),function(node){
           openMainFrame(node['_index'],navigation,typeof goback != 'undefined' ? goback : index);
         });
       }

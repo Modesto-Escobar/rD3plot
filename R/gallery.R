@@ -152,13 +152,7 @@ gallery2_rd3 <- function(nodes, name = NULL, label = NULL, ntext = NULL,
   }
   options <- checkColumn(options,"nodeText",ntext)
 
-  if(!is.null(main)){
-    if(nchar(main)<40){
-      options[["main"]] <- main
-    }else{
-      warning("main: too large")
-    }
-  }
+  if (!is.null(main)) options[["main"]] <- main
   if (!is.null(note)) options[["note"]] <- note
 
   options[["colorScheme"]] <- as.numeric(colorScheme)
