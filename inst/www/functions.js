@@ -1254,7 +1254,7 @@ function displayMultiSearch(){
         .on("keyup",function(){
           clearTimeout(typingTimer);
           if(getKey(d3.event)=="Enter"){
-            if(d3.event.shiftKey){
+            if(d3.event.shiftKey ^ !help){
               searchIcon.dispatch("click");
               this.blur();
               return;
@@ -1297,9 +1297,9 @@ function displayMultiSearch(){
 
             values.forEach(function(value){
             var found = false;
-              value = new RegExp(value,'i');
+              value = cleanString(value);
               data.forEach(function(node){
-                if(String(node[column]).match(value)){
+                if(cleanString(node[column]).match(value)){
                   node.selected = found = true;
                 }
               });
@@ -1310,6 +1310,10 @@ function displayMultiSearch(){
             updateSelection();
           }
           searchIcon.classed("disabled",!checkContainer.selectAll("span.yes").size());
+
+          function cleanString(value){
+            return String(value).normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+          }
     }
   }
 

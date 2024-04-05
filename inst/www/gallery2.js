@@ -332,6 +332,7 @@ function gallery(Graph){
       });
       selectedValues.applyFilter();
       clearTreeParent();
+      window.scrollTo(0, 0);
       displayGraph();
   }
 

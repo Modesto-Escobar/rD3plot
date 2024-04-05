@@ -164,6 +164,7 @@ gallery2_rd3 <- function(nodes, name = NULL, label = NULL, ntext = NULL,
       warning("image: name must match in nodes colnames.")
     }else{
       options[["imageItems"]] <- image
+      nodes[,image] <- sub('\\|.*','', nodes[,image])
     }
   }
 
