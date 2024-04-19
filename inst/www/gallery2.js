@@ -173,7 +173,7 @@ function gallery(Graph){
     .attr("class","footer")
   var footer1 = footer.append("div")
     .attr("class","footer-logo1")
-  footer1.html(Graph.options.note ? Graph.options.note : '<span style="font-size:2.5em;">NetGallery</span>')
+  footer1.html(Graph.options.note ? Graph.options.note : '<span class="no-note">NetGallery</span>')
   var footer2 = footer.append("div")
     .attr("class","footer-logo2")
   footer2.html('<svg xmlns="http://www.w3.org/2000/svg" width="40" height="30" viewBox="0 0 40 30"><g stroke-linejoin="round" stroke="#c1c1c1" stroke-width="2" fill="none"><path d="M11.975 9.6 10 7.475M11.8 12.175l-2.375 3.55M18.175 17.125l-7 1M21.525 13.6l-.275-4.625M24.275 18.6l9.775 6.7M13.05 11.175l7.9-5.925" stroke-width=".5"/></g><g fill="#fff" transform="matrix(.25 0 0 .25 -19.05 35.825)"><circle cy="-123.8" cx="158.8" r="16.5"/><circle cy="-119.8" cx="108.7" r="9.9"/><circle cy="-67.8" cx="106.7" r="14.5"/><circle cy="-99.4" cx="127.8" r="6.6"/><circle cy="-75.7" cx="162.1" r="13.2"/><circle cy="-36.3" cx="219.2" r="9"/></g></svg>');

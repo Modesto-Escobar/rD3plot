@@ -456,6 +456,9 @@ button.switch-button.active:after {
 .footer > .footer-logo1 {
   text-align: center;
 }
+.footer > .footer-logo1 > .no-note {
+  font-size: 2.5em;
+}
 .footer > .footer-logo2 > svg {
   width: 64px;
   height: 48px;
@@ -497,6 +500,9 @@ button.switch-button.active:after {
   width: calc(100% - 32px);
   z-index: 1;
   padding: 8px 16px;
+}
+.fixed-footer > .footer > .footer-logo1 > .no-note {
+  font-size: 1em;
 }
 .fixed-footer > .footer > .footer-logo2 {
   font-size: 16px;
