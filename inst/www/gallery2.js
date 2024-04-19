@@ -159,6 +159,9 @@ function gallery(Graph){
     if(window.innerHeight + window.pageYOffset >= document.body.offsetHeight - 250){
       pagination = pagination + pagestep;
       displayGraph();
+      body.classed("fixed-footer",false);
+    }else if(!body.classed("fixed-footer")){
+      body.classed("fixed-footer",true);
     }
   })
 
@@ -176,6 +179,9 @@ function gallery(Graph){
   footer2.html('<svg xmlns="http://www.w3.org/2000/svg" width="40" height="30" viewBox="0 0 40 30"><g stroke-linejoin="round" stroke="#c1c1c1" stroke-width="2" fill="none"><path d="M11.975 9.6 10 7.475M11.8 12.175l-2.375 3.55M18.175 17.125l-7 1M21.525 13.6l-.275-4.625M24.275 18.6l9.775 6.7M13.05 11.175l7.9-5.925" stroke-width=".5"/></g><g fill="#fff" transform="matrix(.25 0 0 .25 -19.05 35.825)"><circle cy="-123.8" cx="158.8" r="16.5"/><circle cy="-119.8" cx="108.7" r="9.9"/><circle cy="-67.8" cx="106.7" r="14.5"/><circle cy="-99.4" cx="127.8" r="6.6"/><circle cy="-75.7" cx="162.1" r="13.2"/><circle cy="-36.3" cx="219.2" r="9"/></g></svg>');
   footer2.append("span")
     .text("netCoin")
+  footer2.append("span")
+    .attr("class","pagination")
+  body.classed("fixed-footer",true);
 
   displayGraph();
 
@@ -226,6 +232,8 @@ function gallery(Graph){
     updateTopbarTags();
     galleryItems.selectAll("div.item-card, h3.parent-separator").remove();
     viewMore.style("display","none");
+    var total = orderedData.filter(function(d){ return !d['_filtered'] }).length;
+    footer.select("span.pagination").text("");
 
     var showcount = 0,
         indices = [];
@@ -239,7 +247,7 @@ function gallery(Graph){
       if(showcount >= pagination){
         if(viewMore.style("display")=="none"){
           viewMore.style("display",null);
-          viewMore.select("span:last-child").text(pagination+" / "+orderedData.filter(function(d){ return !d['_filtered'] }).length);
+          footer.select("span.pagination").text(pagination+" / "+total);
         }
         continue;
       }

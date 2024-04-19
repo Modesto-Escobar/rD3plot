@@ -466,6 +466,10 @@ button.switch-button.active:after {
   font-size: 2em;
   margin-top: 24px;
 }
+.footer > .footer-logo2 > span.pagination {
+  display: none;
+  margin-left: 16px;
+}
 
 @media (min-width: 768px) {
   .topbar {
@@ -484,6 +488,26 @@ button.switch-button.active:after {
     text-align: right;
     margin: 0;
   }
+}
+
+.fixed-footer > .footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: calc(100% - 32px);
+  z-index: 1;
+  padding: 8px 16px;
+}
+.fixed-footer > .footer > .footer-logo2 {
+  font-size: 16px;
+}
+.fixed-footer > .footer > .footer-logo2 > svg {
+  width: 32px;
+  height: 24px;
+    margin-bottom: -8px;
+}
+.fixed-footer > .footer > .footer-logo2 > span.pagination {
+  display: inline;
 }
 
 /* multi search */
@@ -846,6 +870,8 @@ p.window-message {
 .info-template > div {
   flex-grow: 1;
   overflow-y: auto;
+  padding: 0 56px;
+  margin: 0 -56px;
 }
 .info-template > div > img {
   float: right;

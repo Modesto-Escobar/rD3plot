@@ -218,7 +218,7 @@ function mgmtTree(body, Graph, nodes, updateSelectOptions, deselectAllItems, mou
       if(!treerelatives.empty()){
         treerelatives.selectAll(".tree-relatives > span").each(function(){
           var self = d3.select(this),
-              n = nodes.filter(function(n){ return n[options.nodeName]==self.attr("nodename"); })[0];
+              n = nodes[+self.attr("nodename")];
           if(n[options.nodeText]){
             self.attr("class","linked")
               .on("click",function(){
@@ -236,7 +236,7 @@ function mgmtTree(body, Graph, nodes, updateSelectOptions, deselectAllItems, mou
       if(tooltip.size()==1){
         tooltip.selectAll(".info-template .tree-relatives > span").each(function(){
           var self = d3.select(this),
-              n = nodes.filter(function(n){ return n[options.nodeName]==self.attr("nodename"); })[0];
+              n = nodes[+self.attr("nodename")];
           if(n[options.nodeText]){
             self.style("cursor","pointer")
               .on("click",function(){
