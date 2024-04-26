@@ -374,7 +374,7 @@ button.switch-button.active:after {
   position: absolute;
   top: 0;
   left: 0;
-  z-index: 1;
+  z-index: 2;
 }
 .filterpanel > .filter-side-panel {
   background-color: #d9d9d9;

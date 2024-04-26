@@ -151,6 +151,9 @@ gallery2_rd3 <- function(nodes, name = NULL, label = NULL, ntext = NULL,
     options <- checkColumn(options,"nodeLabel",label)
   }
   options <- checkColumn(options,"nodeText",ntext)
+  if(!is.null(options[["nodeText"]])){
+    nodes[,options[["nodeText"]]] <- sub('\\|.*','', nodes[,options[["nodeText"]]])
+  }
 
   if (!is.null(main)) options[["main"]] <- main
   if (!is.null(note)) options[["note"]] <- note
@@ -367,7 +370,7 @@ treeGalleryWrapper <- function(tree, deep, initialType, tableformat, gallery_mod
     tree <- unique(tree)
     tree[,1] <- as.character(tree[,1])
     tree[,2] <- as.character(tree[,2])
-    tree <- tree[tree[,2]!=tree[,1],]
+    #tree <- tree[tree[,2]!=tree[,1],]
     gallery$tree <- data.frame(Source=tree[,1],Target=tree[,2])
     if(ncol(tree)==4){
           gallery$tree$Type1 <- tree[,3]
