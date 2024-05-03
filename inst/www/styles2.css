@@ -290,6 +290,13 @@ button.switch-button.active:after {
 .topbar > .topbar-topcontent > .topbar-clear {
   clear: both;
 }
+:not(.fixed-topbar) > .topbar > .topbar-topcontent > .topbar-buttons > div.pagination {
+  display: none;
+}
+.topbar > .topbar-topcontent > .topbar-buttons > div.pagination > span {
+  display: inline-block;
+  padding: 14px 16px;
+}
 .topbar-search {
   margin: 0 0 0 16px;
   width: 233px;
@@ -339,7 +346,6 @@ button.switch-button.active:after {
   width: 16px;
   height: 16px;
   font-size: 0.8em;
-  display: none;
 }
 .filter-selection.disabled > span {
   display: none;
@@ -479,17 +485,17 @@ button.switch-button.active:after {
     padding: 16px 144px;
   }
 
-  .footer > .footer-logo1,
-  .footer > .footer-logo2 {
-    display: inline-block;
-    width: 50%;
+  .footer {
+    display: flex;
   }
   .footer > .footer-logo1 {
     text-align: left;
+    flex-grow: 1;
   }
   .footer > .footer-logo2 {
     text-align: right;
     margin: 0;
+    margin-left: 16px;
   }
 }
 
@@ -506,13 +512,14 @@ button.switch-button.active:after {
 }
 .fixed-footer > .footer > .footer-logo2 {
   font-size: 16px;
+  white-space: nowrap;
 }
 .fixed-footer > .footer > .footer-logo2 > svg {
   width: 32px;
   height: 24px;
     margin-bottom: -8px;
 }
-.fixed-footer > .footer > .footer-logo2 > span.pagination {
+:not(.fixed-topbar).fixed-footer > .footer > .footer-logo2 > span.pagination {
   display: inline;
 }
 
@@ -844,7 +851,7 @@ p.window-message {
   top: 50%;
   transform: translateY(-50%);
   border-radius: 4px;
-  opacity: 0;
+  opacity: 0.5;
   transition: all 0.2s ease-in-out;
   background-repeat: no-repeat;
   background-position: center;
@@ -859,7 +866,7 @@ p.window-message {
 }
 .mainframe-background > .mainframe:hover > button.right-button,
 .mainframe-background > .mainframe:hover > button.left-button {
-  opacity: 0.5;
+  opacity: 0.75;
 }
 
 /* info template */

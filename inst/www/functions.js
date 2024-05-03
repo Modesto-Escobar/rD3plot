@@ -1279,6 +1279,7 @@ function displayMultiSearch(){
         .d(d4paths.search)
         .width(16).height(16))
       .on("click",function(){
+        doneTyping();
         updateFilter();
         checkContainer.selectAll("span").remove();
         searchIcon.classed("disabled",true);
@@ -1312,7 +1313,7 @@ function displayMultiSearch(){
           searchIcon.classed("disabled",!checkContainer.selectAll("span.yes").size());
 
           function cleanString(value){
-            return String(value).normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+            return String(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
           }
     }
   }

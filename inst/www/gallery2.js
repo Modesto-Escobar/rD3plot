@@ -36,6 +36,10 @@ function gallery(Graph){
   var topbarButtons = topbarContent.append("div").attr("class","topbar-buttons");
   topbarContent.append("div").attr("class","topbar-clear");
 
+  topbarButtons.append("div")
+    .attr("class","pagination")
+    .append("span")
+
   // node multi search
   var searchFunction = Tree ? Tree.getSearchFunction(filterSelection,displayGraph) : filterSelection;
 
@@ -233,7 +237,8 @@ function gallery(Graph){
     galleryItems.selectAll("div.item-card, h3.parent-separator").remove();
     viewMore.style("display","none");
     var total = orderedData.filter(function(d){ return !d['_filtered'] }).length;
-    footer.select("span.pagination").text("");
+    footer.select("span.pagination").text(total+" / "+total);
+    topbarButtons.select("div.pagination > span").text(total+" / "+total);
 
     var showcount = 0,
         indices = [];
@@ -248,6 +253,7 @@ function gallery(Graph){
         if(viewMore.style("display")=="none"){
           viewMore.style("display",null);
           footer.select("span.pagination").text(pagination+" / "+total);
+          topbarButtons.select("div.pagination > span").text(pagination+" / "+total);
         }
         continue;
       }
