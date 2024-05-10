@@ -49,7 +49,12 @@ function gallery(Graph){
         .data(nodes)
         .column(Graph.options.nodeLabel)
         .updateSelection(displayGraph)
-        .updateFilter(searchFunction)
+        .updateFilter(function(){
+          searchFunction();
+          nodes.forEach(function(node){ delete node.selected; });
+          displayGraph();
+          highlightBreadcrumbsButtons();
+        })
         .help(false))
 
   // filter selection
@@ -134,6 +139,14 @@ function gallery(Graph){
   // breadCrumbs
   if(Tree){
     Tree.breadcrumbs = new Tree.BreadCrumbs(topbar);
+
+    function highlightBreadcrumbsButtons(){
+      var buttons = Tree.breadcrumbs.breadcrumbs.selectAll("button.primary:not(.empty)");
+      buttons.classed("blinkblink",true);
+      setTimeout(function(){
+        buttons.classed("blinkblink",false);
+      }, 10000);
+    }
   }
 
   var gallery = body.append("div")
@@ -729,8 +742,13 @@ function gallery(Graph){
   function openMainFrame(index,navigation,goback){
     var leftindex = false,
         rightindex = false;
-    if(typeof goback != 'undefined'){
-      leftindex = goback;
+    if(typeof goback == 'undefined'){
+      goback = [];
+    }
+    if(goback.length){
+      if(goback.length>1){
+        leftindex = goback[goback.length-1];
+      }
     }else if(navigation){
       leftindex = navigation.indexOf(index)-1;
       rightindex = navigation.indexOf(index)+1;
@@ -766,11 +784,22 @@ function gallery(Graph){
       .attr("title",texts.close)
       .on("click",closeMainFrame);
 
+    if(goback.length){
+      mainframe.append("button")
+      .attr("class","left2-button")
+      .on("click",function(){
+        openMainFrame(goback[0],navigation);
+      })
+    }
+
     if(leftindex!==false){
       mainframe.append("button")
       .attr("class","left-button")
       .on("click",function(){
-        openMainFrame(leftindex,navigation);
+        if(goback.length){
+          goback.pop();
+        }
+        openMainFrame(leftindex,navigation,goback);
       })
     }
 
@@ -797,7 +826,8 @@ function gallery(Graph){
 
       if(Tree){
         Tree.treeRelatives(mainframe.select(".info-template > div > .tree-relatives"),function(node){
-          openMainFrame(node['_index'],navigation,typeof goback != 'undefined' ? goback : index);
+          goback.push(index);
+          openMainFrame(node['_index'],navigation,goback);
         });
       }
 
@@ -811,7 +841,10 @@ function gallery(Graph){
           iframe.style.height = null;
           infoTemplate.style("display","none");
           mainframe.select("button.right-button").remove();
-          mainframe.select("button.left-button").on("click",function(){
+          mainframe.select("button.left-button").remove();
+          mainframe.append("button")
+            .attr("class","left2-button")
+          .on("click",function(){
             openMainFrame(index,navigation);
           })
         })

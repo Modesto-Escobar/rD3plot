@@ -510,7 +510,7 @@ function mgmtTree(body, Graph, nodes, updateSelectOptions, deselectAllItems, mou
                 updateSelectOptions();
               });
               if(!n){
-                Tree.breadcrumbs.breadcrumbs.select("button[content="+type+"]").style("pointer-events","none");
+                Tree.breadcrumbs.breadcrumbs.select("button[content="+type+"]").classed("empty",true);
               }
           });
 
@@ -665,9 +665,27 @@ function mgmtTree(body, Graph, nodes, updateSelectOptions, deselectAllItems, mou
       }
       if(Tree.type == "extended"){
         return function(){
+          var currentType = Tree.typeFilter,
+              newType;
           Tree.resetOptions();
+          var types = nodes.filter(function(n){
+              return n.selected;
+          }).map(function(d){
+            return d[options.nodeType];
+          });
+          types = d3.set(types).values();
+          if(types.length==1){
+            newType = types[0];
+          }else if(types.indexOf(currentType)!=-1){
+            newType = currentType;
+          }else{
+            newType = options.nodeTypes.filter(function(d){
+              return types.indexOf(d)!=-1;
+            })[0];
+          }
           updateSelectOptions();
           filterSelection();
+          Tree.typeFilter = newType;
         }
       }
     }

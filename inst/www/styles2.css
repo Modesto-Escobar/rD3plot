@@ -346,6 +346,11 @@ button.switch-button.active:after {
   width: 16px;
   height: 16px;
   font-size: 0.8em;
+  animation: myhighlight 1s 10;
+}
+@keyframes myhighlight {
+  from {opacity: 0.25;}
+  to {opacity: 1;}
 }
 .filter-selection.disabled > span {
   display: none;
@@ -733,6 +738,16 @@ button.switch-button.active:after {
 .topbar > .breadcrumbs > button.primary.home:hover {
   opacity: 1;
 }
+.topbar > .breadcrumbs > button.primary.empty{
+  pointer-events: none;
+}
+.topbar > .breadcrumbs > button.primary.blinkblink {
+  animation: blinkblink 1s infinite;
+}
+@keyframes blinkblink {
+  from {opacity: 0.25;}
+  to {opacity: 1;}
+}
 
 .breadcrumbs + .topbar-tag-container {
   width: 100%;
@@ -840,7 +855,8 @@ p.window-message {
   height: calc(100% - 80px);
 }
 .mainframe-background > .mainframe > button.right-button,
-.mainframe-background > .mainframe > button.left-button {
+.mainframe-background > .mainframe > button.left-button,
+.mainframe-background > .mainframe > button.left2-button {
   width: 24px;
   height: 32px;
   padding: 0;
@@ -856,6 +872,11 @@ p.window-message {
   background-repeat: no-repeat;
   background-position: center;
 }
+.mainframe-background > .mainframe > button.left2-button {
+  left: 0;
+  transform: translateY(-175%);
+  background-image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCA2LjM1IDEyLjciIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZmlsbD0iI2ZmZiIgZD0iTTMuODQgMTAuMDEzYS41My41MyAwIDAgMCAuMzI1LS40OXYtNi4zNWEuNTMuNTMgMCAwIDAtLjkwMi0uMzcyTC4wODcgNS45NzRhLjUzLjUzIDAgMCAwIDAgLjc0OGwzLjE3NyAzLjE3NmEuNTMuNTMgMCAwIDAgLjU3Ni4xMTV6Ii8+PHBhdGggZmlsbD0iI2ZmZiIgZD0iTTYuMDkxIDEwLjAxM2EuNTMuNTMgMCAwIDAgLjMyNi0uNDl2LTYuMzVhLjUzLjUzIDAgMCAwLS45MDItLjM3MkwyLjMzOSA1Ljk3NGEuNTMuNTMgMCAwIDAgMCAuNzQ4bDMuMTc3IDMuMTc2YS41My41MyAwIDAgMCAuNTc2LjExNXoiLz48L3N2Zz4=);
+}
 .mainframe-background > .mainframe > button.left-button {
   left: 0;
   background-image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCA2LjM1IDEyLjciIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZmlsbD0iI2ZmZmZmZiIgZD0iTTQuOTY1IDEwLjAxM2EuNTMuNTMgMCAwIDAgLjMyNi0uNDl2LTYuMzVhLjUzLjUzIDAgMCAwLS45MDItLjM3MkwxLjIxMyA1Ljk3NGEuNTMuNTMgMCAwIDAgMCAuNzQ4TDQuMzkgOS44OThhLjUzLjUzIDAgMCAwIC41NzYuMTE1WiIvPjwvc3ZnPg==)
@@ -865,7 +886,8 @@ p.window-message {
   background-image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCA2LjM1IDEyLjciIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZmlsbD0iI2ZmZmZmZiIgZD0iTTEuMzg1IDIuNjg2YS41My41MyAwIDAgMC0uMzI2LjQ5djYuMzVhLjUzLjUzIDAgMCAwIC45MDIuMzcybDMuMTc2LTMuMTczYS41My41MyAwIDAgMCAwLS43NDhMMS45NiAyLjhhLjUzLjUzIDAgMCAwLS41NzYtLjExNVoiLz48L3N2Zz4=);
 }
 .mainframe-background > .mainframe:hover > button.right-button,
-.mainframe-background > .mainframe:hover > button.left-button {
+.mainframe-background > .mainframe:hover > button.left-button,
+.mainframe-background > .mainframe:hover > button.left2-button {
   opacity: 0.75;
 }
 
