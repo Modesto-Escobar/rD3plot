@@ -594,7 +594,7 @@ function gallery(Graph){
   });
 
     // filters
-    var subNodes = Tree ? Tree.getFilterData() : nodes;
+    var subNodes = Tree ? Tree.getFilterData() : nodes.filter(function(n){ return !n['_filtered']; });
   selectedOptions.forEach(function(col){
     var type = keytypes[col];
     var div = sidecontent.append("div")
@@ -672,7 +672,6 @@ function gallery(Graph){
                     tag.classed("tag-selected",!tag.classed("tag-selected"));
                     selectedValues[tag.classed("tag-selected") ? 'add' : 'remove'](col,d);
                     selectedValues.applyFilter();
-                    clearTreeParent();
                     updateFiltersMarkers();
                     displayGraph();
                   })
@@ -918,9 +917,11 @@ ValueSelector.prototype = {
     if(d3.keys(selectedValues).length === 0){
       data.forEach(function(n){
         delete n['_filtered'];
+        delete n['selected'];
       });
     }else{
       data.forEach(function(n){
+        delete n['selected'];
         for(k in selectedValues){
           var type = keytypes[k];
           if(type=="number"){

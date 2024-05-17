@@ -671,9 +671,9 @@ function mgmtTree(body, Graph, nodes, updateSelectOptions, deselectAllItems, mou
           var types = nodes.filter(function(n){
               return n.selected;
           }).map(function(d){
-            return d[options.nodeType];
+            return Array.isArray(d[options.nodeType]) ? d[options.nodeType] : [d[options.nodeType]];
           });
-          types = d3.set(types).values();
+          types = d3.set(d3.merge(types)).values();
           if(types.length==1){
             newType = types[0];
           }else if(types.indexOf(currentType)!=-1){
