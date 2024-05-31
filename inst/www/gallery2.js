@@ -8,9 +8,32 @@ function gallery(Graph){
     node['_index'] = i;
   });
 
+  if(Graph.options.nodeOrder){
+    if(typeof Graph.options.nodeOrder == "string" && Graph.nodenames.indexOf(Graph.options.nodeOrder)==-1){
+      delete Graph.options.nodeOrder;
+    }
+    if(Array.isArray(Graph.options.nodeOrder)){
+      if(!Graph.options.nodeTypes || !Graph.options.nodeNamesByType || Graph.options.nodeOrder.length!=Graph.options.nodeTypes.length){
+        delete Graph.options.nodeOrder;
+      }else{
+        for(var i=0; i<Graph.options.nodeOrder.length; i++){
+          if(Graph.options.nodeOrder[i] && Graph.options.nodeNamesByType[Graph.options.nodeTypes[i]].indexOf(Graph.options.nodeOrder[i])==-1){
+            Graph.options.nodeOrder[i] = null;
+          }
+        }
+      }
+    }
+  }
+
+  if(Graph.options.decreasing && Array.isArray(Graph.options.decreasing) && (!Graph.options.nodeTypes || Graph.options.decreasing.length!=Graph.options.nodeTypes.length)){
+    delete Graph.options.decreasing;
+  }
+
   var body = d3.select("body");
 
   var Tree = typeof mgmtTree != 'undefined' ? mgmtTree(body, Graph, nodes, updateSelectOptions, deselectAllItems, mousePosition, selectedNames, removeFilter, false, false, 2) : false;
+
+  updateReverseOrder();
 
   var keytypes = {};
   Graph.nodenames.forEach(function(col){
@@ -209,6 +232,23 @@ function gallery(Graph){
       Tree.displayTreeMenu(filteredData);
     }
 
+    var nodeOrder = false;
+    if(Graph.options.order){
+      nodeOrder = Graph.options.order;
+    }else if(Graph.options.nodeOrder){
+      if(typeof Graph.options.nodeOrder=="string"){
+        nodeOrder = Graph.options.nodeOrder;
+      }else{
+        nodeOrder = Graph.options.nodeOrder[Graph.options.nodeTypes.indexOf(Tree.typeFilter)];
+        if(!nodeOrder){
+          nodeOrder = false;
+        }
+      }
+    }
+    if(nodeOrder && Graph.options.nodeNamesByType && Tree.typeFilter && Graph.options.nodeNamesByType[Tree.typeFilter].indexOf(nodeOrder)==-1){
+      nodeOrder = false;
+    }
+
     var orderedData = filteredData.slice();
     if(Tree && Tree.relatives){
       orderedData.sort(function(a,b){
@@ -224,9 +264,9 @@ function gallery(Graph){
         }else{
           comp = Tree.treeParent.indexOf(aa)-Tree.treeParent.indexOf(bb);
         }
-        if(comp==0 && Graph.options.order){
-          aa = a[Graph.options.order];
-          bb = b[Graph.options.order];
+        if(comp==0 && nodeOrder){
+          aa = a[nodeOrder];
+          bb = b[nodeOrder];
           return compareFunction(aa,bb,Graph.options.rev);
         }
         if(comp==0 && Graph.options.rev){
@@ -235,10 +275,10 @@ function gallery(Graph){
         return comp;
       })
     }else{
-      if(Graph.options.order){
+      if(nodeOrder){
         orderedData.sort(function(a,b){
-          var aa = a[Graph.options.order],
-              bb = b[Graph.options.order];
+          var aa = a[nodeOrder],
+              bb = b[nodeOrder];
           return compareFunction(aa,bb,Graph.options.rev);
         })
       }else if(Graph.options.rev){
@@ -520,7 +560,17 @@ function gallery(Graph){
 
   function updateSelectOptions(){
     delete Graph.options.order;
+    updateReverseOrder();
     Tree.breadcrumbs.updateSelectedType();
+  }
+
+  function updateReverseOrder(){
+    delete Graph.options.rev;
+    if(Graph.options.decreasing){
+      if(!Array.isArray(Graph.options.decreasing) || Graph.options.decreasing[Graph.options.nodeTypes.indexOf(Tree.typeFilter)]){
+        Graph.options.rev = true;
+      }
+    }
   }
 
   function deselectAllItems(){
