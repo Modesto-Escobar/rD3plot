@@ -723,6 +723,7 @@ function gallery(Graph){
                     selectedValues[tag.classed("tag-selected") ? 'add' : 'remove'](col,d);
                     selectedValues.applyFilter();
                     updateFiltersMarkers();
+                    clearTreeParent();
                     displayGraph();
                   })
               });
