@@ -523,7 +523,6 @@ function mgmtTree(body, Graph, nodes, updateSelectOptions, deselectAllItems, mou
                   n['_relatives'].push(e);
                 }
               });
-              n['_relatives'] = n['_relatives'].join(" & ");
             })
           }else{
             delete Tree.relatives;

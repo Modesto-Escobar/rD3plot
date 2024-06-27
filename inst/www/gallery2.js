@@ -255,14 +255,14 @@ function gallery(Graph){
         var aa = a['_relatives'],
             bb = b['_relatives'];
             comp = 0;
-        if(Tree.treeParent.indexOf(aa)!=-1 && Tree.treeParent.indexOf(bb)==-1){
-          comp = 1;
-        }else if(Tree.treeParent.indexOf(bb)!=-1 && Tree.treeParent.indexOf(aa)==-1){
-          comp = -1;
-        }else if(Tree.treeParent.indexOf(aa)==-1 && Tree.treeParent.indexOf(bb)==-1){
+        if(bb.length>1 || aa.length>1){
           comp = bb.length-aa.length;
+        }else if(Tree.treeParent.indexOf(aa[0])!=-1 && Tree.treeParent.indexOf(bb[0])==-1){
+          comp = 1;
+        }else if(Tree.treeParent.indexOf(bb[0])!=-1 && Tree.treeParent.indexOf(aa[0])==-1){
+          comp = -1;
         }else{
-          comp = Tree.treeParent.indexOf(aa)-Tree.treeParent.indexOf(bb);
+          comp = Tree.treeParent.indexOf(aa[0])-Tree.treeParent.indexOf(bb[0]);
         }
         if(comp==0 && nodeOrder){
           aa = a[nodeOrder];
@@ -314,11 +314,17 @@ function gallery(Graph){
       showcount++;
 
       if(Tree && Tree.relatives && orderedData[i]['_relatives'] && !galleryItems.selectAll("h3.parent-separator").filter(function(){
-        return this.textContent==orderedData[i]['_relatives'];
+        return d3.select(this).attr("relatives-id")==orderedData[i]['_relatives'].join("|");
       }).size()){
+        var label = Graph.options.nodeLabel ? orderedData[i]['_relatives'].map(function(r){
+          return nodes.filter(function(n){
+            return n[Graph.options.nodeName]==r;
+          })[0][Graph.options.nodeLabel];
+        }) : orderedData[i]['_relatives'];
         galleryItems.append("h3")
           .attr("class","parent-separator")
-          .text(orderedData[i]['_relatives'])
+          .attr("relatives-id",orderedData[i]['_relatives'].join("|"))
+          .text(label.join(" & "))
       }
 
       var itemcard = galleryItems.append("div")
@@ -474,10 +480,14 @@ function gallery(Graph){
       container.selectAll(".tag").each(function(){
         var self = d3.select(this);
         if(!self.text() || self.text().indexOf("_")===0){
-          self.text("")
-          self.call(getSVG()
-            .d(d4paths.search)
-            .width(16).height(16))
+          if(Tree && Tree.typeFilter){
+            self.text(Tree.typeFilter)
+          }else{
+            self.text("")
+            self.call(getSVG()
+              .d(d4paths.search)
+              .width(16).height(16))
+          }
         }
       });
     }
@@ -591,6 +601,9 @@ function gallery(Graph){
         return d!=Graph.options.nodeType;
       })
     }
+    if(Graph.options.nodeName=="_name" && Tree && Tree.typeFilter && Graph.options.nodeLabel=="_name"){
+      selectedOptions.unshift("_name");
+    }
 
     // order
   var ordercontainer = sidecontent.append("div")
@@ -610,7 +623,7 @@ function gallery(Graph){
     selectedOptions.forEach(function(col){
       container.append("span")
         .attr("class","radio-item"+(Graph.options.order && Graph.options.order==col ? " selected-item" : ""))
-        .text(col)
+        .text(getText(col))
         .attr("order-key",col)
         .on("click",function(){
           Graph.options.order = d3.select(this).attr("order-key");
@@ -650,7 +663,7 @@ function gallery(Graph){
     var div = sidecontent.append("div")
       .attr("class","filter-container")
       .attr("filter-key",col);
-    div.append("span").text(col)
+    div.append("span").text(getText(col))
       .attr("class","filter-name")
       .append("span")
     plusMinusButton(div,function(container){
@@ -731,6 +744,14 @@ function gallery(Graph){
           }
     });
   });
+
+    function getText(col){
+      var text = col;
+      if(col=="_name" && Tree && Tree.typeFilter){
+        text = Tree.typeFilter;
+      }
+      return text;
+    }
   }
 
   function colorScheme(mode){

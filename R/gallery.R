@@ -202,13 +202,23 @@ table2links <- function(x){
               aux <- strsplit(tree[i,c(1,j)],"|",fixed=TRUE)
               aux <- expand.grid(aux)
               aux <- cbind(aux,types[1],types[j])
-              colnames(aux) <- c("parent","child","type1","type2")
-              tree2[[length(tree2)+1]] <- aux
+            }else{
+              aux <- cbind(tree[i,1],NA,types[1],NA)
+              aux <- unname(aux)
             }
+            colnames(aux) <- c("parent","child","type1","type2")
+            tree2[[length(tree2)+1]] <- aux
           }
         }
       }
       tree <- do.call(rbind,tree2)
+      tree <- unique(tree)
+      tree <- tree[apply(tree,1,function(x){
+        if(is.na(x[2]) && sum(x[1]==tree[,1])>1){
+          return(FALSE)
+        }
+        return(TRUE)
+      }),]
       return(tree)
 }
 
@@ -388,38 +398,13 @@ treeGalleryWrapper <- function(tree, deep, initialType, tableformat, gallery_mod
             aux <- unique(types[names==x])
             return(paste0(aux,collapse="|"))
           })
-          gallery$options$nodeTypes <- unique(types)
+          types <- unique(types)
+          types <- types[!is.na(types)]
+          gallery$options$nodeTypes <- types
     }
 
     if(!is.null(initialType)){
       gallery$options$initialType <- as.character(initialType)[1]
-    }
-  }
-
-  if(name=="_name" && !is.null(gallery$options$nodeTypes)){
-    for(ntype in rev(gallery$options$nodeTypes)){
-      if(is.null(gallery$nodes[[ntype]])){
-        gallery$nodes[[ntype]] <- NA
-      }else{
-        col <- gallery$nodes[[ntype]]
-        gallery$nodes[[ntype]] <- NULL
-        gallery$nodes[[ntype]] <- col
-      }
-      typematch <- vapply(gallery$nodes[[nodeType]],function(x){
-        aux <- unlist(strsplit(x,"|",fixed=TRUE))
-        if(length(aux)==1){
-          return(x==ntype)
-        }else{
-          return(ntype %in% aux)
-        }
-      },logical(1))
-      gallery$nodes[typematch,ntype] <- gallery$nodes[typematch,name]
-      cnames <- colnames(gallery$nodes)
-      cnames <- cnames[c(-1,-length(cnames))]
-      gallery$nodes <- gallery$nodes[,c(name,ntype,cnames)]
-      if(exists("nodenamesbytype") && !is.null(nodenamesbytype[[ntype]])){
-        nodenamesbytype[[ntype]] <- c(nodenamesbytype[[ntype]][1],ntype,nodenamesbytype[[ntype]][-1])
-      }
     }
   }
 
