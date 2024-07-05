@@ -6,7 +6,12 @@ galleryJSON <- function(gallery){
   )
 
   #prepare tree
-  if(length(gallery$tree)){
+  if(length(gallery$nodes_relatives)){
+    json$nodes_relatives <- gallery$nodes_relatives
+    if(length(gallery$nodes_relativesTypes)){
+      json$nodes_relativesTypes <- gallery$nodes_relativesTypes
+    }
+  }else if(length(gallery$tree)){
     json$tree <- unname(as.list(gallery$tree))
   }
 
@@ -24,7 +29,11 @@ galleryCreate <- function(gallery, dir){
     style <- "styles2.css"
   }
   if(!is.null(gallery$tree)){
-    script <- c("gallerytree.js",script)
+    if(mode==2){
+      script <- c("gallerytree2.js",script)
+    }else{
+      script <- c("gallerytree.js",script)
+    }
   }
   styles <- c("reset.css",style)
   scripts <- c("d3.min.js","jszip.min.js","images.js","colorScales.js","functions.js",language,script)
@@ -135,8 +144,10 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
   return(gallery)
 }
 
-gallery2_rd3 <- function(nodes, name = NULL, label = NULL, order = NULL, decreasing = FALSE, ntext = NULL,
-    image = NULL, main = NULL, note = NULL, colorScheme = 0, language = c("en", "es", "ca"), dir = NULL){
+gallery2_rd3 <- function(nodes, name = NULL, label = NULL, order = NULL,
+    decreasing = FALSE, ntext = NULL, image = NULL, main = NULL, note = NULL,
+    export = FALSE, colorScheme = 0,
+    language = c("en", "es", "ca"), dir = NULL){
 
   if(is.null(name)){
     name <- colnames(nodes)[1]
@@ -164,6 +175,7 @@ gallery2_rd3 <- function(nodes, name = NULL, label = NULL, order = NULL, decreas
   if (!is.null(main)) options[["main"]] <- main
   if (!is.null(note)) options[["note"]] <- note
 
+  options <- showSomething(options,"exportExcel",export)
   options[["colorScheme"]] <- as.numeric(colorScheme)
   options[["language"]] <- checkLanguage(language)
 
@@ -396,6 +408,7 @@ treeGalleryWrapper <- function(tree, deep, initialType, tableformat, gallery_mod
           checkColumnType(gallery)
           gallery$nodes[[nodeType]] <- sapply(gallery$nodes[[name]],function(x){
             aux <- unique(types[names==x])
+            aux <- aux[!is.na(aux)]
             return(paste0(aux,collapse="|"))
           })
           types <- unique(types)
@@ -441,7 +454,44 @@ treeGallery2_rd3 <- function(tree, initialType = NULL, tableformat = FALSE, ...)
     tree[,3] <- colnames(tree)[1]
     tree[,4] <- colnames(tree)[2]
   }
-  return(treeGalleryWrapper(tree, FALSE, initialType, tableformat, gallery2_rd3, ...))
+  gallery <- treeGalleryWrapper(tree, FALSE, initialType, tableformat, gallery2_rd3, ...)
+  tree <- gallery$tree
+  tree <- tree[!is.na(tree[,1]) & !is.na(tree[,2]),]
+  nodes <- gallery$nodes
+  relatives <- list()
+  relativesTypes <- list()
+  for(i in seq_len(nrow(nodes))){
+    name <- nodes[i,gallery$options$nodeName]
+    aux1 <- character(0)
+    aux2 <- character(0)
+    if(name %in% tree[,1]){
+      aux1 <- tree[tree[,1]==name,2]
+      aux2 <- tree[tree[,1]==name,3]
+    }
+    if(name %in% tree[,2]){
+      target <- !is.na(tree[,2]) & tree[,2]==name
+      parents <- tree[target,1]
+      pType <- tree[target,4]
+      aux1 <- c(aux1,parents)
+      aux2 <- c(aux2,pType)
+      for(j in seq_along(parents)){
+        siblings <- tree[tree[,1]==parents[j],2]
+        siblings <- siblings[siblings!=name]
+        stypes <- rep(pType[j],length(siblings))
+        aux1 <- c(aux1,siblings)
+        aux2 <- c(aux2,stypes)
+      }
+    }
+    relatives[[i]] <- aux1
+    if(length(unique(aux2))>1){
+      relativesTypes[[as.character(i-1)]] <- aux2
+    }
+  }
+  gallery$nodes_relatives <- relatives
+  if(length(unlist(relativesTypes))){
+    gallery$nodes_relativesTypes <- relativesTypes
+  }
+  return(gallery)
 }
 
 add_tutorial_rd3 <- function(x, image=NULL, description=NULL){

@@ -10,7 +10,7 @@ Object of class \code{gallery_rd3}.
 
 \usage{
 gallery2_rd3(nodes, name = NULL, label = NULL, order = NULL, decreasing = FALSE,
-  ntext = NULL, image = NULL, main = NULL, note = NULL,
+  ntext = NULL, image = NULL, main = NULL, note = NULL, export = FALSE,
   colorScheme = 0, language = c("en", "es", "ca"), dir = NULL)
 }
 \arguments{
@@ -23,6 +23,7 @@ gallery2_rd3(nodes, name = NULL, label = NULL, order = NULL, decreasing = FALSE,
 \item{image}{column name which indicates the image paths in the nodes data frame.}
 \item{main}{upper title of the graph.}
 \item{note}{lower title of the graph.}
+\item{export}{A button will appear to export gallery as excel.}
 \item{colorScheme}{Select a color theme for display (0-11).}
 \item{language}{a character string indicating the language of the graph (en=english (default); es=spanish; ca=catalan).}
 \item{dir}{a character string representing the directory where the web files will be saved.}

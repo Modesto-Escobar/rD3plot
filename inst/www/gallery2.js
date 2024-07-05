@@ -8,6 +8,8 @@ function gallery(Graph){
     node['_index'] = i;
   });
 
+  Graph.filteredOrderedData = nodes.slice();
+
   if(Graph.options.nodeOrder){
     if(typeof Graph.options.nodeOrder == "string" && Graph.nodenames.indexOf(Graph.options.nodeOrder)==-1){
       delete Graph.options.nodeOrder;
@@ -31,7 +33,7 @@ function gallery(Graph){
 
   var body = d3.select("body");
 
-  var Tree = typeof mgmtTree != 'undefined' ? mgmtTree(body, Graph, nodes, updateSelectOptions, deselectAllItems, mousePosition, selectedNames, removeFilter, false, false, 2) : false;
+  var Tree = typeof mgmtTree != 'undefined' ? mgmtTree(Graph, nodes, updateSelectOptions, deselectAllItems, removeFilter) : false;
 
   updateReverseOrder();
 
@@ -49,6 +51,23 @@ function gallery(Graph){
   var topbarContent = topbar.append("div")
         .attr("class","topbar-topcontent");
   var mainTitle = topbarContent.append("div").attr("class","topbar-main");
+  if(Graph.options.multipages){
+    mainTitle.append("div")
+      .append("button")
+      .attr("class","topbar-button multipages-home")
+      .attr("aria-label",texts.goback)
+      .attr("title",texts.goback)
+      .on("click",function(){
+        window.history.back();
+      })
+      .append("svg")
+        .attr("height",24)
+        .attr("width",24)
+        .attr("viewBox","0 0 24 24")
+        .append("path")
+          .style("fill","#ffffff")
+          .attr("d","M6 19h3v-6h6v6h3v-9l-6-4.5L6 10Zm-2 2V9l8-6 8 6v12h-7v-6h-2v6Zm8-8.75Z")
+  }
   if(Graph.options.main){
     mainTitle.append("a")
       .attr("href","")
@@ -62,6 +81,40 @@ function gallery(Graph){
   topbarButtons.append("div")
     .attr("class","pagination")
     .append("span")
+
+  if(Graph.options.exportExcel){
+    topbarButtons.append("div")
+      .append("button")
+        .attr("class","topbar-button excel-export")
+        .attr("aria-label","xlsx")
+        .attr("title","xlsx")
+        .on("click",function(){
+          var excel = {};
+          var cols = getSelectOptions(sortAsc,Graph,Tree);
+          var sheetname = Tree ? Tree.typeFilter : "data";
+          excel[sheetname] = [];
+          var row = [];
+          cols.forEach(function(c){
+              row.push(String(c));
+          });
+          excel[sheetname].push(row);
+          Graph.filteredOrderedData.forEach(function(n){
+              row = [];
+              cols.forEach(function(c){
+                row.push(String(n[c]));
+              });
+              excel[sheetname].push(row);
+          });
+          downloadExcel(excel, d3.select("head>title").text());
+        })
+        .append("svg")
+        .attr("height",24)
+        .attr("width",24)
+        .attr("viewBox","0 0 14 14")
+        .append("path")
+          .style("fill","#ffffff")
+          .attr("d","m8.2305 0-8.2305 1.3711v11.229l8.2305 1.4004v-1.6777h4.9766c0.43219 0 0.78711-0.35492 0.78711-0.78711v-9.3984c0-0.43219-0.35492-0.78711-0.78711-0.78711h-4.9766v-1.3496zm0 1.8516h4.9766c0.16276 0 0.28516 0.1224 0.28516 0.28516v9.3984c0 0.16276-0.1224 0.28516-0.28516 0.28516h-4.9766v-0.95898h1.2266v-1.0605h-1.2266v-0.74023h1.2266v-1.0605h-1.2266v-0.63867h1.2266v-1.0605h-1.2266v-0.74023h1.2266v-1.0605h-1.2266v-0.63867h1.2266v-1.0605h-1.2266v-0.94922zm1.9336 0.94922v1.0605h2.2109v-1.0605h-2.2109zm-4.375 1.5176-1.3203 2.582 1.375 2.7266-1.0723-0.080078-0.89062-1.7969-0.8457 1.666-0.94141-0.070312 1.2188-2.457-1.1738-2.3887 0.94141-0.046875 0.80078 1.5938 0.83008-1.6738 1.0781-0.054688zm4.375 0.18164v1.0605h2.2109v-1.0605h-2.2109zm0 1.8008v1.0605h2.2109v-1.0605h-2.2109zm0 1.6992v1.0605h2.2109v-1.0605h-2.2109zm0 1.8008v1.0605h2.2109v-1.0605h-2.2109z")
+   }
 
   // node multi search
   var searchFunction = Tree ? Tree.getSearchFunction(filterSelection,displayGraph) : filterSelection;
@@ -83,10 +136,11 @@ function gallery(Graph){
   // filter selection
   var filterSelectionButton = topbarButtons.append("div")
       .append("button")
-        .attr("class","filter-selection")
+        .attr("class","topbar-button filter-selection")
         .attr("aria-label",texts.filterselection)
         .attr("title",texts.filterselection)
         .on("click",filterSelection)
+        .classed("disabled",true)
   filterSelectionButton.append("svg")
         .attr("height",24)
         .attr("width",24)
@@ -96,11 +150,10 @@ function gallery(Graph){
           .attr("d","M7,6h10l-5.01,6.3L7,6z M4.25,5.61C6.27,8.2,10,13,10,13v6c0,0.55,0.45,1,1,1h2c0.55,0,1-0.45,1-1v-6 c0,0,3.72-4.8,5.74-7.39C20.25,4.95,19.78,4,18.95,4H5.04C4.21,4,3.74,4.95,4.25,5.61z")
   filterSelectionButton.append("span")
 
-
   // filter button
   topbarButtons.append("div")
       .append("button")
-        .attr("class","filter-button")
+        .attr("class","topbar-button filter-button")
         .attr("aria-label",texts.filtermenu)
         .attr("title",texts.filtermenu)
         .on("click",function(){
@@ -178,8 +231,6 @@ function gallery(Graph){
   var galleryItems = gallery.append("div")
         .attr("class","gallery-items")
 
-  resetPagination();
-
   var viewMore = gallery.append("div")
     .attr("class","loading-icon")
     .html(getLoadingSVG())
@@ -198,7 +249,7 @@ function gallery(Graph){
     }
     if(window.innerHeight + window.pageYOffset >= document.body.offsetHeight - 250){
       pagination = pagination + pagestep;
-      displayGraph();
+      renderCards(pagination);
       body.classed("fixed-footer",false);
     }else if(!body.classed("fixed-footer")){
       body.classed("fixed-footer",true);
@@ -206,6 +257,7 @@ function gallery(Graph){
   })
 
   function resetPagination(){
+    window.scrollTo(0, 0);
     pagestep = pagination = Math.floor(galleryItems.node().clientWidth / 385) * 3;
   }
 
@@ -226,8 +278,16 @@ function gallery(Graph){
   displayGraph();
 
   function displayGraph(){
+    resetPagination();
+
     var filteredData = nodes;
     if(Tree){
+      if(Tree && Tree.relatives){
+        filteredData.forEach(function(d){
+          delete d['_current_relatives'];
+        })
+        delete Tree.relatives;
+      }
       filteredData = Tree.treeFilteredData(filteredData);
       Tree.displayTreeMenu(filteredData);
     }
@@ -249,11 +309,11 @@ function gallery(Graph){
       nodeOrder = false;
     }
 
-    var orderedData = filteredData.slice();
+    Graph.filteredOrderedData = filteredData.filter(function(n){ return !n['_filtered']; });
     if(Tree && Tree.relatives){
-      orderedData.sort(function(a,b){
-        var aa = a['_relatives'],
-            bb = b['_relatives'];
+      Graph.filteredOrderedData.sort(function(a,b){
+        var aa = a['_current_relatives'],
+            bb = b['_current_relatives'];
             comp = 0;
         if(bb.length>1 || aa.length>1){
           comp = bb.length-aa.length;
@@ -276,54 +336,48 @@ function gallery(Graph){
       })
     }else{
       if(nodeOrder){
-        orderedData.sort(function(a,b){
+        Graph.filteredOrderedData.sort(function(a,b){
           var aa = a[nodeOrder],
               bb = b[nodeOrder];
           return compareFunction(aa,bb,Graph.options.rev);
         })
       }else if(Graph.options.rev){
-        orderedData.reverse();
+        Graph.filteredOrderedData.reverse();
       }
     }
 
     updateTopbarTags();
+
+    renderCards(pagination);
+  } // end of displayGraph
+
+  function renderCards(nitems){
     galleryItems.selectAll("div.item-card, h3.parent-separator").remove();
     viewMore.style("display","none");
-    var total = orderedData.filter(function(d){ return !d['_filtered'] }).length;
-    footer.select("span.pagination").text(total+" / "+total);
-    topbarButtons.select("div.pagination > span").text(total+" / "+total);
 
-    var showcount = 0,
-        indices = [];
-    for(var i = 0; i<orderedData.length; i++){
-      if(orderedData[i]["_filtered"]){
-        continue;
-      }
+    var showcount = 0;
+    for(var i = 0; i<Graph.filteredOrderedData.length; i++){
 
-      indices.push(orderedData[i]['_index']);
-
-      if(showcount >= pagination){
+      if(showcount >= nitems){
         if(viewMore.style("display")=="none"){
           viewMore.style("display",null);
-          footer.select("span.pagination").text(pagination+" / "+total);
-          topbarButtons.select("div.pagination > span").text(pagination+" / "+total);
         }
-        continue;
+        break;
       }
 
       showcount++;
 
-      if(Tree && Tree.relatives && orderedData[i]['_relatives'] && !galleryItems.selectAll("h3.parent-separator").filter(function(){
-        return d3.select(this).attr("relatives-id")==orderedData[i]['_relatives'].join("|");
+      if(Tree && Tree.relatives && Graph.filteredOrderedData[i]['_current_relatives'] && !galleryItems.selectAll("h3.parent-separator").filter(function(){
+        return d3.select(this).attr("relatives-id")==Graph.filteredOrderedData[i]['_current_relatives'].join("|");
       }).size()){
-        var label = Graph.options.nodeLabel ? orderedData[i]['_relatives'].map(function(r){
+        var label = Graph.options.nodeLabel ? Graph.filteredOrderedData[i]['_current_relatives'].map(function(r){
           return nodes.filter(function(n){
             return n[Graph.options.nodeName]==r;
           })[0][Graph.options.nodeLabel];
-        }) : orderedData[i]['_relatives'];
+        }) : Graph.filteredOrderedData[i]['_current_relatives'];
         galleryItems.append("h3")
           .attr("class","parent-separator")
-          .attr("relatives-id",orderedData[i]['_relatives'].join("|"))
+          .attr("relatives-id",Graph.filteredOrderedData[i]['_current_relatives'].join("|"))
           .text(label.join(" & "))
       }
 
@@ -337,10 +391,17 @@ function gallery(Graph){
         .attr("class","card-check check-box")
         .on("click",function(n){
           d3.event.stopPropagation();
-          var index = d3.select(this.parentNode.parentNode).attr("card-index");
-          selectItem(index);
+          var thisitemcard = d3.select(this.parentNode.parentNode);
+          var n = Graph.filteredOrderedData[thisitemcard.attr("card-index")];
+          if(!n["selected"]){
+            n["selected"] = true;
+          }else{
+            delete n["selected"];
+          }
+          thisitemcard.classed("selected",n["selected"]);
+          updateSelectionTools();
         })
-      var text = orderedData[i][Graph.options.nodeLabel];
+      var text = Graph.filteredOrderedData[i][Graph.options.nodeLabel];
       var span = iteminner.append("span")
         .text(text)
         .attr("title",text)
@@ -352,49 +413,27 @@ function gallery(Graph){
             d3.select(this).attr("src",b64Icons.image)
               .style("width","60px")
           })
-          .attr("src",orderedData[i][Graph.options.imageItems]);
+          .attr("src",Graph.filteredOrderedData[i][Graph.options.imageItems]);
       }else{
         image.attr("src",b64Icons.image)
           .style("width","60px")
       }
 
-      itemcard.classed("selected",orderedData[i]["selected"])
+      itemcard.classed("selected",Graph.filteredOrderedData[i]["selected"])
         .attr("card-index",i)
 
-      if(Graph.options.nodeText && orderedData[i][Graph.options.nodeText]){
+      if(Graph.options.nodeText && Graph.filteredOrderedData[i][Graph.options.nodeText]){
         itemcard.style("cursor","pointer")
           .on("click.mainframe",function(){
             var index = d3.select(this).attr("card-index");
-            openMainFrame(orderedData[index]['_index'],indices);
+            openMainFrame(Graph.filteredOrderedData[index]['_index'],getMainFrameNavigation());
           })
       }
     }
 
-    if(Tree && Tree.relatives){
-      orderedData.forEach(function(d){
-        delete d['_relatives'];
-      })
-      delete Tree.relatives;
-    }
-
-    var selectedlen = selectedNames().length;
-    if(Tree && Tree.type == "extended"){
-      topbarContent.selectAll(".icon-selection").classed("disabled",selectedlen<2);
-    }
-
-    filterSelectionButton.classed("disabled",!selectedlen);
-    filterSelectionButton.select("span").text(selectedlen);
-
-    function selectItem(i){
-      var n = orderedData[i];
-      if(!n["selected"]){
-        n["selected"] = true;
-      }else{
-        delete n["selected"];
-      }
-      displayGraph();
-    }
-  } // end of displayGraph
+    updateSelectionTools();
+    updatePaginationViewer();
+  }
 
   function filterSelection(){
       selectedValues.clear();
@@ -405,7 +444,6 @@ function gallery(Graph){
       });
       selectedValues.applyFilter();
       clearTreeParent();
-      window.scrollTo(0, 0);
       displayGraph();
   }
 
@@ -416,6 +454,20 @@ function gallery(Graph){
         .map(function(n){
           return n[Graph.options.nodeName];
         });
+  }
+
+  function updateSelectionTools(){
+    var selectedlen = selectedNames().length;
+
+    filterSelectionButton.classed("disabled",!selectedlen);
+    filterSelectionButton.select("span").text(selectedlen);
+  }
+
+  function updatePaginationViewer(){
+    var total = Graph.filteredOrderedData.length;
+    var pag = galleryItems.selectAll(".item-card").size();
+    footer.select("span.pagination").text(pag+" / "+total);
+    topbarButtons.select("div.pagination > span").text(pag+" / "+total);
   }
 
   function roundNumeric(d){
@@ -447,6 +499,8 @@ function gallery(Graph){
     selectedValues.keys().forEach(function(k){
       if(keytypes[k] == "number"){
         renderTag(container,k + " (" + selectedValues.values(k).map(roundNumeric).join(" - ") + ")",k);
+      }else if(k==Graph.options.nodeName){
+        renderTag(container,k,k);
       }else{
         selectedValues.values(k).forEach(function(v){
           renderTag(container,v,k,v);
@@ -657,7 +711,6 @@ function gallery(Graph){
   });
 
     // filters
-    var subNodes = Tree ? Tree.getFilterData() : nodes.filter(function(n){ return !n['_filtered']; });
   selectedOptions.forEach(function(col){
     var type = keytypes[col];
     var div = sidecontent.append("div")
@@ -669,7 +722,7 @@ function gallery(Graph){
     plusMinusButton(div,function(container){
           if(type == 'number'){
             var discrete = true,
-                extent = d3.extent(subNodes, function(d){
+                extent = d3.extent(Graph.filteredOrderedData, function(d){
                   if(discrete && d[col]%1!=0){
                     discrete = false;
                   }
@@ -691,7 +744,7 @@ function gallery(Graph){
               displayGraph();
             }));
           }else{
-            var dat = subNodes.map(function(d){ return d[col]; }),
+            var dat = Graph.filteredOrderedData.map(function(d){ return d[col]; }),
                 crosstab = {};
             if(type != 'string'){
               dat = dat.reduce(function(a,b) { return b ? a.concat(b) : a; }, []);
@@ -779,13 +832,11 @@ function gallery(Graph){
         .text(
 '.topbar, .footer { background-color: '+pallete[0]+'; color: '+pallete[1]+'; }' +
 '.grid-gallery-mode2 { background-color: '+pallete[2]+'; }' +
-'.filter-button, .filter-selection, .icon-selection { border-color: '+pallete[1]+'; color: '+pallete[1]+' }' +
-'.filter-button > svg > path, .filter-selection > svg > path { fill: '+pallete[1]+'!important; }' +
+'.topbar-button { border-color: '+pallete[1]+'; color: '+pallete[1]+' }' +
+'.topbar-button > svg > path { fill: '+pallete[1]+'!important; }' +
 '.multi-search > .search-box, .multi-search > .search-box > div.text-wrapper > div.text-content > textarea { background-color: '+pallete[1]+'; color: '+contrast(pallete[1])+'; }' +
 '.multi-search > .search-box > div.check-container > span.yes::after { border-color: '+contrast(pallete[1])+'; }' +
 '.multi-search > button.search-icon > svg > path { fill: '+pallete[0]+'; }' +
-'.icon-selection > svg > rect.fill1 { fill: '+pallete[1]+'!important; }' +
-'.icon-selection > svg > rect.stroke1 { stroke: '+pallete[1]+'!important; }' +
 '.topbar > .breadcrumbs { border-bottom-color: '+pallete[1]+'; }' +
 '.topbar > .breadcrumbs > button.primary { color: '+pallete[1]+'; }' +
 '.topbar > .breadcrumbs > button.primary.disabled { border-bottom-color: '+pallete[1]+'; }' +
@@ -801,13 +852,19 @@ function gallery(Graph){
 '.info-template > div > .tree-relatives > span.linked { color: '+pallete[3]+' }' +
 '.topbar > .topbar-topcontent > .topbar-main > a > h1 { color: '+pallete[1]+'; }' +
 '.footer > .footer-logo2 > svg > g[transform] { fill: '+pallete[1]+'; }' +
-'.filter-selection > span { background-color: '+pallete[3]+'; }'
+'.topbar-button.filter-selection > span { background-color: '+pallete[3]+'; }'
         )
     }
 
     function contrast(color){
       return d3.hsl(color).l > 0.66 ? '#000000' : '#ffffff';
     }
+  }
+
+  function getMainFrameNavigation(){
+    return Graph.filteredOrderedData.map(function(d){
+      return d['_index'];
+    });
   }
 
   function openMainFrame(index,navigation,goback){

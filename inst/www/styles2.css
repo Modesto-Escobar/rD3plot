@@ -151,7 +151,7 @@ button.switch-button.active:after {
 .grid-gallery-mode2 {
   background-color: #e7f1fd;
   border-radius: 0 0 150px 0;
-  padding: 40px;
+  padding: 40px 0;
   text-align: center;
 }
 .grid-gallery-mode2 > .gallery-items > h3 {
@@ -272,9 +272,13 @@ button.switch-button.active:after {
 }
 .topbar > .topbar-topcontent > .topbar-main {
   float: left;
-  margin: 16px 0;
+  margin: 8px 0;
+}
+.topbar > .topbar-topcontent > .topbar-main > div > button.multipages-home {
+  margin: 0 16px 0 0;
 }
 .topbar > .topbar-topcontent > .topbar-main > a > h1 {
+  display: inline-block;
   font-size: 2em;
   color: #ffffff;
 }
@@ -282,6 +286,7 @@ button.switch-button.active:after {
   float: right;
   margin: 8px 0;
 }
+.topbar > .topbar-topcontent > .topbar-main > div,
 .topbar > .topbar-topcontent > .topbar-buttons > div {
   display: inline-block;
   vertical-align: top;
@@ -322,19 +327,20 @@ button.switch-button.active:after {
   font-weight: bold;
 }
 
-.filter-button,
-.filter-selection,
-.icon-selection {
+.topbar-button {
   border: 1px solid #ffffff;
   color: #ffffff;
   background: none;
   margin: 0 0 0 16px;
   padding: 14px 16px;
 }
-.filter-selection {
+.fixed-topbar .topbar-button.excel-export {
+  display: none;
+}
+.topbar-button.filter-selection {
   position: relative;
 }
-.filter-selection > span {
+.topbar-button.filter-selection > span {
   border-radius: 50%;
   background-color: #2f7bee;
   position: absolute;
@@ -352,23 +358,12 @@ button.switch-button.active:after {
   from {opacity: 0.25;}
   to {opacity: 1;}
 }
-.filter-selection.disabled > span {
+.topbar-button.filter-selection.disabled > span {
   display: none;
 }
-.icon-selection {
-  display: inline-block;
-  cursor: pointer;
-}
-.icon-selection.disabled,
-.filter-selection.disabled {
+.topbar-button.filter-selection.disabled {
   opacity: 0.5;
   pointer-events: none;
-}
-.icon-selection > svg > rect.fill1 {
-  fill: #ffffff!important;
-}
-.icon-selection > svg > rect.stroke1 {
-  stroke: #ffffff!important;
 }
 
 .display-filterpanel {
