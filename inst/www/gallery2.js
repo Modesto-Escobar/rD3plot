@@ -1,5 +1,4 @@
 function gallery(Graph){
-
   colorScheme(Graph.options.colorScheme);
 
   var nodes = transposeNodes(Graph.nodes,Graph.nodenames,Graph.options);
@@ -68,6 +67,18 @@ function gallery(Graph){
           .style("fill","#ffffff")
           .attr("d","M6 19h3v-6h6v6h3v-9l-6-4.5L6 10Zm-2 2V9l8-6 8 6v12h-7v-6h-2v6Zm8-8.75Z")
   }
+  if(Graph.options.multigraph){
+    var multiGraphContainer = mainTitle.append("div"); 
+    multiGraphSelect(multiGraphContainer, Graph.options.multigraph.idx, Graph.options.multigraph.names);
+    multiGraphContainer.select(".multi-select")
+      .append("svg")
+        .attr("height",24)
+        .attr("width",24)
+        .attr("viewBox","0 0 24 24")
+        .append("path")
+          .style("fill","#ffffff")
+          .attr("d","M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z")
+  }
   if(Graph.options.main){
     mainTitle.append("a")
       .attr("href","")
@@ -90,12 +101,24 @@ function gallery(Graph){
         .attr("title","xlsx")
         .on("click",function(){
           var excel = {};
-          var cols = getSelectOptions(sortAsc,Graph,Tree);
+          var cols = getSelectOptions(false,Graph,Tree);
+          if(Graph.options.nodeName=="_name" && Tree && Tree.typeFilter){
+            cols.unshift("_name");
+          }
+          if(Graph.options.nodeType){
+            cols = cols.filter(function(d){
+              return d!=Graph.options.nodeType;
+            })
+          }
           var sheetname = Tree ? Tree.typeFilter : "data";
           excel[sheetname] = [];
           var row = [];
           cols.forEach(function(c){
-              row.push(String(c));
+            var c = String(c);
+            if(c=="_name" && Tree && Tree.typeFilter){
+              c = Tree.typeFilter;
+            }
+            row.push(c);
           });
           excel[sheetname].push(row);
           Graph.filteredOrderedData.forEach(function(n){
@@ -832,8 +855,8 @@ function gallery(Graph){
         .text(
 '.topbar, .footer { background-color: '+pallete[0]+'; color: '+pallete[1]+'; }' +
 '.grid-gallery-mode2 { background-color: '+pallete[2]+'; }' +
-'.topbar-button { border-color: '+pallete[1]+'; color: '+pallete[1]+' }' +
-'.topbar-button > svg > path { fill: '+pallete[1]+'!important; }' +
+'.topbar-button, .multi-select { border-color: '+pallete[1]+'; color: '+pallete[1]+' }' +
+'.topbar-button > svg > path, .multi-select > svg > path { fill: '+pallete[1]+'!important; }' +
 '.multi-search > .search-box, .multi-search > .search-box > div.text-wrapper > div.text-content > textarea { background-color: '+pallete[1]+'; color: '+contrast(pallete[1])+'; }' +
 '.multi-search > .search-box > div.check-container > span.yes::after { border-color: '+contrast(pallete[1])+'; }' +
 '.multi-search > button.search-icon > svg > path { fill: '+pallete[0]+'; }' +

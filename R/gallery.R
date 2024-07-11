@@ -460,37 +460,46 @@ treeGallery2_rd3 <- function(tree, initialType = NULL, tableformat = FALSE, ...)
   nodes <- gallery$nodes
   relatives <- list()
   relativesTypes <- list()
+  relativesTypes2 <- list()
   for(i in seq_len(nrow(nodes))){
     name <- nodes[i,gallery$options$nodeName]
     aux1 <- character(0)
     aux2 <- character(0)
+    aux3 <- character(0)
     if(name %in% tree[,1]){
       aux1 <- tree[tree[,1]==name,2]
       aux2 <- tree[tree[,1]==name,3]
+      aux3 <- tree[tree[,1]==name,4]
     }
     if(name %in% tree[,2]){
       target <- !is.na(tree[,2]) & tree[,2]==name
       parents <- tree[target,1]
       pType <- tree[target,4]
+      pType2 <- tree[target,3]
       aux1 <- c(aux1,parents)
       aux2 <- c(aux2,pType)
+      aux3 <- c(aux3,pType2)
       for(j in seq_along(parents)){
-        siblings <- tree[tree[,1]==parents[j],2]
-        siblings <- siblings[siblings!=name]
+        target <- tree[,1]==parents[j] & tree[,2]!=name
+        siblings <- tree[target,2]
         stypes <- rep(pType[j],length(siblings))
+        stypes2 <- tree[target,4]
         aux1 <- c(aux1,siblings)
         aux2 <- c(aux2,stypes)
+        aux3 <- c(aux3,stypes2)
       }
     }
     relatives[[i]] <- aux1
     if(length(unique(aux2))>1){
       relativesTypes[[as.character(i-1)]] <- aux2
     }
+    relativesTypes2[[i]] <- aux3
   }
   gallery$nodes_relatives <- relatives
   if(length(unlist(relativesTypes))){
     gallery$nodes_relativesTypes <- relativesTypes
   }
+  gallery$nodes_relativesTypes2 <- relativesTypes2
   return(gallery)
 }
 
