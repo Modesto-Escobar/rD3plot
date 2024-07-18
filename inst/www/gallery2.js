@@ -1,5 +1,6 @@
 function gallery(Graph){
   colorScheme(Graph.options.colorScheme);
+  pageZoom(Graph.options.zoom)
 
   var nodes = transposeNodes(Graph.nodes,Graph.nodenames,Graph.options);
 
@@ -66,18 +67,6 @@ function gallery(Graph){
         .append("path")
           .style("fill","#ffffff")
           .attr("d","M6 19h3v-6h6v6h3v-9l-6-4.5L6 10Zm-2 2V9l8-6 8 6v12h-7v-6h-2v6Zm8-8.75Z")
-  }
-  if(Graph.options.multigraph){
-    var multiGraphContainer = mainTitle.append("div"); 
-    multiGraphSelect(multiGraphContainer, Graph.options.multigraph.idx, Graph.options.multigraph.names);
-    multiGraphContainer.select(".multi-select")
-      .append("svg")
-        .attr("height",24)
-        .attr("width",24)
-        .attr("viewBox","0 0 24 24")
-        .append("path")
-          .style("fill","#ffffff")
-          .attr("d","M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z")
   }
   if(Graph.options.main){
     mainTitle.append("a")
@@ -281,7 +270,16 @@ function gallery(Graph){
 
   function resetPagination(){
     window.scrollTo(0, 0);
-    pagestep = pagination = Math.floor(galleryItems.node().clientWidth / 385) * 3;
+    var itemw = 385,
+        itemh = 468;
+    if(Graph.options.zoom){
+      itemw = itemw * Graph.options.zoom;
+      itemh = itemh * Graph.options.zoom;
+    }
+    var itemsX = Math.floor(window.innerWidth / itemw),
+        itemsY = Math.floor(window.innerHeight / itemh);
+    pagestep = itemsX * itemsY;
+    pagination = pagestep * 2;
   }
 
   var footer = body.append("div")
@@ -830,6 +828,20 @@ function gallery(Graph){
     }
   }
 
+  function pageZoom(zoom){
+    if(zoom){
+      d3.select("head")
+        .append("style")
+        .text(
+".grid-gallery-mode2 > .gallery-items > .item-card { width: "+(305*zoom)+"px; height: unset; margin: "+(40*zoom)+"px}" +
+".grid-gallery-mode2 > .gallery-items > .item-card > .item-card-inner > .img-wrapper { height: "+(272*zoom)+"px; }" +
+".grid-gallery-mode2 > .gallery-items > .item-card > .item-card-inner > span { font-size: "+(1.25*zoom)+"em; height: "+(34*zoom)+"px; }" +
+".grid-gallery-mode2 > .gallery-items > .item-card > .item-card-inner > .card-check.check-box { margin: "+(24*zoom)+"px; width: "+(24*zoom)+"px; height: "+(24*zoom)+"px; border-radius: "+(4*zoom)+"px; }" +
+".grid-gallery-mode2 > .gallery-items > .item-card > .item-card-inner { padding: "+(24*zoom)+"px; width: unset; height: unset; }"
+        )
+    }
+  }
+
   function colorScheme(mode){
     // headerback headertext galleryback buttons cardback
     var pallete = [
@@ -855,8 +867,8 @@ function gallery(Graph){
         .text(
 '.topbar, .footer { background-color: '+pallete[0]+'; color: '+pallete[1]+'; }' +
 '.grid-gallery-mode2 { background-color: '+pallete[2]+'; }' +
-'.topbar-button, .multi-select { border-color: '+pallete[1]+'; color: '+pallete[1]+' }' +
-'.topbar-button > svg > path, .multi-select > svg > path { fill: '+pallete[1]+'!important; }' +
+'.topbar-button { border-color: '+pallete[1]+'; color: '+pallete[1]+' }' +
+'.topbar-button > svg > path { fill: '+pallete[1]+'!important; }' +
 '.multi-search > .search-box, .multi-search > .search-box > div.text-wrapper > div.text-content > textarea { background-color: '+pallete[1]+'; color: '+contrast(pallete[1])+'; }' +
 '.multi-search > .search-box > div.check-container > span.yes::after { border-color: '+contrast(pallete[1])+'; }' +
 '.multi-search > button.search-icon > svg > path { fill: '+pallete[0]+'; }' +
@@ -1006,10 +1018,13 @@ function gallery(Graph){
         wh = window.innerHeight-(mt*2),
         mh = parseInt(mainframe.style("max-height")),
         h = wh<mh ? wh : mh;
+    if(Graph.options.mainframeHeight){
+      h = h*Graph.options.mainframeHeight;
+    }
     mainframe.style("height",h+"px");
 
-    if(wh>mh){
-      var nmt = mt + ((wh-mh)/2);
+    if(wh>h){
+      var nmt = mt + ((wh-h)/2);
       mainframe.style("margin-top",nmt+"px")
     }
 

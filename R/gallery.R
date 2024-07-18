@@ -145,9 +145,9 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
 }
 
 gallery2_rd3 <- function(nodes, name = NULL, label = NULL, order = NULL,
-    decreasing = FALSE, ntext = NULL, image = NULL, main = NULL, note = NULL,
-    export = FALSE, colorScheme = 0,
-    language = c("en", "es", "ca"), dir = NULL){
+    decreasing = FALSE, ntext = NULL, mainframeHeight = NULL,
+    image = NULL, zoom = NULL, main = NULL, note = NULL, export = FALSE,
+    colorScheme = 0, language = c("en", "es", "ca"), dir = NULL){
 
   if(is.null(name)){
     name <- colnames(nodes)[1]
@@ -170,6 +170,20 @@ gallery2_rd3 <- function(nodes, name = NULL, label = NULL, order = NULL,
   options <- checkColumn(options,"nodeText",ntext)
   if(!is.null(options[["nodeText"]])){
     nodes[,options[["nodeText"]]] <- sub('\\|.*','', nodes[,options[["nodeText"]]])
+  }
+
+  if(!is.null(mainframeHeight)){
+    if(!(is.numeric(mainframeHeight) && mainframeHeight>=0.1 && mainframeHeight<=1)){
+      warning("mainframeHeight: must be numeric between 0.1 and 1")
+    }
+    options[["mainframeHeight"]] <- mainframeHeight
+  }
+
+  if(!is.null(zoom)){
+    if(!(is.numeric(zoom) && zoom>=0.1 && zoom<=1)){
+      warning("zoom: must be numeric between 0.1 and 1")
+    }
+    options[["zoom"]] <- zoom
   }
 
   if (!is.null(main)) options[["main"]] <- main
