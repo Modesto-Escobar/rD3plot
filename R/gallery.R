@@ -144,8 +144,8 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
   return(gallery)
 }
 
-gallery2_rd3 <- function(nodes, name = NULL, label = NULL, order = NULL,
-    decreasing = FALSE, ntext = NULL, mainframeHeight = NULL,
+gallery2_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL,
+    order = NULL, decreasing = FALSE, ntext = NULL, mainframeHeight = NULL,
     image = NULL, zoom = NULL, main = NULL, note = NULL, export = FALSE,
     colorScheme = 0, language = c("en", "es", "ca"), dir = NULL){
 
@@ -161,6 +161,7 @@ gallery2_rd3 <- function(nodes, name = NULL, label = NULL, order = NULL,
   }else{
     options <- checkColumn(options,"nodeLabel",label)
   }
+  options <- checkColumn(options,"nodeSubtitle",subtitle)
   if(is.character(order)){
     options[["nodeOrder"]] <- order
   }

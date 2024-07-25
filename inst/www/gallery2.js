@@ -424,10 +424,23 @@ function gallery(Graph){
         })
       var text = Graph.filteredOrderedData[i][Graph.options.nodeLabel];
       var span = iteminner.append("span")
+        .attr("class","title")
         .text(text)
         .attr("title",text)
       var imgwrapper = iteminner.append("div")
         .attr("class","img-wrapper")
+      if(Graph.options.nodeSubtitle){
+        var subtitle = Graph.filteredOrderedData[i][Graph.options.nodeSubtitle],
+            subtitletitle = subtitle.replace(/(<([^>]+)>)/gi, "");
+        if(!subtitle){
+          subtitle = "&nbsp;";
+          subtitletitle = null;
+        }
+        var subtitle = iteminner.append("span")
+          .attr("class","subtitle")
+          .html(subtitle)
+          .attr("title",subtitletitle)
+      }
       var image = imgwrapper.append("img")
       if(Graph.options.imageItems){
         image.on("error",function(){
@@ -670,7 +683,7 @@ function gallery(Graph){
   }
 
   function displaySideContent(){
-    var selectedOptions = getSelectOptions(sortAsc,Graph,Tree);
+    var selectedOptions = getSelectOptions(false,Graph,Tree);
     if(Graph.options.nodeType){
       selectedOptions = selectedOptions.filter(function(d){
         return d!=Graph.options.nodeType;
