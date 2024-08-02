@@ -68,6 +68,18 @@ function gallery(Graph){
           .style("fill","#ffffff")
           .attr("d","M6 19h3v-6h6v6h3v-9l-6-4.5L6 10Zm-2 2V9l8-6 8 6v12h-7v-6h-2v6Zm8-8.75Z")
   }
+ if(Graph.options.multigraph){
+    var multiGraphContainer = mainTitle.append("div"); 
+    multiGraphSelect(multiGraphContainer, Graph.options.multigraph.idx, Graph.options.multigraph.names);
+    multiGraphContainer.select(".multi-select")
+      .append("svg")
+        .attr("height",24)
+        .attr("width",24)
+        .attr("viewBox","0 0 24 24")
+        .append("path")
+          .style("fill","#ffffff")
+          .attr("d","M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z")
+  }
   if(Graph.options.main){
     mainTitle.append("a")
       .attr("href","")
@@ -880,6 +892,8 @@ function gallery(Graph){
         .text(
 '.topbar, .footer { background-color: '+pallete[0]+'; color: '+pallete[1]+'; }' +
 '.grid-gallery-mode2 { background-color: '+pallete[2]+'; }' +
+'.topbar-button, .multi-select { border-color: '+pallete[1]+'; color: '+pallete[1]+' }' +
+'.topbar-button > svg > path, .multi-select > svg > path { fill: '+pallete[1]+'!important; }' +
 '.topbar-button { border-color: '+pallete[1]+'; color: '+pallete[1]+' }' +
 '.topbar-button > svg > path { fill: '+pallete[1]+'!important; }' +
 '.multi-search > .search-box, .multi-search > .search-box > div.text-wrapper > div.text-content > textarea { background-color: '+pallete[1]+'; color: '+contrast(pallete[1])+'; }' +
