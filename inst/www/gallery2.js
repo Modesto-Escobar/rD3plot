@@ -1,6 +1,6 @@
 function gallery(Graph){
   colorScheme(Graph.options.colorScheme);
-  pageZoom(Graph.options.zoom)
+  Graph.options.zoom = pageZoom(Graph.options.zoom);
 
   var nodes = transposeNodes(Graph.nodes,Graph.nodenames,Graph.options);
 
@@ -274,7 +274,9 @@ function gallery(Graph){
     if(window.innerHeight + window.pageYOffset >= document.body.offsetHeight - 250){
       pagination = pagination + pagestep;
       renderCards(pagination);
-      body.classed("fixed-footer",false);
+      if(viewMore.style("display")=="none"){
+        body.classed("fixed-footer",false);
+      }
     }else if(!body.classed("fixed-footer")){
       body.classed("fixed-footer",true);
     }
@@ -443,10 +445,9 @@ function gallery(Graph){
         .attr("class","img-wrapper")
       if(Graph.options.nodeSubtitle){
         var subtitle = Graph.filteredOrderedData[i][Graph.options.nodeSubtitle],
-            subtitletitle = subtitle.replace(/(<([^>]+)>)/gi, "");
+            subtitletitle = subtitle? subtitle.replace(/(<([^>]+)>)/gi, "") : null;
         if(!subtitle){
           subtitle = "&nbsp;";
-          subtitletitle = null;
         }
         var subtitle = iteminner.append("span")
           .attr("class","subtitle")
@@ -854,6 +855,9 @@ function gallery(Graph){
   }
 
   function pageZoom(zoom){
+    if(window.innerWidth<385){
+      zoom = window.innerWidth / 385;
+    }
     if(zoom){
       d3.select("head")
         .append("style")
@@ -864,7 +868,9 @@ function gallery(Graph){
 ".grid-gallery-mode2 > .gallery-items > .item-card > .item-card-inner > .card-check.check-box { margin: "+(24*zoom)+"px; width: "+(24*zoom)+"px; height: "+(24*zoom)+"px; border-radius: "+(4*zoom)+"px; }" +
 ".grid-gallery-mode2 > .gallery-items > .item-card > .item-card-inner { padding: "+(24*zoom)+"px; width: unset; height: unset; }"
         )
+      return zoom;
     }
+    return 1;
   }
 
   function colorScheme(mode){

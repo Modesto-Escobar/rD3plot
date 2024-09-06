@@ -1252,14 +1252,15 @@ function displayMultiSearch(){
           clearTimeout(typingTimer);
         })
         .on("keyup",function(){
+          d3.event.stopPropagation();
+        })
+        .on("keypress",function(){
           clearTimeout(typingTimer);
           if(getKey(d3.event)=="Enter"){
             if(d3.event.shiftKey ^ !help){
               searchIcon.dispatch("click");
               this.blur();
               return;
-            }else{
-              d3.event.stopPropagation();
             }
           }
           if(["ArrowLeft","ArrowRight","ArrowDown","ArrowUp"].indexOf(getKey(d3.event))!=-1){

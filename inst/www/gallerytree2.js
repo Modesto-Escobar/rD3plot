@@ -1,4 +1,4 @@
-function mgmtTree(Graph, nodes, updateSelectOptions, deselectAllItems, removeFilter, displayTooltip, resetZoom){
+function mgmtTree(Graph, nodes, updateSelectOptions, deselectAllItems, removeFilter){
   if(!updateSelectOptions){
     updateSelectOptions = function(){};
   }
@@ -86,7 +86,6 @@ function mgmtTree(Graph, nodes, updateSelectOptions, deselectAllItems, removeFil
             callback();
             thiz.empty();
             deselectAllItems();
-            resetZoom();
           })
         thiz.updateSelectedType();
       },

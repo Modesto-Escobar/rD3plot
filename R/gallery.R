@@ -44,7 +44,7 @@ galleryCreate <- function(gallery, dir){
     scripts <- c(scripts,"tutorial.js",paste0("tutorial_",language))
     styles <- c(styles,"tutorial.css")
   }
-  createHTML(dir, styles, scripts, function(){ return(imgWrapper(gallery,galleryJSON,dir)) })
+  createHTML(dir, styles, scripts, function(){ return(imgWrapper(gallery,galleryJSON,dir)) },mode-1)
   if(mode==1 && is.null(gallery$options$note)){
     dir.create(paste0(dir,"/images"),FALSE)
     www <- wwwDirectory()
