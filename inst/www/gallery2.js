@@ -154,8 +154,29 @@ function gallery(Graph){
           nodes.forEach(function(node){ delete node.selected; });
           displayGraph();
           highlightBreadcrumbsButtons();
+          topbarButtons.select(".show-search-container").style("display",null);
+          topbarButtons.select(".topbar-search").style("display",null);
         })
         .help(false))
+
+  // filter selection
+  var searchButton = topbarButtons.append("div")
+      .attr("class","show-search-container")
+      .append("button")
+        .attr("class","topbar-button show-search-button")
+        .attr("aria-label","search")
+        .attr("title","search")
+        .on("click",function(){
+          topbarButtons.select(".show-search-container").style("display","none");
+          topbarButtons.select(".topbar-search").style("display","inline-block");
+        })
+  searchButton.append("svg")
+        .attr("height",24)
+        .attr("width",24)
+        .attr("viewBox","0 0 8 8")
+        .append("path")
+          .style("fill","#ffffff")
+          .attr("d",d4paths.search)
 
   // filter selection
   var filterSelectionButton = topbarButtons.append("div")

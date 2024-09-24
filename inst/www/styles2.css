@@ -309,7 +309,8 @@ button.switch-button.active:after {
   display: inline-block;
   padding: 14px 16px;
 }
-.topbar-search {
+.topbar > .topbar-topcontent > .topbar-buttons > div.topbar-search {
+  display: none;
   margin: 0 0 0 16px;
   width: 233px;
 }
@@ -486,8 +487,13 @@ button.switch-button.active:after {
   display: none;
   margin-left: 16px;
 }
-
 @media (min-width: 768px) {
+  .topbar-search {
+    display: inline-block !important;
+  }
+  .show-search-container {
+    display: none !important;
+  }
   .topbar {
     padding: 16px 144px;
   }
