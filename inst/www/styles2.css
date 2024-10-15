@@ -504,6 +504,8 @@ button.switch-button.active:after {
   .footer > .footer-logo1 {
     text-align: left;
     flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
   }
   .footer > .footer-logo2 {
     text-align: right;
