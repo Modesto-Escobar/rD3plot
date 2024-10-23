@@ -140,7 +140,7 @@ objCreate <- function(x,dir){
     pieCreate(x,dir)
   }else if(inherits(x,"evolMap")){
     if(system.file(package='evolMap')!=""){
-      evolMap:::map_html(x,dir)
+      utils::getFromNamespace("map_html","evolMap")(x,dir)
     }else{
       stop("'evolMap' package not installed")
     }

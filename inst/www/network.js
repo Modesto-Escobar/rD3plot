@@ -76,6 +76,8 @@ function network(Graph){
     .style("position","absolute")
     .style("height", (computeHeight() - 45) + "px")
 
+  var multiSearch = options.showSearch ? displayMultiSearch() : false;
+
   // main bar
   var main = body.append("div")
         .attr("class", "main")
@@ -1000,15 +1002,14 @@ function displayButton(sel,txt,clk,tooltip,enable,classes){
 
 function displaySidebar(){
 
-  if(options.showSearch && sidebar.select(".subSearch").empty()){
-    sidebar.append("div")
-      .attr("class","subSearch")
-      .call(displayMultiSearch()
-        .data(Graph.nodes.filter(checkSelectableNode))
+  if(multiSearch && sidebar.select(".subSearch").empty()){
+    multiSearch.data(Graph.nodes.filter(checkSelectableNode))
         .column(options.nodeLabel ? options.nodeLabel : options.nodeName)
         .updateSelection(showTables)
-        .updateFilter(switchEgoNet));
-
+        .updateFilter(switchEgoNet);
+    sidebar.append("div")
+      .attr("class","subSearch")
+      .call(multiSearch);
   }else{
     sidebar.selectAll("div.sidebar > div:not(.subSearch)").remove();
   }
@@ -2453,6 +2454,10 @@ function frameStep(value){
         if(frameControls.frame==frameControls.frames.length-1 && !frameControls.loop){
           pauseFrames();
         }
+
+    if(multiSearch){
+      multiSearch.data(Graph.nodes.filter(checkSelectableNode));
+    }
 }
 
 function drawNet(){  
