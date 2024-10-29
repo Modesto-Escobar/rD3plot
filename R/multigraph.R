@@ -211,7 +211,14 @@ rd3_multigraph <- function(..., mfrow = NULL, dir = NULL){
 
 # Evolving network
 evolNetwork_rd3 <- function(..., frame = 0, speed = 50, loop = FALSE, lineplots = NULL, dir = NULL){
-  net <- evolvingWrapper(list(...),frame,speed,loop,lineplots)
+  multi <- list(...)
+  for(i in seq_along(multi)){
+    if(is.list(multi[[i]]) && all(vapply(multi[[i]], inherits, TRUE, what = "network_rd3"))){
+      multi <- multi[[i]]
+      break
+    }
+  }
+  net <- evolvingWrapper(multi,frame,speed,loop,lineplots)
   if (!is.null(dir)) netCreate(net,dir)
   return(net)
 }
