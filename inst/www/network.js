@@ -2952,18 +2952,18 @@ function drawNet(){
         if(typeof b != "string"){
           b = b[0];
         }
-        return [a,b];
+        return [a,b,a+"|"+b];
       })
       data.sort(function(a,b){
           return sortAsc(a[0],b[0]);
       })
-      var data2 = d3.map(data, function(d){ return d[0]; }).keys();
-      data = d3.map(data, function(d){ return d[1]; }).keys()
+      var datakeys = data.map(function(d){ return d[2]; });
+      data = data.filter(function(value, index, array) {
+        return datakeys.indexOf(value[2]) === index;
+      })
+      var data2 = data.map(function(d){ return d[0]; });
+      data = data.map(function(d){ return d[1]; });
       var textFunc = function(d,i){ return data2[i]; };
-      if(data2.length!=data.length){
-        title = options.imageItem;
-        textFunc = getImageName;
-      }
       Legends.image = displayLegend()
         .type("Image")
         .key(options.imageItem)
@@ -4196,11 +4196,24 @@ function filterSelection(){
 }
 
 function filterLinkSelection(){
+  if(frameControls){
+    var selected = Graph.links.filter(function(d){
+        return d.selected;
+    }).map(function(d){
+        return d[options.linkSource] + "-" + d[options.linkTarget];
+    });
+    Graph.links.forEach(function(d){
+      if(!d.selected && selected.indexOf(d[options.linkSource] + "-" + d[options.linkTarget])==-1){
+        d._hidden = true;
+      }
+    });
+  }else{
     Graph.links.forEach(function(d){
       if(!d.selected)
         d._hidden = true;
     });
-    drawNet();
+  }
+  drawNet();
 }
 
 function isolateLinkSelection(){
