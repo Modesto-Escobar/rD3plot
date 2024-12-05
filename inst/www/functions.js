@@ -2336,7 +2336,7 @@ function displayTopBar(){
     if(goback){
       exports.addBox(function(box){
         box.append("button").attr("class","primary home").text(texts.goback).attr("title",texts.goback).on("click",function(){
-          window.history.back();
+          window.location.href = "../../index.html";
         })
       })
     }

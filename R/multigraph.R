@@ -36,6 +36,40 @@ polyGraph <- function(multi,mfrow,dir){
   multiGraph(multi,paste0(dir,"/multiGraph"))
 }
 
+uniqueEvolLinks <- function(links,frames,linkSource,linkTarget){
+  uLinks <- aggregate(links[,setdiff(colnames(links),c(linkSource,linkTarget)),drop=FALSE], list(links[[linkSource]],links[[linkTarget]]),function(x){
+    return(x)
+  })
+  colnames(uLinks)[1:2] <- c(linkSource,linkTarget)
+
+  columns <- setdiff(colnames(uLinks),c(linkSource,linkTarget,"_frame_"))
+  for(i in seq_len(nrow(uLinks))){
+    currentframes <- unlist(uLinks[i,"_frame_"])+1
+    for(col in columns){
+      values <- unique(unlist(uLinks[i,col]))
+      if(length(values)==1){
+        uLinks[i,col] <- values
+      }else if(length(values)==length(currentframes)){
+        aux <- character(length(frames))
+        aux[currentframes] <- values
+        uLinks[i,col] <- paste0(aux,collapse="|")
+      }else{
+        uLinks[i,col] <- NA
+      }
+    }
+    fs <- character(length(frames))
+    fs[currentframes] <- "1"
+    uLinks[i,"_frame_"] <- paste0(fs,collapse="|")
+  }
+  for(col in colnames(uLinks)){
+    if(is.list(uLinks[[col]])){
+      uLinks[[col]] <- unlist(uLinks[[col]])
+    }
+  }
+
+  return(uLinks)
+}
+
 evolvingWrapper <- function(multi,frame,speed,loop=FALSE,lineplots=NULL){
   if(length(multi)<2){
     stop("Cannot make an evolving network with only one graph")
@@ -48,15 +82,6 @@ evolvingWrapper <- function(multi,frame,speed,loop=FALSE,lineplots=NULL){
   if(is.null(names(multi)) || !all(!duplicated(names(multi)))){
     message("Graph names will be generated automatically")
     names(multi) <- paste0("graph",seq_along(multi))
-  }
-
-  if(!(is.numeric(frame) && frame>=0)){
-      frame <- formals(evolNetwork_rd3)[["frame"]]
-      warning("frame: must be integer greater than 0")
-  }
-  if(!(is.numeric(speed) && speed>=0 && speed<=100)){
-      speed <- formals(evolNetwork_rd3)[["speed"]]
-      warning("speed: must be numeric between 0 and 100")
   }
 
   name <- unique(vapply(multi,function(x){ return(x$options$nodeName) },character(1)))
@@ -123,6 +148,9 @@ evolvingWrapper <- function(multi,frame,speed,loop=FALSE,lineplots=NULL){
   if(identical(loop,TRUE)){
     options$loop <- TRUE
   }
+
+  #links <- uniqueEvolLinks(links,frames,options$linkSource,options$linkTarget)
+
   lineplots <- intersect(as.character(lineplots),union(union(names(nodes),names(links)),"degree"))
   if(length(lineplots)){
     options$lineplotsKeys <- lineplots
@@ -210,16 +238,178 @@ rd3_multigraph <- function(..., mfrow = NULL, dir = NULL){
 }
 
 # Evolving network
-evolNetwork_rd3 <- function(..., frame = 0, speed = 50, loop = FALSE, lineplots = NULL, dir = NULL){
-  multi <- list(...)
-  for(i in seq_along(multi)){
-    if(is.list(multi[[i]]) && all(vapply(multi[[i]], inherits, TRUE, what = "network_rd3"))){
-      multi <- multi[[i]]
-      break
+evolNetwork_rd3 <- function(..., timelinks = NULL, timenodes = NULL,
+    timestart = NULL, timeend = NULL,
+    frame = 0, speed = 50, loop = FALSE, lineplots = NULL, dir = NULL){
+  if(!(is.numeric(frame) && frame>=0)){
+      frame <- formals(evolNetwork_rd3)[["frame"]]
+      warning("frame: must be integer greater than 0")
+  }
+  if(!(is.numeric(speed) && speed>=0 && speed<=100)){
+      speed <- formals(evolNetwork_rd3)[["speed"]]
+      warning("speed: must be numeric between 0 and 100")
+  }
+
+  if(is.null(timestart)){
+    multi <- list(...)
+    for(i in seq_along(multi)){
+      if(is.list(multi[[i]]) && all(vapply(multi[[i]], inherits, TRUE, what = "network_rd3"))){
+        multi <- multi[[i]]
+        break
+      }
+    }
+    net <- evolvingWrapper(multi,frame,speed,loop,lineplots)
+  }else{
+    if(is.null(timelinks)){
+      stop("timelinks: missing timelinks")
+    }
+    if(!(timestart %in% colnames(timelinks))){
+      stop("timestart: missing timestart in timelinks")
+    }
+    if(!is.null(timeend) && !(timeend %in% colnames(timelinks))){
+      stop("timeend: missing timeend in timelinks")
+    }
+    args <- list(...)
+    net <- evolvingWrapper2(timelinks, timenodes, timestart, timeend, frame, speed, loop, lineplots, args)
+  }
+  if (!is.null(dir)) netCreate(net,dir)
+  return(net)
+}
+
+evolvingWrapper2 <- function(timelinks, timenodes, timestart, timeend, frame = 0, speed = 50, loop = FALSE, lineplots = NULL, args = list()){
+  args <- args[intersect(names(args),names(formals(network_rd3)))]
+  timelinks <- timelinks[!is.na(timelinks[[timestart]]),]
+  linkstimestart <- timelinks[[timestart]]
+  getFrames <- function(frames){
+    frames <- unique(frames)
+    frames <- frames[!is.na(frames)]
+    framesnum <- suppressWarnings(as.numeric(frames))
+    if(!sum(is.na(framesnum))){
+      frames <- sort(framesnum)
+      frames <- as.character(frames)
+    }
+    return(frames)
+  }
+  if(!is.null(timeend)){
+    linkstimeend <- timelinks[[timeend]]
+    frames <- getFrames(c(linkstimestart,linkstimeend))
+    linkstimeend[is.na(linkstimeend)] <- frames[length(frames)]
+  }else{
+    frames <- getFrames(linkstimestart)
+    linkstimeend <- rep(frames[length(frames)],length(linkstimestart))
+  }
+  linkstimestart <- factor(linkstimestart,levels=frames)
+  linkstimestart <- as.numeric(linkstimestart)
+  linkstimeend <- factor(linkstimeend,levels=frames)
+  linkstimeend <- as.numeric(linkstimeend)
+  timelinks[[timestart]] <- NULL
+  if(!is.null(timeend)){
+    timelinks[[timeend]] <- NULL
+  }
+  totallinks <- list()
+  for(i in seq_along(frames)){
+    currentlinks <- timelinks[linkstimestart<=i & linkstimeend>=i,]
+    if(nrow(currentlinks)){
+      currentlinks[['_frame_']] <- i-1
+      totallinks[[i]] <- currentlinks
     }
   }
-  net <- evolvingWrapper(multi,frame,speed,loop,lineplots)
-  if (!is.null(dir)) netCreate(net,dir)
+  timelinks <- do.call(rbind,totallinks)
+  if(is.null(args$source)){
+    args$source <- colnames(args$links)[1]
+  }
+  if(is.null(args$target)){
+    args$target <- colnames(args$links)[2]
+  }
+  if(!is.null(args$links)){
+    args$links <- merge(args$links,timelinks,by=c(args$source,args$target))
+  }else{
+    args$links <- timelinks
+  }
+  #args$links <- uniqueEvolLinks(args$links,frames,args$source,args$target)
+
+  if(!is.null(timenodes)){
+    if(timestart %in% colnames(timenodes)){
+      if(is.null(args$name)){
+        args$name <- colnames(timenodes)[1]
+      }
+      nodenames <- unique(timenodes[[args$name]])
+      nodes <- data.frame(name=nodenames)
+      colnames(nodes)[1] <- args$name
+      rownames(nodes) <- nodenames
+      timenodes[['_timestart_']] <- timenodes[[timestart]]
+      if(!is.null(timeend) && timeend %in% colnames(timenodes)){
+        timenodes[['_timeend_']] <- timenodes[[timeend]]
+      }else{
+        timenodes[['_timeend_']] <- rep(frames[length(frames)],nrow(timenodes))
+      }
+      timenodes[['_timestart_']] <- factor(timenodes[['_timestart_']],levels=frames)
+      timenodes[['_timeend_']] <- factor(timenodes[['_timeend_']],levels=frames)
+      timenodes <- timenodes[!is.na(timenodes[['_timestart_']]) & !is.na(timenodes[['_timeend_']]),]
+      timenodes[['_timestart_']] <- as.numeric(timenodes[['_timestart_']])
+      timenodes[['_timeend_']] <- as.numeric(timenodes[['_timeend_']])
+      for(col in setdiff(colnames(timenodes),c(args$name,'_timestart_','_timeend_',timestart,timeend))){
+        nodes[[col]] <- NA
+        for(n in nodenames){
+          values <- character(length(frames))
+          subtimenodes <- timenodes[timenodes[[args$name]]==n, c(col,'_timestart_','_timeend_'), drop=FALSE]
+          for(f in seq_along(frames)){
+            value <- subtimenodes[subtimenodes[,2]<=f & subtimenodes[,3]>=f, , drop=FALSE]
+            if(nrow(value)>1){
+              value <- value[value[,2]==max(value[,2]),1][1]
+            }else{
+              value <- value[1,1]
+            }
+            values[f] <- value
+          }
+          values <- paste0(values, collapse="|")
+          nodes[n,col] <- values
+        }
+      }
+      if(!is.null(args$nodes)){
+        args$nodes <- merge(args$nodes,nodes,by=args$name,all=TRUE)
+      }else{
+        args$nodes <- nodes
+      }
+      allnodes <- data.frame(name=unique(c(args$links[[args$source]],args$links[[args$target]])))
+      colnames(allnodes)[1] <- args$name
+      args$nodes <- merge(allnodes,args$nodes,by=args$name,all.x=TRUE)
+    }else{
+      warning("timenodes: missing timestart in timenodes")
+    }
+  }
+
+  special_cases <- list()
+  for(i in c("main","note","repulsion","distance","zoom")){
+    if(!is.null(args[[i]]) && length(args[[i]])>1){
+      if(length(args[[i]])==length(frames)){
+        special_cases[[i]] <- args[[i]]
+      }else{
+        stop(paste0(i,": length must be 1 or match with time frames"))
+      }
+      args[[i]] <- NULL
+    }
+  }
+
+  net <- do.call(network_rd3,args)
+
+  if(length(special_cases)){
+    for(i in names(special_cases)){
+      net$options[[i]] <- special_cases[[i]]
+    }
+  }
+
+  net$options$frames <- frames
+  net$options$frame <- frame
+  net$options$speed <- speed
+  if(identical(loop,TRUE)){
+    net$options$loop <- TRUE
+  }
+  lineplots <- intersect(as.character(lineplots),union(union(names(net$nodes),names(net$links)),"degree"))
+  if(length(lineplots)){
+    net$options$lineplotsKeys <- lineplots
+  }
+
   return(net)
 }
 

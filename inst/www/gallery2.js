@@ -58,7 +58,7 @@ function gallery(Graph){
       .attr("aria-label",texts.goback)
       .attr("title",texts.goback)
       .on("click",function(){
-        window.history.back();
+        window.location.href = "../../index.html";
       })
       .append("svg")
         .attr("height",24)
@@ -1151,7 +1151,11 @@ ValueSelector.prototype = {
               continue;
             }
           }else{
-            if(n[k] && intersection(selectedValues[k].values().map(String),(Array.isArray(n[k]) ? n[k] : [n[k]])).length){
+            var values = selectedValues[k].values().map(String);
+            if(n[k]===null && values.indexOf("null")!=-1){
+              continue;
+            }
+            if(n[k] && intersection(values,(Array.isArray(n[k]) ? n[k] : [n[k]])).length){
               continue;
             }
           }

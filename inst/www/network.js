@@ -707,7 +707,7 @@ function displayMain(){
   main.selectAll("*").remove();
   if(options.multipages){
     main.append("button").attr("class","primary home").text(texts.goback).attr("title",texts.goback).on("click",function(){
-      window.history.back();
+      window.location.href = "../../index.html";
     })
   }
   if(options.multigraph){
