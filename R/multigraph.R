@@ -36,40 +36,6 @@ polyGraph <- function(multi,mfrow,dir){
   multiGraph(multi,paste0(dir,"/multiGraph"))
 }
 
-uniqueEvolLinks <- function(links,frames,linkSource,linkTarget){
-  uLinks <- aggregate(links[,setdiff(colnames(links),c(linkSource,linkTarget)),drop=FALSE], list(links[[linkSource]],links[[linkTarget]]),function(x){
-    return(x)
-  })
-  colnames(uLinks)[1:2] <- c(linkSource,linkTarget)
-
-  columns <- setdiff(colnames(uLinks),c(linkSource,linkTarget,"_frame_"))
-  for(i in seq_len(nrow(uLinks))){
-    currentframes <- unlist(uLinks[i,"_frame_"])+1
-    for(col in columns){
-      values <- unique(unlist(uLinks[i,col]))
-      if(length(values)==1){
-        uLinks[i,col] <- values
-      }else if(length(values)==length(currentframes)){
-        aux <- character(length(frames))
-        aux[currentframes] <- values
-        uLinks[i,col] <- paste0(aux,collapse="|")
-      }else{
-        uLinks[i,col] <- NA
-      }
-    }
-    fs <- character(length(frames))
-    fs[currentframes] <- "1"
-    uLinks[i,"_frame_"] <- paste0(fs,collapse="|")
-  }
-  for(col in colnames(uLinks)){
-    if(is.list(uLinks[[col]])){
-      uLinks[[col]] <- unlist(uLinks[[col]])
-    }
-  }
-
-  return(uLinks)
-}
-
 evolvingWrapper <- function(multi,frame,speed,loop=FALSE,lineplots=NULL){
   if(length(multi)<2){
     stop("Cannot make an evolving network with only one graph")
@@ -148,8 +114,6 @@ evolvingWrapper <- function(multi,frame,speed,loop=FALSE,lineplots=NULL){
   if(identical(loop,TRUE)){
     options$loop <- TRUE
   }
-
-  #links <- uniqueEvolLinks(links,frames,options$linkSource,options$linkTarget)
 
   lineplots <- intersect(as.character(lineplots),union(union(names(nodes),names(links)),"degree"))
   if(length(lineplots)){
@@ -326,7 +290,6 @@ evolvingWrapper2 <- function(timelinks, timenodes, timestart, timeend, frame = 0
   }else{
     args$links <- timelinks
   }
-  #args$links <- uniqueEvolLinks(args$links,frames,args$source,args$target)
 
   if(!is.null(timenodes)){
     if(timestart %in% colnames(timenodes)){
