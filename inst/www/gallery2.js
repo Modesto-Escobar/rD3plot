@@ -1,5 +1,4 @@
 function gallery(Graph){
-Graph.options.colorScheme = 1;
   colorScheme(Graph.options.colorScheme);
   Graph.options.zoom = pageZoom(Graph.options.zoom);
 
