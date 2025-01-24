@@ -1,4 +1,5 @@
 function gallery(Graph){
+Graph.options.colorScheme = 1;
   colorScheme(Graph.options.colorScheme);
   Graph.options.zoom = pageZoom(Graph.options.zoom);
 
@@ -332,6 +333,10 @@ function gallery(Graph){
   body.classed("fixed-footer",true);
 
   displayGraph();
+
+  if(typeof tutorialTour != "undefined"){
+    tutorialTour(Graph.options);
+  }
 
   function displayGraph(){
     resetPagination();
@@ -896,6 +901,7 @@ function gallery(Graph){
 
   function colorScheme(mode){
     // headerback headertext galleryback buttons cardback
+    // default: #2F7BEE, #FFFFFF, #E7F1FD, #2F7BEE, #DEE5ED
     var pallete = [
         ["#A53F2B","#FFFFFF","#FFFFFF","#003366","#EFEFEF"],
         ["#FF8247","#222C37","#222C37","#FF6319","#DEE5ED"],
@@ -941,7 +947,13 @@ function gallery(Graph){
 '.info-template > div > .tree-relatives > span.linked { color: '+pallete[3]+' }' +
 '.topbar > .topbar-topcontent > .topbar-main > a > h1 { color: '+pallete[1]+'; }' +
 '.footer > .footer-logo2 > svg > g[transform] { fill: '+pallete[1]+'; }' +
-'.topbar-button.filter-selection > span { background-color: '+pallete[3]+'; }'
+'.topbar-button.filter-selection > span { background-color: '+pallete[3]+'; }' +
+
+'div.tutorial > .img-and-text > div:first-child { border-color: '+pallete[3]+'; }' +
+'div.tutorial span.highlight { color: '+pallete[3]+'; }' +
+'div.tutorial-icon { background-color: '+pallete[0]+'; }' +
+'div.tutorial-arrow:before { background-color: '+pallete[3]+'; }' +
+'div.tutorial-arrow:after { border-bottom-color: '+pallete[3]+'; }'
         )
     }
 

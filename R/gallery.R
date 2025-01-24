@@ -41,8 +41,13 @@ galleryCreate <- function(gallery, dir){
     scripts <- c(scripts,"d3.layout.cloud.js")
   }
   if(!is.null(gallery$options$tutorial) && !identical(as.logical(gallery$options$tutorial),FALSE)){
-    scripts <- c(scripts,"tutorial.js",paste0("tutorial_",language))
-    styles <- c(styles,"tutorial.css")
+    if(mode==2){
+      scripts <- c(scripts,"tutorial2.js",paste0("tutorial2_",language))
+      styles <- c(styles,"tutorial2.css")
+    }else{
+      scripts <- c(scripts,"tutorial.js",paste0("tutorial_",language))
+      styles <- c(styles,"tutorial.css")
+    }
   }
   createHTML(dir, styles, scripts, function(){ return(imgWrapper(gallery,galleryJSON,dir)) },mode-1)
   if(mode==1 && is.null(gallery$options$note)){
@@ -146,8 +151,8 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
 
 gallery2_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL,
     order = NULL, decreasing = FALSE, ntext = NULL, mainframeHeight = NULL,
-    image = NULL, zoom = NULL, main = NULL, note = NULL, export = FALSE,
-    colorScheme = 0, language = c("en", "es", "ca"), dir = NULL){
+    image = NULL, zoom = NULL, main = NULL, note = NULL, tutorial = FALSE,
+    export = FALSE, colorScheme = 0, language = c("en", "es", "ca"), dir = NULL){
 
   if(is.null(name)){
     name <- colnames(nodes)[1]
@@ -190,6 +195,7 @@ gallery2_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL,
   if (!is.null(main)) options[["main"]] <- main
   if (!is.null(note)) options[["note"]] <- note
 
+  options <- showSomething(options,"tutorial",tutorial)
   options <- showSomething(options,"exportExcel",export)
   options[["colorScheme"]] <- as.numeric(colorScheme)
   options[["language"]] <- checkLanguage(language)
