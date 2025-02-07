@@ -44,9 +44,11 @@ function tutorialTour(options){
       }
     })
 
-  var tutorialArrow = body.append("div")
+  var tutorialArrow = body.append("svg")
       .attr("class","tutorial-arrow")
       .style("display","none")
+  tutorialArrow.append("path")
+      .attr("d","M20 0 L40 20 L26 20 L26 60 L14 60 L14 20 L0 20 Z")
 
   var tutorial2 = body.append("div")
     .attr("class","tutorial")
@@ -125,8 +127,6 @@ function tutorialTour(options){
       var filterDim = topFilter.node().getBoundingClientRect();
       tutorialContent.selectAll("*").remove()
       tutorialArrow.style("display",null)
-        .style("transform",null)
-        .style("margin-left",null)
         .style("left",(filterDim.left+(filterDim.width/2))+"px")
         .style("top",(maxtop-40)+"px")
       var left = Math.max(60,filterDim.left);
@@ -151,8 +151,6 @@ function tutorialTour(options){
       tutorialContent.append("p").html(tutorial_texts['otherfunctions'])
 
       tutorialArrow.style("display",null)
-      .style("transform",null)
-      .style("margin-left",null)
       .style("left",(xlsxButtonSize.left + (xlsxButtonSize.width/2))+"px")
       .style("top",(maxtop-40)+"px")
     });

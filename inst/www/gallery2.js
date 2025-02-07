@@ -94,52 +94,6 @@ function gallery(Graph){
     .attr("class","pagination")
     .append("span")
 
-  if(Graph.options.exportExcel){
-    topbarButtons.append("div")
-      .append("button")
-        .attr("class","topbar-button excel-export")
-        .attr("aria-label","xlsx")
-        .attr("title","xlsx")
-        .on("click",function(){
-          var excel = {};
-          var cols = getSelectOptions(false,Graph,Tree);
-          if(Graph.options.nodeName=="_name" && Tree && Tree.typeFilter){
-            cols.unshift("_name");
-          }
-          if(Graph.options.nodeType){
-            cols = cols.filter(function(d){
-              return d!=Graph.options.nodeType;
-            })
-          }
-          var sheetname = Tree ? Tree.typeFilter : "data";
-          excel[sheetname] = [];
-          var row = [];
-          cols.forEach(function(c){
-            var c = String(c);
-            if(c=="_name" && Tree && Tree.typeFilter){
-              c = Tree.typeFilter;
-            }
-            row.push(c);
-          });
-          excel[sheetname].push(row);
-          Graph.filteredOrderedData.forEach(function(n){
-              row = [];
-              cols.forEach(function(c){
-                row.push(String(n[c]));
-              });
-              excel[sheetname].push(row);
-          });
-          downloadExcel(excel, d3.select("head>title").text());
-        })
-        .append("svg")
-        .attr("height",24)
-        .attr("width",24)
-        .attr("viewBox","0 0 14 14")
-        .append("path")
-          .style("fill","#ffffff")
-          .attr("d","m8.2305 0-8.2305 1.3711v11.229l8.2305 1.4004v-1.6777h4.9766c0.43219 0 0.78711-0.35492 0.78711-0.78711v-9.3984c0-0.43219-0.35492-0.78711-0.78711-0.78711h-4.9766v-1.3496zm0 1.8516h4.9766c0.16276 0 0.28516 0.1224 0.28516 0.28516v9.3984c0 0.16276-0.1224 0.28516-0.28516 0.28516h-4.9766v-0.95898h1.2266v-1.0605h-1.2266v-0.74023h1.2266v-1.0605h-1.2266v-0.63867h1.2266v-1.0605h-1.2266v-0.74023h1.2266v-1.0605h-1.2266v-0.63867h1.2266v-1.0605h-1.2266v-0.94922zm1.9336 0.94922v1.0605h2.2109v-1.0605h-2.2109zm-4.375 1.5176-1.3203 2.582 1.375 2.7266-1.0723-0.080078-0.89062-1.7969-0.8457 1.666-0.94141-0.070312 1.2188-2.457-1.1738-2.3887 0.94141-0.046875 0.80078 1.5938 0.83008-1.6738 1.0781-0.054688zm4.375 0.18164v1.0605h2.2109v-1.0605h-2.2109zm0 1.8008v1.0605h2.2109v-1.0605h-2.2109zm0 1.6992v1.0605h2.2109v-1.0605h-2.2109zm0 1.8008v1.0605h2.2109v-1.0605h-2.2109z")
-   }
-
   // node multi search
   var searchFunction = Tree ? Tree.getSearchFunction(filterSelection,displayGraph) : filterSelection;
 
@@ -159,7 +113,6 @@ function gallery(Graph){
         })
         .help(false))
 
-  // filter selection
   var searchButton = topbarButtons.append("div")
       .attr("class","show-search-container")
       .append("button")
@@ -194,6 +147,25 @@ function gallery(Graph){
           .style("fill","#ffffff")
           .attr("d","M7,6h10l-5.01,6.3L7,6z M4.25,5.61C6.27,8.2,10,13,10,13v6c0,0.55,0.45,1,1,1h2c0.55,0,1-0.45,1-1v-6 c0,0,3.72-4.8,5.74-7.39C20.25,4.95,19.78,4,18.95,4H5.04C4.21,4,3.74,4.95,4.25,5.61z")
   filterSelectionButton.append("span")
+
+  // show table
+  if(Graph.options.showTable){
+    topbarButtons.append("div")
+      .append("button")
+        .attr("class","topbar-button show-table")
+        .attr("aria-label",texts["Table"])
+        .attr("title",texts["Table"])
+        .on("click",function(){
+          displayTable(Tree ? Tree.typeFilter : false);
+        })
+        .append("svg")
+        .attr("height",24)
+        .attr("width",24)
+        .attr("viewBox","0 0 24 24")
+        .append("path")
+          .style("fill","#ffffff")
+          .attr("d","M19,7H9C7.9,7,7,7.9,7,9v10c0,1.1,0.9,2,2,2h10c1.1,0,2-0.9,2-2V9C21,7.9,20.1,7,19,7z M19,9v2H9V9H19z M13,15v-2h2v2H13z M15,17v2h-2v-2H15z M11,15H9v-2h2V15z M17,13h2v2h-2V13z M9,17h2v2H9V17z M17,19v-2h2v2H17z M6,17H5c-1.1,0-2-0.9-2-2V5 c0-1.1,0.9-2,2-2h10c1.1,0,2,0.9,2,2v1h-2V5H5v10h1V17z")
+  }
 
   // filter button
   topbarButtons.append("div")
@@ -679,6 +651,203 @@ function gallery(Graph){
       })
   }
 
+  function displayTable(tableitem){
+    if(!body.select("body > .tables").empty()){
+      alert("Tables are already displayed");
+      return;
+    }
+
+    var tables = body.style("overflow", "hidden")
+            .append("div")
+              .attr("class","tables")
+
+    tables.append("button")
+          .attr("class","close-button")
+          .attr("aria-label",texts.close)
+          .attr("title",texts.close)
+          .on("click",closeTable);
+
+    if(Graph.options.exportExcel){
+      tables.append("button")
+            .attr("class","excel-export")
+            .attr("aria-label","xlsx")
+            .attr("title","xlsx")
+            .on("click",function(){
+
+    var excel = {};
+    var cols = getSelectOptions(false,Graph,Tree);
+    if(Graph.options.nodeName=="_name" && Tree && Tree.typeFilter){
+      cols.unshift("_name");
+    }
+    if(Graph.options.nodeType){
+            cols = cols.filter(function(d){
+              return d!=Graph.options.nodeType;
+            })
+    }
+    var sheetname = Tree ? Tree.typeFilter : "data";
+    excel[sheetname] = [];
+    var row = [];
+    cols.forEach(function(c){
+            var c = String(c);
+            if(c=="_name" && Tree && Tree.typeFilter){
+              c = Tree.typeFilter;
+            }
+            row.push(c);
+    });
+    excel[sheetname].push(row);
+    Graph.filteredOrderedData.forEach(function(n){
+              row = [];
+              cols.forEach(function(c){
+                row.push(String(n[c]));
+              });
+              excel[sheetname].push(row);
+    });
+    downloadExcel(excel, d3.select("head>title").text());
+
+            })
+            .append("img")
+              .attr("src",b64Icons["xlsx"])
+    }
+
+    var header = tables.append("div")
+            .attr("class","table-header")
+
+    header.append("input")
+      .attr("type", "text")
+      .attr("placeholder",texts.searchintable)
+      .on("keyup",function(){
+        var txt = d3.select(this).property("value");
+        if(txt.length>1){
+          txt = new RegExp(txt,'i');
+          var columns = tableInst.columns();
+          tableInst.data().forEach(function(node,j){
+            delete node._selected;
+            var i = 0;
+            while(!node._selected && i<columns.length){
+              if(String(node[columns[i++]]).match(txt))
+                node._selected = true;
+            }
+            if(node._selected){
+              table.selectAll("tr").filter(function(d){
+                return d==j;
+              }).classed("selected",true);
+            }
+          });
+          filterFromTable();
+          tableInst.data(Graph.filteredOrderedData);
+          tables.call(tableInst);
+          clearButton.classed("disabled",!selectedValues.keys().length);
+        }
+      })
+
+    header.append("button")
+            .attr("class","primary tablefilter disabled")
+            .text(texts.filter)
+            .on("click",function(){
+              filterFromTable();
+              tableInst.data(Graph.filteredOrderedData);
+              tables.call(tableInst);
+              clearButton.classed("disabled",!selectedValues.keys().length);
+            })
+
+    var clearButton = header.append("button")
+      .attr("class","primary-outline clear disabled")
+      .text(texts.clear)
+      .on("click", function(){
+        selectedValues.clear();
+        selectedValues.applyFilter();
+        clearTreeParent();
+        displayGraph();
+        updateFiltersMarkers();
+        tableInst.data(Graph.filteredOrderedData);
+        tables.call(tableInst);
+        clearButton.classed("disabled",true);
+      });
+
+    var table = tables.append("div")
+            .attr("class","table-container")
+
+    var tableInst = tableWrapper()
+            .data(Graph.filteredOrderedData)
+            .onlySelectedData(false)
+            .columns(Graph.nodenames.filter(filterColumns))
+            .id(Graph.options.nodeName)
+            .update(function(){
+              tables.select("button.primary.tablefilter")
+                .classed("disabled",tables.selectAll("tr.selected").empty());
+            })
+
+    if(tableitem){
+      tableInst.item(tableitem);
+      if(Graph.options.nodeTypes && Graph.options.nodeTypes.indexOf(tableitem)!=-1){
+        var columns = [],
+            data = [];
+
+        if(Graph.options.nodeNamesByType && Graph.options.nodeNamesByType.hasOwnProperty(tableitem)){
+          columns = Graph.options.nodeNamesByType[tableitem].filter(filterColumns);
+          columns.push(Graph.options.nodeType);
+        }else{
+          columns = Graph.nodenames.filter(filterColumns);
+        }
+        data = Graph.filteredOrderedData.filter(function(n){
+          if(Array.isArray(n[Graph.options.nodeType])){
+            return n[Graph.options.nodeType].indexOf(tableitem)!=-1;
+          }
+          return n[Graph.options.nodeType]==tableitem;
+        }).map(function(n){
+          var subset = {};
+          columns.forEach(function(c){
+            subset[c] = n.hasOwnProperty(c) ? n[c] : null;
+          });
+          if(n.selected){
+            subset.selected = true;
+          }
+          return subset;
+        });
+        tableInst.data(data)
+          .columns(columns);
+      }
+    }
+
+    tables.call(tableInst);
+
+    function closeTable(){
+        tables.remove();
+        body.style("overflow", null);
+    }
+
+    function filterFromTable(){
+      var table = tables.select("table"),
+          trSelected = table.selectAll("tr.selected");
+      if(!trSelected.empty()){
+            trSelected.each(function(){
+              selectedValues.add(Graph.options.nodeName,d3.select(this).attr("rowname"));
+            })
+            .classed("selected",false);
+      }
+      selectedValues.applyFilter();
+      clearTreeParent();
+      displayGraph();
+      updateFiltersMarkers();
+    }
+
+    function filterColumns(d){
+      if(d==Graph.options.nodeName){
+        return true;
+      }
+      if(d.substring(0,1)=="_"){
+        return false;
+      }
+      if(Graph.options.imageItems && d==Graph.options.imageItems){
+        return false;
+      }
+      if((d==Graph.options.nodeText || d==Graph.options.nodeInfo) && d!=Graph.options.nodeLabel){
+        return false;
+      }
+      return true;
+    }
+  }
+
   function mousePosition(sel){
       var coor = d3.mouse(body.node());
 
@@ -951,8 +1120,7 @@ function gallery(Graph){
 'div.tutorial > .img-and-text > div:first-child { border-color: '+pallete[3]+'; }' +
 'div.tutorial span.highlight { color: '+pallete[3]+'; }' +
 'div.tutorial-icon { background-color: '+pallete[0]+'; }' +
-'div.tutorial-arrow:before { background-color: '+pallete[3]+'; }' +
-'div.tutorial-arrow:after { border-bottom-color: '+pallete[3]+'; }'
+'svg.tutorial-arrow > path { fill: '+pallete[3]+'; }'
         )
     }
 

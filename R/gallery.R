@@ -151,7 +151,7 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
 
 gallery2_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL,
     order = NULL, decreasing = FALSE, ntext = NULL, mainframeHeight = NULL,
-    image = NULL, zoom = NULL, main = NULL, note = NULL, tutorial = FALSE,
+    image = NULL, zoom = NULL, main = NULL, note = NULL, tutorial = FALSE, tableButton = FALSE,
     export = FALSE, colorScheme = 0, language = c("en", "es", "ca"), dir = NULL){
 
   if(is.null(name)){
@@ -196,6 +196,7 @@ gallery2_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL,
   if (!is.null(note)) options[["note"]] <- note
 
   options <- showSomething(options,"tutorial",tutorial)
+  options <- showSomething(options,"showTable",tableButton)
   options <- showSomething(options,"exportExcel",export)
   options[["colorScheme"]] <- as.numeric(colorScheme)
   options[["language"]] <- checkLanguage(language)

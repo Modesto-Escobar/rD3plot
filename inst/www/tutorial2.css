@@ -48,7 +48,7 @@ div.tutorial > .tutorial-content > ul.ul-table > li > span {
   display: block;
 }
 
-div.tutorial-arrow {
+svg.tutorial-arrow {
 width: 40px;
 height: 60px;
 margin-left: -20px;
@@ -57,26 +57,9 @@ display: inline-block;
 z-index: 1001;
 pointer-events: none;
 }
-div.tutorial-arrow:before,
-div.tutorial-arrow:after {
-content: '';
-border-color: transparent;
-border-style: solid;
-position: absolute;
-}
-div.tutorial-arrow:before {
-border: none;
-background-color: #2f7bee;
-height: 80%;
-width: 30%;
-top: 20%;
-left: 35%;
-}
-div.tutorial-arrow:after {
-left: 0;
-top: -35%;
-border-width: 20px 20px;
-border-bottom-color: #2f7bee;
+svg.tutorial-arrow > path {
+  fill: #2f7bee;
+  stroke: #ffffff;
 }
 
 div.tutorial > .img-and-text {

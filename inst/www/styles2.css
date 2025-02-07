@@ -342,7 +342,7 @@ button.switch-button.active:after {
   margin: 0 0 0 16px;
   padding: 14px 16px;
 }
-.fixed-topbar .topbar-button.excel-export {
+.fixed-topbar .topbar-button.show-table {
   display: none;
 }
 .topbar-button.filter-selection {
@@ -956,4 +956,123 @@ p.window-message {
   opacity: 0;
   cursor: pointer;
   margin: -8px 0 0 -16px;
+}
+
+/* tables */
+body > div.tables {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #ffffff;
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+}
+
+button.excel-export {
+  border: none;
+  border-radius: 0;
+  color: #000000;
+  background: none;
+  padding: 0;
+  width: 48px;
+  height: 48px;
+  position: absolute;
+  top: 0;
+  right: 48px;
+}
+button.excel-export > img {
+  width: 24px;
+  height: 24px;
+}
+
+body > div.tables > .table-container {
+  margin: 16px;
+  flex-grow: 1;
+  overflow-y: auto;
+}
+body > div.tables > .table-container > table > tbody > tr.selected {
+  background-color: #cbdefb !important;
+}
+body > div.tables > .table-container > table > tbody > tr:nth-child(odd) {
+  background-color: #ffffff;
+}
+body > div.tables > .table-container > table > thead > tr,
+body > div.tables > .table-container > table > tbody > tr {
+  white-space: nowrap;
+}
+body > div.tables > .table-container > table > thead > tr > th,
+body > div.tables > .table-container > table > tbody > tr > td {
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 0;
+  position: relative;
+}
+body > div.tables > .table-container > table > thead > tr > th > div,
+body > div.tables > .table-container > table > tbody > tr > td > div {
+  padding: 4px 8px;
+}
+body > div.tables > .table-container > table > thead > tr > th.sorting,
+body > div.tables > .table-container > table > thead > tr > th.sorting_asc,
+body > div.tables > .table-container > table > thead > tr > th.sorting_desc {
+  cursor: pointer;
+  position: relative;
+}
+body > div.tables > .table-container > table > thead > tr > th.sorting > div,
+body > div.tables > .table-container > table > thead > tr > th.sorting_asc > div,
+body > div.tables > .table-container > table > thead > tr > th.sorting_desc > div {
+  padding-right: 1.2em;
+}
+body > div.tables > .table-container > table > thead > tr > th.sorting:after,
+body > div.tables > .table-container > table > thead > tr > th.sorting_asc:after,
+body > div.tables > .table-container > table > thead > tr > th.sorting_desc:after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 1.4em;
+  background: linear-gradient(to right, transparent 0%, white 25%);
+}
+body > div.tables > .table-container > table > thead > tr > th.sorting:after {
+  content: "\20\2195";
+  color: #c6c6c6;
+}
+body > div.tables > .table-container > table > thead > tr > th.sorting_asc:after {
+  content: "\20\2191";
+  color: #2f7bee;
+}
+body > div.tables > .table-container > table > thead > tr > th.sorting_desc:after {
+  content: "\20\2193";
+  color: #2f7bee;
+}
+body > div.tables > .table-container > table > tbody > tr > td:after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%; 
+  background: linear-gradient(to right, transparent 90%, white);
+  pointer-events: none;
+}
+body > div.tables > .table-container > table > thead > tr > th.text-right,
+body > div.tables > .table-container > table > tbody > tr > td.text-right {
+  text-align: right;
+}
+body > div.tables > .table-container > table > tbody > tr > td.text-right:after {
+  background: linear-gradient(to left, transparent 90%, white);
+}
+body > div.tables > .table-container > table > tbody > tr.selected > td:after {
+  background: linear-gradient(to right, transparent 90%, #cbdefb);
+}
+body > div.tables > .table-container > table > tbody > tr.selected > td.text-right:after {
+  background: linear-gradient(to left, transparent 90%, #cbdefb);
+}
+
+body > div.tables > .table-header {
+  margin: 0 16px;
+}
+body > div.tables > .table-header > button.primary {
+  margin: 0 8px;
 }
