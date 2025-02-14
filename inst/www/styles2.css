@@ -94,6 +94,19 @@ button.primary:hover,
 button.primary-outline:hover {
   filter: brightness(120%);
 }
+button.primary-outline.clear {
+  border: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  color: transparent;
+  width: 51px;
+  height: 51px;
+  border-radius: 0;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjwvc3ZnPg==);
+}
 button.switch-button {
   width: 22px;
   height: 14px;
@@ -979,13 +992,11 @@ button.excel-export {
   padding: 0;
   width: 48px;
   height: 48px;
-  position: absolute;
-  top: 0;
-  right: 48px;
 }
 button.excel-export > img {
   width: 24px;
   height: 24px;
+  vertical-align: middle;
 }
 
 body > div.tables > .table-container {
@@ -1071,8 +1082,22 @@ body > div.tables > .table-container > table > tbody > tr.selected > td.text-rig
 }
 
 body > div.tables > .table-header {
-  margin: 0 16px;
+  margin: 8px 16px;
 }
 body > div.tables > .table-header > button.primary {
   margin: 0 8px;
+}
+body > div.tables > .table-top-header > .multi-select {
+  line-height: 0;
+}
+body > div.tables > .table-top-header > .multi-select > svg {
+  vertical-align: middle;
+}
+
+body > div.tables > .only-selected-data {
+  position: absolute;
+  right: 0;
+  top: 0;
+  cursor: pointer;
+  margin: 10px 50px 0 0;
 }

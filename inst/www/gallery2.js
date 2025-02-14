@@ -667,8 +667,47 @@ function gallery(Graph){
           .attr("title",texts.close)
           .on("click",closeTable);
 
+    var onlySelected = selectedNames().length ? true : false;
+
+    var onlySelectedData = tables.append("div")
+      .attr("class","only-selected-data")
+      .classed("selected",onlySelected)
+      .on("click",function(){
+        onlySelectedData.classed("selected",!onlySelectedData.classed("selected"));
+        tableInst.onlySelectedData(onlySelectedData.classed("selected"));
+        tables.call(tableInst);
+      })
+    onlySelectedData.append("span")
+        .text(texts.showonlyselecteditems+" ")
+    onlySelectedData.append("div")
+        .attr("class","check-box")
+
+    if(Graph.options.multigraph || Graph.options.main){
+      var tabletopheader = tables.append("div")
+        .attr("class","table-top-header")
+      
+      if(Graph.options.multigraph){
+        multiGraphSelect(tabletopheader, Graph.options.multigraph.idx, Graph.options.multigraph.names);
+    tabletopheader.select(".multi-select")
+      .append("svg")
+        .attr("height",24)
+        .attr("width",24)
+        .attr("viewBox","0 0 24 24")
+        .append("path")
+          .attr("d","M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z")
+      }
+      if(Graph.options.main){
+        tabletopheader
+        .append("span")
+          .html(Graph.options.main);
+      }
+    }
+
+    var header = tables.append("div")
+            .attr("class","table-header")
+
     if(Graph.options.exportExcel){
-      tables.append("button")
+      header.append("button")
             .attr("class","excel-export")
             .attr("aria-label","xlsx")
             .attr("title","xlsx")
@@ -709,9 +748,6 @@ function gallery(Graph){
               .attr("src",b64Icons["xlsx"])
     }
 
-    var header = tables.append("div")
-            .attr("class","table-header")
-
     header.append("input")
       .attr("type", "text")
       .attr("placeholder",texts.searchintable)
@@ -721,13 +757,13 @@ function gallery(Graph){
           txt = new RegExp(txt,'i');
           var columns = tableInst.columns();
           tableInst.data().forEach(function(node,j){
-            delete node._selected;
+            delete node.selected;
             var i = 0;
-            while(!node._selected && i<columns.length){
+            while(!node.selected && i<columns.length){
               if(String(node[columns[i++]]).match(txt))
-                node._selected = true;
+                node.selected = true;
             }
-            if(node._selected){
+            if(node.selected){
               table.selectAll("tr").filter(function(d){
                 return d==j;
               }).classed("selected",true);
@@ -739,6 +775,17 @@ function gallery(Graph){
           clearButton.classed("disabled",!selectedValues.keys().length);
         }
       })
+
+    header.append("button")
+            .attr("class","primary tableselection disabled")
+            .text(texts.tableselection)
+            .on("click",function(){
+              selectFromTable();
+              tableInst.data(Graph.filteredOrderedData);
+              onlySelectedData.classed("selected",true);
+              tableInst.onlySelectedData(true);
+              tables.call(tableInst);
+            })
 
     header.append("button")
             .attr("class","primary tablefilter disabled")
@@ -769,11 +816,11 @@ function gallery(Graph){
 
     var tableInst = tableWrapper()
             .data(Graph.filteredOrderedData)
-            .onlySelectedData(false)
+            .onlySelectedData(onlySelected)
             .columns(Graph.nodenames.filter(filterColumns))
             .id(Graph.options.nodeName)
             .update(function(){
-              tables.select("button.primary.tablefilter")
+              tables.selectAll("button.primary.tableselection, button.primary.tablefilter")
                 .classed("disabled",tables.selectAll("tr.selected").empty());
             })
 
@@ -814,6 +861,23 @@ function gallery(Graph){
     function closeTable(){
         tables.remove();
         body.style("overflow", null);
+    }
+
+    function selectFromTable(){
+      var names = [],
+          table = tables.select("table"),
+          trSelected = table.selectAll("tr.selected");
+      if(!trSelected.empty()){
+            trSelected.each(function(){
+                names.push(d3.select(this).attr("rowname"));
+            })
+            .classed("selected",false);
+
+            Graph.filteredOrderedData.forEach(function(d){
+              d.selected = names.indexOf(d[Graph.options.nodeName]) != -1;
+            });
+      }
+      displayGraph();
     }
 
     function filterFromTable(){
@@ -1071,6 +1135,7 @@ function gallery(Graph){
     // headerback headertext galleryback buttons cardback
     // default: #2F7BEE, #FFFFFF, #E7F1FD, #2F7BEE, #DEE5ED
     var pallete = [
+        ["#2F7BEE","#FFFFFF","#E7F1FD","#2F7BEE","#DEE5ED"],
         ["#A53F2B","#FFFFFF","#FFFFFF","#003366","#EFEFEF"],
         ["#FF8247","#222C37","#222C37","#FF6319","#DEE5ED"],
         ["#222C37","#FFFFFF","#FFEFE7","#FF6319","#DEE5ED"],
@@ -1085,16 +1150,21 @@ function gallery(Graph){
         ["#46475D","#FFFFFF","#D7E5ED","#FF6319","#DEE5ED"]
       ];
 
-    if(mode && mode<=pallete.length){
-      pallete = pallete[mode-1];
-      
-      d3.select("head")
+    mode = +mode;
+    if(mode>pallete.length){
+      mode = 0;
+    }
+
+    pallete = pallete[mode];
+
+    d3.select("head")
         .append("style")
         .text(
+'button.primary-outline.clear { background-image: url('+b64Iconsresetfilter(48,pallete[3])+'); } '+
 '.topbar, .footer { background-color: '+pallete[0]+'; color: '+pallete[1]+'; }' +
 '.grid-gallery-mode2 { background-color: '+pallete[2]+'; }' +
-'.topbar-button, .multi-select { border-color: '+pallete[1]+'; color: '+pallete[1]+' }' +
-'.topbar-button > svg > path, .multi-select > svg > path { fill: '+pallete[1]+'!important; }' +
+'.topbar-button, .topbar-main > div > .multi-select { border-color: '+pallete[1]+'; color: '+pallete[1]+' }' +
+'.topbar-button > svg > path, .topbar-main > div > .multi-select > svg > path { fill: '+pallete[1]+'!important; }' +
 '.topbar-button { border-color: '+pallete[1]+'; color: '+pallete[1]+' }' +
 '.topbar-button > svg > path { fill: '+pallete[1]+'!important; }' +
 '.multi-search > .search-box, .multi-search > .search-box > div.text-wrapper > div.text-content > textarea { background-color: '+pallete[1]+'; color: '+contrast(pallete[1])+'; }' +
@@ -1116,16 +1186,20 @@ function gallery(Graph){
 '.topbar > .topbar-topcontent > .topbar-main > a > h1 { color: '+pallete[1]+'; }' +
 '.footer > .footer-logo2 > svg > g[transform] { fill: '+pallete[1]+'; }' +
 '.topbar-button.filter-selection > span { background-color: '+pallete[3]+'; }' +
+'body > div.tables > .table-top-header > .multi-select > svg > path { fill: '+pallete[0]+'; }' +
 
 'div.tutorial > .img-and-text > div:first-child { border-color: '+pallete[3]+'; }' +
 'div.tutorial span.highlight { color: '+pallete[3]+'; }' +
 'div.tutorial-icon { background-color: '+pallete[0]+'; }' +
 'svg.tutorial-arrow > path { fill: '+pallete[3]+'; }'
         )
-    }
 
     function contrast(color){
       return d3.hsl(color).l > 0.66 ? '#000000' : '#ffffff';
+    }
+
+    function b64Iconsresetfilter(iconSize,iconColor){
+      return "data:image/svg+xml;base64,"+btoa('<svg width="'+iconSize+'" height="'+iconSize+'" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22.035 10.5L18.375 14.16L14.715 10.5L13.125 12.09L16.785 15.75L13.125 19.41L14.715 21L18.375 17.34L22.035 21L23.625 19.41L19.965 15.75L23.625 12.09L22.035 10.5ZM7.5 31.5L9 31.5L9 34.5L12 34.5L12 31.5L24 31.5L24 34.5L27 34.5L27 31.5L28.5 31.5C30.165 31.5 31.485 30.15 31.485 28.5L31.5 7.5C31.5 5.85 30.165 4.5 28.5 4.5L7.5 4.5C5.85 4.5 4.5 5.85 4.5 7.5L4.5 28.5C4.5 30.15 5.85 31.5 7.5 31.5ZM7.5 7.5L28.5 7.5L28.5 24L7.5 24L7.5 7.5Z" fill="'+iconColor+'"/></svg>');
     }
   }
 
