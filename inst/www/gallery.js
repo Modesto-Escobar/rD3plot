@@ -1307,7 +1307,7 @@ function gallery(Graph){
 
     header.append("button")
             .attr("class","primary tableselection disabled")
-            .text(texts.tableselection)
+            .text(texts.select)
             .on("click",function(){
               selectFromTable();
               onlySelectedCheck.classed("checked",true);
