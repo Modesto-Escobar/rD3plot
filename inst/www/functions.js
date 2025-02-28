@@ -1253,6 +1253,9 @@ function displayMultiSearch(){
         })
         .on("keyup",function(){
           d3.event.stopPropagation();
+          if(searchBoxInput.property("value").length<3){
+            checkContainer.selectAll("span").remove();
+          }
         })
         .on("keypress",function(){
           clearTimeout(typingTimer);
