@@ -1315,10 +1315,6 @@ function displayMultiSearch(){
             updateSelection();
           }
           searchIcon.classed("disabled",!checkContainer.selectAll("span.yes").size());
-
-          function cleanString(value){
-            return String(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-          }
     }
   }
 
@@ -1353,6 +1349,10 @@ function displayMultiSearch(){
   };
 
   return exports;
+}
+
+function cleanString(value){
+    return String(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
 
 function intersection(a, b){

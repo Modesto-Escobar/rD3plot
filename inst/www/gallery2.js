@@ -752,28 +752,30 @@ function gallery(Graph){
       .attr("type", "text")
       .attr("placeholder",texts.searchintable)
       .on("keyup",function(){
-        var txt = d3.select(this).property("value");
+        var txt = cleanString(d3.select(this).property("value"));
+        onlySelectedData.classed("selected",false);
+        tableInst.onlySelectedData(false);
+        tables.call(tableInst);
         if(txt.length>1){
-          txt = new RegExp(txt,'i');
           var columns = tableInst.columns();
           tableInst.data().forEach(function(node,j){
             delete node.selected;
             var i = 0;
             while(!node.selected && i<columns.length){
-              if(String(node[columns[i++]]).match(txt))
+              if(cleanString(node[columns[i++]]).match(txt)!==null){
                 node.selected = true;
-            }
-            if(node.selected){
-              table.selectAll("tr").filter(function(d){
-                return d==j;
-              }).classed("selected",true);
+              }
             }
           });
-          filterFromTable();
-          tableInst.data(Graph.filteredOrderedData);
-          tables.call(tableInst);
-          clearButton.classed("disabled",!selectedValues.keys().length);
+          onlySelectedData.classed("selected",true);
+          tableInst.onlySelectedData(true);
+        }else{
+          Graph.filteredOrderedData.forEach(function(d){
+            d.selected = false;
+          });
         }
+        tables.call(tableInst);
+        displayGraph();
       })
 
     header.append("button")
@@ -781,7 +783,6 @@ function gallery(Graph){
             .text(texts.select)
             .on("click",function(){
               selectFromTable();
-              tableInst.data(Graph.filteredOrderedData);
               onlySelectedData.classed("selected",true);
               tableInst.onlySelectedData(true);
               tables.call(tableInst);
@@ -798,8 +799,9 @@ function gallery(Graph){
             })
 
     var clearButton = header.append("button")
-      .attr("class","primary-outline clear disabled")
-      .text(texts.clear)
+      .attr("class","primary-outline clear")
+      .classed("disabled",!selectedValues.keys().length)
+      .text(texts.clearfilters)
       .on("click", function(){
         selectedValues.clear();
         selectedValues.applyFilter();
@@ -1160,7 +1162,6 @@ function gallery(Graph){
     d3.select("head")
         .append("style")
         .text(
-'button.primary-outline.clear { background-image: url('+b64Iconsresetfilter(48,pallete[3])+'); } '+
 '.topbar, .footer { background-color: '+pallete[0]+'; color: '+pallete[1]+'; }' +
 '.grid-gallery-mode2 { background-color: '+pallete[2]+'; }' +
 '.topbar-button, .topbar-main > div > .multi-select { border-color: '+pallete[1]+'; color: '+pallete[1]+' }' +
