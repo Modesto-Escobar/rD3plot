@@ -1085,10 +1085,13 @@ body > div.tables > .table-top-header > span {
   font-size: 20px;
 }
 
-body > div.tables > .only-selected-data {
-  position: absolute;
-  right: 0;
-  top: 0;
+body > div.tables > .table-top-header > .only-selected-data {
+  float: right;
   cursor: pointer;
   margin: 10px 50px 0 0;
+}
+body > div.tables > .table-top-header > .show-relations {
+  float: right;
+  margin: 10px 16px 0 0;
+  line-height: 2.5;
 }

@@ -2933,7 +2933,8 @@ function tableWrapper(){
       paginationDiv,
       columnwidths = [],
       id = false,
-      columnHidden;
+      columnHidden,
+      columnsDict = {};
 
   function exports(tables){
     tableContainer = tables.select("div.table-container");
@@ -2981,7 +2982,7 @@ function tableWrapper(){
         });
 
     columnHidden = columns.map(function(d){
-      if(d.substring(0,1)=="_"){
+      if(d.substring(0,1)=="_" && !columnsDict.hasOwnProperty(d)){
         return true;
       }
       return false;
@@ -3121,6 +3122,10 @@ function tableWrapper(){
             desc0 = columns.map(function(){ return false; }),
             desc = desc0.slice();
         columns.forEach(function(d,i){
+          var visibleName = d;
+          if(columnsDict.hasOwnProperty(d)){
+            visibleName = columnsDict[d];
+          }
           if(columnHidden[i]){
             return false;
           }
@@ -3145,8 +3150,8 @@ function tableWrapper(){
               drawTable();
             })
             .append("div")
-              .attr("title",d)
-              .text(d)
+              .attr("title",visibleName)
+              .text(visibleName)
         });
   }
 
@@ -3223,6 +3228,12 @@ function tableWrapper(){
   exports.id = function(x){
     if (!arguments.length) return id;
     id = x;
+    return exports;
+  }
+
+  exports.columnsDict = function(x){
+    if (!arguments.length) return columnsDict;
+    columnsDict = x;
     return exports;
   }
 

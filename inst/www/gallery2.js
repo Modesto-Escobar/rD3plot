@@ -504,6 +504,9 @@ function gallery(Graph){
     var selectedlen = selectedNames().length;
 
     filterSelectionButton.classed("disabled",!selectedlen);
+    if(selectedlen && selectedlen>99){
+      selectedlen = "99+";
+    }
     filterSelectionButton.select("span").text(selectedlen);
   }
 
@@ -652,16 +655,16 @@ function gallery(Graph){
   }
 
   function displayTable(tableitem){
-    if(!body.select("body > .tables").empty()){
-      alert("Tables are already displayed");
-      return;
-    }
+    body.select("body > .tables").remove();
 
     var tables = body.style("overflow", "hidden")
             .append("div")
               .attr("class","tables")
 
-    tables.append("button")
+    var tabletopheader = tables.append("div")
+        .attr("class","table-top-header")
+
+    tabletopheader.append("button")
           .attr("class","close-button")
           .attr("aria-label",texts.close)
           .attr("title",texts.close)
@@ -669,7 +672,7 @@ function gallery(Graph){
 
     var onlySelected = selectedNames().length ? true : false;
 
-    var onlySelectedData = tables.append("div")
+    var onlySelectedData = tabletopheader.append("div")
       .attr("class","only-selected-data")
       .classed("selected",onlySelected)
       .on("click",function(){
@@ -683,13 +686,10 @@ function gallery(Graph){
         .attr("class","check-box")
 
     if(Graph.options.multigraph || Graph.options.main){
-      var tabletopheader = tables.append("div")
-        .attr("class","table-top-header")
-      
       if(Graph.options.multigraph){
         multiGraphSelect(tabletopheader, Graph.options.multigraph.idx, Graph.options.multigraph.names);
-    tabletopheader.select(".multi-select")
-      .append("svg")
+        tabletopheader.select(".multi-select")
+          .append("svg")
         .attr("height",24)
         .attr("width",24)
         .attr("viewBox","0 0 24 24")
@@ -714,27 +714,15 @@ function gallery(Graph){
             .on("click",function(){
 
     var excel = {};
-    var cols = getSelectOptions(false,Graph,Tree);
-    if(Graph.options.nodeName=="_name" && Tree && Tree.typeFilter){
-      cols.unshift("_name");
-    }
-    if(Graph.options.nodeType){
-            cols = cols.filter(function(d){
-              return d!=Graph.options.nodeType;
-            })
-    }
+    var cols = tableInst.columns();
     var sheetname = Tree ? Tree.typeFilter : "data";
     excel[sheetname] = [];
     var row = [];
     cols.forEach(function(c){
-            var c = String(c);
-            if(c=="_name" && Tree && Tree.typeFilter){
-              c = Tree.typeFilter;
-            }
-            row.push(c);
+            row.push(String(c));
     });
     excel[sheetname].push(row);
-    Graph.filteredOrderedData.forEach(function(n){
+    tableInst.data().forEach(function(n){
               row = [];
               cols.forEach(function(c){
                 row.push(String(n[c]));
@@ -783,9 +771,7 @@ function gallery(Graph){
             .text(texts.select)
             .on("click",function(){
               selectFromTable();
-              onlySelectedData.classed("selected",true);
-              tableInst.onlySelectedData(true);
-              tables.call(tableInst);
+              displayTable(tableitem);
             })
 
     header.append("button")
@@ -793,12 +779,10 @@ function gallery(Graph){
             .text(texts.filter)
             .on("click",function(){
               filterFromTable();
-              tableInst.data(Graph.filteredOrderedData);
-              tables.call(tableInst);
-              clearButton.classed("disabled",!selectedValues.keys().length);
+              displayTable(tableitem);
             })
 
-    var clearButton = header.append("button")
+    header.append("button")
       .attr("class","primary-outline clear")
       .classed("disabled",!selectedValues.keys().length)
       .text(texts.clearfilters)
@@ -808,9 +792,7 @@ function gallery(Graph){
         clearTreeParent();
         displayGraph();
         updateFiltersMarkers();
-        tableInst.data(Graph.filteredOrderedData);
-        tables.call(tableInst);
-        clearButton.classed("disabled",true);
+        displayTable(tableitem);
       });
 
     var table = tables.append("div")
@@ -827,11 +809,48 @@ function gallery(Graph){
             })
 
     if(tableitem){
-      tableInst.item(tableitem);
-      if(Graph.options.nodeTypes && Graph.options.nodeTypes.indexOf(tableitem)!=-1){
-        var columns = [],
-            data = [];
+      var showRelations = tabletopheader.append("div")
+        .attr("class","show-relations")
+      showRelations.append("span")
+        .text("Show relations ")
+      showRelations.append("button")
+        .attr("class","switch-button")
+        .classed("active",tableitem=="_relations_")
+        .on("click",function(){
+          displayTable(Tree ? tableitem=="_relations_" ? Tree.typeFilter : "_relations_" : false);
+        })
 
+      var columns = [],
+          data = [];
+
+      if(tableitem=="_relations_"){
+        header.selectAll("button.tableselection, button.tablefilter, button.clear").style("display","none");
+
+        nodes.forEach(function(d){
+          if(d[Graph.options.nodeType]==Graph.options.nodeTypes[0]){
+            var row = {};
+            Graph.options.nodeTypes.forEach(function(t){
+              row[t] = [];
+            });
+            row[Graph.options.nodeTypes[0]].push(d[Graph.options.nodeLabel]);
+            var relatives = Graph.nodes_relatives[d["_index"]],
+                relativesTypes = Graph.nodes_relativesTypes[d["_index"]];
+            relatives.forEach(function(r,i){
+              row[relativesTypes[i]].push(Graph.options.nodeLabel==Graph.options.nodeName ? r : nodes.filter(function(n){
+                return n[Graph.options.nodeName]==r;
+              })[0][Graph.options.nodeLabel]);
+            });
+            Graph.options.nodeTypes.forEach(function(t){
+              row[t] = row[t].join(" | ");
+            });
+            data.push(row);
+          }
+        });
+        tableInst.data(data)
+          .columns(Graph.options.nodeTypes);
+      }else{
+
+      if(Graph.options.nodeTypes && Graph.options.nodeTypes.indexOf(tableitem)!=-1){
         if(Graph.options.nodeNamesByType && Graph.options.nodeNamesByType.hasOwnProperty(tableitem)){
           columns = Graph.options.nodeNamesByType[tableitem].filter(filterColumns);
           columns.push(Graph.options.nodeType);
@@ -853,8 +872,15 @@ function gallery(Graph){
           }
           return subset;
         });
+        var columnsDict = {};
+        if(Graph.options.nodeName=="_name"){
+          columnsDict[Graph.options.nodeName] = tableitem;
+        }
         tableInst.data(data)
-          .columns(columns);
+          .columns(columns)
+          .columnsDict(columnsDict)
+      }
+
       }
     }
 
@@ -866,31 +892,25 @@ function gallery(Graph){
     }
 
     function selectFromTable(){
-      var names = [],
-          table = tables.select("table"),
-          trSelected = table.selectAll("tr.selected");
-      if(!trSelected.empty()){
-            trSelected.each(function(){
-                names.push(d3.select(this).attr("rowname"));
-            })
-            .classed("selected",false);
+      var names = [];
+      tableInst.data().forEach(function(d){
+          if(d._selected){
+              names.push(d[Graph.options.nodeName]);
+          }
+      })
 
-            Graph.filteredOrderedData.forEach(function(d){
+      Graph.filteredOrderedData.forEach(function(d){
               d.selected = names.indexOf(d[Graph.options.nodeName]) != -1;
-            });
-      }
+      });
       displayGraph();
     }
 
     function filterFromTable(){
-      var table = tables.select("table"),
-          trSelected = table.selectAll("tr.selected");
-      if(!trSelected.empty()){
-            trSelected.each(function(){
-              selectedValues.add(Graph.options.nodeName,d3.select(this).attr("rowname"));
-            })
-            .classed("selected",false);
-      }
+      tableInst.data().forEach(function(d){
+        if(d._selected){
+          selectedValues.add(Graph.options.nodeName,d[Graph.options.nodeName]);
+        }
+      })
       selectedValues.applyFilter();
       clearTreeParent();
       displayGraph();

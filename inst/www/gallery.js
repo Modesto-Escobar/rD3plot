@@ -1375,6 +1375,7 @@ function gallery(Graph){
     if(tableitem){
       tableInst.item(tableitem);
       if(tableitem=="table"){
+        header.selectAll("button.tableselection, button.tablefilter, button.clear").style("display","none");
         var columns = [],
             data = [];
 
