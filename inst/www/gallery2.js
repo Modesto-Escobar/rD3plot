@@ -167,6 +167,23 @@ function gallery(Graph){
           .attr("d","M19,7H9C7.9,7,7,7.9,7,9v10c0,1.1,0.9,2,2,2h10c1.1,0,2-0.9,2-2V9C21,7.9,20.1,7,19,7z M19,9v2H9V9H19z M13,15v-2h2v2H13z M15,17v2h-2v-2H15z M11,15H9v-2h2V15z M17,13h2v2h-2V13z M9,17h2v2H9V17z M17,19v-2h2v2H17z M6,17H5c-1.1,0-2-0.9-2-2V5 c0-1.1,0.9-2,2-2h10c1.1,0,2,0.9,2,2v1h-2V5H5v10h1V17z")
   }
 
+  // show frequencies
+  if(Graph.options.frequencies){
+      topbarButtons.append("div")
+      .append("button")
+        .attr("class","topbar-button show-frequencies")
+        .on("click",function(){
+          displayFrequencies();
+        })
+        .attr("title","frequencies")
+        .append("img")
+          .attr("src",b64Icons.chart)
+          .attr("alt","freq")
+          .attr("width","24")
+          .attr("height","24")
+          .style("filter","brightness(0) invert(1)")
+  }
+
   // filter button
   topbarButtons.append("div")
       .append("button")
@@ -213,7 +230,7 @@ function gallery(Graph){
   var sidebottom = sidepanel.append("div")
     .attr("class","side-panel-bottom")
   sidebottom.append("button")
-    .attr("class","primary")
+    .attr("class","primary clear")
     .text(texts.clearfilters)
     .on("click",function(){
       selectedValues.clear();
@@ -225,6 +242,7 @@ function gallery(Graph){
     })
 
   function closeFilterPanel(){
+    sidepanel.classed("show-frequencies",false);
     body.classed("display-filterpanel",false);
     sidecontent.selectAll("*").remove();
   }
@@ -771,7 +789,11 @@ function gallery(Graph){
             .text(texts.select)
             .on("click",function(){
               selectFromTable();
-              displayTable(tableitem);
+              if(tableitem=="_relations_" ){
+                closeTable();
+              }else{
+                displayTable(tableitem);
+              }
             })
 
     header.append("button")
@@ -779,7 +801,11 @@ function gallery(Graph){
             .text(texts.filter)
             .on("click",function(){
               filterFromTable();
-              displayTable(tableitem);
+              if(tableitem=="_relations_" ){
+                closeTable();
+              }else{
+                displayTable(tableitem);
+              }
             })
 
     header.append("button")
@@ -791,9 +817,34 @@ function gallery(Graph){
         selectedValues.applyFilter();
         clearTreeParent();
         displayGraph();
-        updateFiltersMarkers();
         displayTable(tableitem);
       });
+
+    if(Tree && tableitem){
+      header.append("button")
+        .attr("class","primary")
+        .text(texts["Relations"])
+        .classed("disabled",tableitem=="_relations_")
+        .style("margin-left","24px")
+        .on("click",function(){
+          selectedValues.clear();
+          selectedValues.applyFilter();
+          clearTreeParent();
+          body.select(".topbar > .breadcrumbs > button[content="+Graph.options.nodeTypes[0]+"]").node().click();
+          displayTable("_relations_");
+        })
+
+      Graph.options.nodeTypes.forEach(function(type){
+        header.append("button")
+        .attr("class","primary")
+        .text(type)
+        .classed("disabled",tableitem==type)
+        .on("click",function(){
+          body.select(".topbar > .breadcrumbs > button[content="+type+"]").node().click();
+          displayTable(type);
+        })
+      });
+    }
 
     var table = tables.append("div")
             .attr("class","table-container")
@@ -809,26 +860,15 @@ function gallery(Graph){
             })
 
     if(tableitem){
-      var showRelations = tabletopheader.append("div")
-        .attr("class","show-relations")
-      showRelations.append("span")
-        .text("Show relations ")
-      showRelations.append("button")
-        .attr("class","switch-button")
-        .classed("active",tableitem=="_relations_")
-        .on("click",function(){
-          displayTable(Tree ? tableitem=="_relations_" ? Tree.typeFilter : "_relations_" : false);
-        })
-
       var columns = [],
           data = [];
 
       if(tableitem=="_relations_"){
-        header.selectAll("button.tableselection, button.tablefilter, button.clear").style("display","none");
-
         nodes.forEach(function(d){
           if(d[Graph.options.nodeType]==Graph.options.nodeTypes[0]){
             var row = {};
+            row["_id"] = d[Graph.options.nodeName];
+            //row["selected"] = d.selected;
             Graph.options.nodeTypes.forEach(function(t){
               row[t] = [];
             });
@@ -841,13 +881,16 @@ function gallery(Graph){
               })[0][Graph.options.nodeLabel]);
             });
             Graph.options.nodeTypes.forEach(function(t){
-              row[t] = row[t].join(" | ");
+              row[t] = row[t].join("; ");
             });
             data.push(row);
           }
         });
+        columns = Graph.options.nodeTypes.slice();
+        columns.unshift("_id");
         tableInst.data(data)
-          .columns(Graph.options.nodeTypes);
+          .columns(columns)
+          .id("_id");
       }else{
 
       if(Graph.options.nodeTypes && Graph.options.nodeTypes.indexOf(tableitem)!=-1){
@@ -891,26 +934,40 @@ function gallery(Graph){
         body.style("overflow", null);
     }
 
-    function selectFromTable(){
-      var names = [];
-      tableInst.data().forEach(function(d){
-          if(d._selected){
-              names.push(d[Graph.options.nodeName]);
-          }
-      })
+    function getRowName(tr,callback){
+      callback(d3.select(tr).attr("rowname"));
+    }
 
-      Graph.filteredOrderedData.forEach(function(d){
+    function selectFromTable(){
+      var names = [],
+          table = tables.select("table"),
+          trSelected = table.selectAll("tr.selected");
+      if(!trSelected.empty()){
+            trSelected.each(function(){
+              getRowName(this,function(rowname){
+                names.push(rowname);
+              })
+            })
+            .classed("selected",false);
+
+            Graph.filteredOrderedData.forEach(function(d){
               d.selected = names.indexOf(d[Graph.options.nodeName]) != -1;
-      });
+            });
+      }
       displayGraph();
     }
 
     function filterFromTable(){
-      tableInst.data().forEach(function(d){
-        if(d._selected){
-          selectedValues.add(Graph.options.nodeName,d[Graph.options.nodeName]);
-        }
-      })
+      var table = tables.select("table"),
+          trSelected = table.selectAll("tr.selected");
+      if(!trSelected.empty()){
+            trSelected.each(function(){
+              getRowName(this,function(rowname){
+                selectedValues.add(Graph.options.nodeName,rowname);
+              });
+            })
+            .classed("selected",false);
+      }
       selectedValues.applyFilter();
       clearTreeParent();
       displayGraph();

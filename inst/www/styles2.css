@@ -1071,7 +1071,8 @@ body > div.tables > .table-container > table > tbody > tr.selected > td.text-rig
 body > div.tables > .table-header {
   margin: 8px 16px;
 }
-body > div.tables > .table-header > button.primary {
+body > div.tables > .table-header > button.primary,
+body > div.tables > .table-header > button.primary-outline {
   margin: 0 8px;
 }
 body > div.tables > .table-top-header > .multi-select {
@@ -1089,9 +1090,4 @@ body > div.tables > .table-top-header > .only-selected-data {
   float: right;
   cursor: pointer;
   margin: 10px 50px 0 0;
-}
-body > div.tables > .table-top-header > .show-relations {
-  float: right;
-  margin: 10px 16px 0 0;
-  line-height: 2.5;
 }

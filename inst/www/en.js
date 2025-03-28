@@ -122,6 +122,7 @@ var texts = {
     Table: "Table",
     goto: "go to",
     showonlyselecteditems: "Show only selected items",
+    Relations: "Relations",
     Variable: "Variable",
     Value: "Value",
     highlightneighbors: "Highlight neighbors",

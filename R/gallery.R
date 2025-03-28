@@ -311,6 +311,19 @@ treeGalleryWrapper <- function(tree, deep, initialType, tableformat, gallery_mod
   nodes <- nodes[!is.na(nodes)]
   nodes <- data.frame(name=nodes)
 
+  check_ids <- function(treeids,nodesids){
+      if(!length(intersect(nodesids,treeids))){
+        warning("nodes: no nodes matches the tree")
+      }else{
+        if(length(setdiff(treeids,nodesids))){
+          warning("nodes: some tree ids are missing in nodes")
+        }
+        if(length(setdiff(nodesids,treeids))){
+          warning("nodes: some nodes are missing in tree")
+        }
+      }
+  }
+
   if(!is.null(arguments$nodes)){
     name <- arguments$name
     if(is.data.frame(arguments$nodes)){
@@ -318,6 +331,7 @@ treeGalleryWrapper <- function(tree, deep, initialType, tableformat, gallery_mod
         name <- colnames(arguments$nodes)[1]
       }
       colnames(nodes)[1] <- name
+      check_ids(nodes[[name]],arguments$nodes[[name]])
       nodeorder <- c(intersect(arguments$nodes[[name]],nodes[[name]]),setdiff(nodes[[name]],arguments$nodes[[name]]))
       nodes <- merge(nodes, arguments$nodes, by=name, all.x=TRUE)
     }else if(is.list(arguments$nodes)){
@@ -341,6 +355,7 @@ treeGalleryWrapper <- function(tree, deep, initialType, tableformat, gallery_mod
         nodes <- merge(nodes, arguments$nodes[[n]], by=name, all.x=TRUE)
       }
       nodeorder <- unique(nodeorder)
+      check_ids(initialnodes,nodeorder)
       nodeorder <- c(intersect(nodeorder,initialnodes),setdiff(initialnodes,nodeorder))
       for(d in dupnames){
         nodes[[d]] <- NA
@@ -436,10 +451,10 @@ treeGalleryWrapper <- function(tree, deep, initialType, tableformat, gallery_mod
           types <- unique(types)
           types <- types[!is.na(types)]
           gallery$options$nodeTypes <- types
-    }
-
-    if(!is.null(initialType)){
-      gallery$options$initialType <- as.character(initialType)[1]
+          if(is.null(initialType)){
+            initialType <- types[1]
+          }
+          gallery$options$initialType <- as.character(initialType)[1]
     }
   }
 

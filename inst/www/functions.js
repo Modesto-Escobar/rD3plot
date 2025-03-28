@@ -3160,12 +3160,13 @@ function tableWrapper(){
         tbody = table.select("tbody");
 
     if(!columnwidths.length){
+      var maxwidth = Math.max(table.node().offsetWidth / thead.selectAll("tr > th").size(),300);
       thead.selectAll("tr > th").each(function(d,i){
-        columnwidths[i] = Math.min(this.offsetWidth,300);
+        columnwidths[i] = Math.min(this.offsetWidth,maxwidth);
       });
       tbody.selectAll("tr").each(function(){
         d3.select(this).selectAll("td").each(function(d,i){
-          var w = Math.min(this.offsetWidth+10,300);
+          var w = Math.min(this.offsetWidth+10,maxwidth);
           if(w > columnwidths[i]){
             columnwidths[i] = w;
           }
