@@ -156,6 +156,7 @@ function gallery(Graph){
         .attr("aria-label",texts["Table"])
         .attr("title",texts["Table"])
         .on("click",function(){
+          window.scrollTo(0, 0);
           displayTable(Tree ? Tree.typeFilter : false);
         })
         .append("svg")
@@ -670,6 +671,40 @@ function gallery(Graph){
           div.select(".items-container").remove();
         }
       })
+  }
+
+  function displayFrequencies(){
+    var frequencyBars = displayFreqBars()
+        .nodenames(getSelectOptions(false,Graph,Tree).filter(function(d){ return d!=Graph.options.nodeName; }))
+        .updateSelection(function(){
+          galleryItems.selectAll(".item-card").each(function(n){
+            var thisitemcard = d3.select(this);
+            var n = Graph.filteredOrderedData[thisitemcard.attr("card-index")];
+            thisitemcard.classed("selected",n["selected"]);
+          });
+          updateSelectionTools();
+          frequencyBars(sidecontent);
+        })
+        .filterHandler({
+          addFilter: function(name,values){
+            filterSelection();
+            displayFrequencies();
+          },
+          removeFilter: function(){
+            selectedValues.clear();
+            selectedValues.applyFilter();
+            clearTreeParent();
+            displayGraph();
+            displayFrequencies();
+          }
+        })
+        .nodes(Graph.filteredOrderedData);
+
+    window.scrollTo(0, 0);
+    body.classed("display-filterpanel",true);
+    sidepanel.classed("show-frequencies",true);
+
+    frequencyBars(sidecontent);
   }
 
   function displayTable(tableitem){

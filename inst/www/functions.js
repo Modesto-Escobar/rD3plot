@@ -1788,10 +1788,6 @@ function displayFreqBars(){
       div;
   
   function exports(sel){
-
-  div = sel.select("div.frequency-barplots");
-
-  if(div.empty()){
     sel.selectAll("*").remove();
     div = sel.append("div");
     div.attr("class","frequency-barplots");
@@ -1821,7 +1817,6 @@ function displayFreqBars(){
             filterHandler.removeFilter();
           })
     }
-  }
 
   var renderPercentage = frequencies=="relative" ? "%" : "";
 
@@ -2195,12 +2190,17 @@ function displayFreqBars(){
           .attr("title","wordcloud")
           .attr("src",b64Icons.wordcloud)
           .on("click",function(){
+            var divparent = d3.select(div.node().parentNode);
             if(wordclouds.has(name)){
               wordclouds.remove(name);
-              exports(d3.select(div.node().parentNode));
+              exports(divparent);
             }else{
               wordclouds.add(name);
-              applyColor(name);
+              if(applyColor){
+                applyColor(name);
+              }else{
+                exports(divparent);
+              }
             }
           })
         }
