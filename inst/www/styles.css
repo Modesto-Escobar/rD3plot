@@ -1493,6 +1493,9 @@ svg .legend-bottom-button > text{
   top: 0;
   left: 0;
 }
+.frequency-barplots > .bar-plot > svg > g > g.freq-bar > rect.freq1 {
+  fill: #cbdefb;
+}
 .frequency-barplots > .bar-plot > .freq-bar > span {
   position: absolute;
   display: inline-block;

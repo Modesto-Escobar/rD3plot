@@ -1100,6 +1100,7 @@ body > div.tables > .table-top-header > .only-selected-data {
 .frequency-barplots > .bar-plot > h2 > img {
   cursor: pointer;
   float: right;
+  filter: brightness(0%);
 }
 .frequency-barplots > .bar-plot > .freq-bar {
   position: relative;
@@ -1128,9 +1129,12 @@ body > div.tables > .table-top-header > .only-selected-data {
   z-index: 1;
   top: 0;
   left: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  width: 100%;
 }
 .frequency-barplots > .bar-plot > .show-more-less-bars {
-  color: #2f7bee;
+  color: #000000;
   padding: 4px;
   margin-bottom: 4px;
   display: inline-block;
@@ -1152,6 +1156,7 @@ body > div.tables > .table-top-header > .only-selected-data {
     background-position: center;
     background-repeat: no-repeat;
     pointer-events: none;
+    filter: brightness(0%);
 }
 .frequency-barplots > .bar-plot > .show-more-less-bars > .show-less-bars:after {
     transform: rotate(180deg);
@@ -1187,8 +1192,9 @@ body > div.tables > .table-top-header > .only-selected-data {
 .frequency-barplots > .freq-header > div:nth-child(2) {
   text-align: right;
 }
-.frequency-barplots > .freq-header > div:nth-child(2) > img {
+.frequency-barplots > .freq-header > div > img.clear {
   cursor: pointer;
+  filter: brightness(0%);
 }
 
 .filterpanel > .filter-side-panel.show-frequencies {
@@ -1196,4 +1202,28 @@ body > div.tables > .table-top-header > .only-selected-data {
 }
 .filterpanel > .filter-side-panel.show-frequencies > .side-panel-bottom > button.primary.clear {
   display: none;
+}
+
+/* select wrapper */
+.select-wrapper {
+    display: inline-block;
+    position: relative;
+}
+.select-wrapper:after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 28px;
+    height: 100%;
+    background-image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTE4IDlMMTIgMTVMNiA5IiBzdHJva2U9IiMyRjdCRUUiIHN0cm9rZS13aWR0aD0iMiIgZmlsbD0ibm9uZSIvPgo8L3N2Zz4=);
+    background-position: center;
+    background-repeat: no-repeat;
+    pointer-events: none;
+    filter: brightness(0%);
+}
+.select-wrapper > select {
+    width: 100%;
+    position: relative;
+    cursor: pointer;
 }

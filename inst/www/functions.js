@@ -1809,10 +1809,10 @@ function displayFreqBars(){
         .text(String)
 
     var headerButtons = header.append("div")
-    if(filterHandler){
-      headerButtons.append("img")
-          .attr("title",texts.resetfilter)
-          .attr("src",b64Icons.removefilter)
+    if(filterHandler && filterHandler.removeFilter && (!filterHandler.checkFilter || filterHandler.checkFilter())){
+        headerButtons.append("button")
+          .attr("class","primary clear")
+          .text(texts.clearfilters)
           .on("click",function(){
             filterHandler.removeFilter();
           })
@@ -2153,7 +2153,7 @@ function displayFreqBars(){
           .attr("height", function(d) { return h - y(d.y); })
           .style("fill", nodeColor==name && colorScale ? function(d){
             return colorScale((d.x0+d.x1)/2);
-          } : basicColors.lightBlue)
+          } : null)
 
       if(selectedValues.length){
         columns.append("rect")
@@ -2220,7 +2220,7 @@ function displayFreqBars(){
             applyColor(name);
           })
         }
-        if(filterHandler){
+        if(filterHandler && filterHandler.addFilter){
           h2.append("img")
           .attr("title",texts.filter)
           .attr("src",b64Icons.filter)

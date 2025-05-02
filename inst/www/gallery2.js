@@ -696,6 +696,9 @@ function gallery(Graph){
             clearTreeParent();
             displayGraph();
             displayFrequencies();
+          },
+          checkFilter: function(){
+            return selectedValues.keys().length;
           }
         })
         .nodes(Graph.filteredOrderedData);
@@ -1304,8 +1307,18 @@ function gallery(Graph){
 'div.tutorial > .img-and-text > div:first-child { border-color: '+pallete[3]+'; }' +
 'div.tutorial span.highlight { color: '+pallete[3]+'; }' +
 'div.tutorial-icon { background-color: '+pallete[0]+'; }' +
-'svg.tutorial-arrow > path { fill: '+pallete[3]+'; }'
+'svg.tutorial-arrow > path { fill: '+pallete[3]+'; }' +
+'.frequency-barplots > .bar-plot > .freq-bar > div.freq1 { background-color: '+checkBrightness(pallete[0])+'; }' +
+'.frequency-barplots > .bar-plot > svg > g > g.freq-bar > rect.freq1 { fill: '+checkBrightness(pallete[0])+'; }'
         )
+
+    function checkBrightness(color){
+      color = d3.hsl(color);
+      if(color.l < 0.66){
+        color.l = 0.66;
+      }
+      return color;
+    }
 
     function contrast(color){
       return d3.hsl(color).l > 0.66 ? '#000000' : '#ffffff';
