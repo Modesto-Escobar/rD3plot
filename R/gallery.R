@@ -151,9 +151,9 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
 
 gallery2_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL,
     order = NULL, decreasing = FALSE, ntext = NULL, mainframeHeight = NULL,
-    image = NULL, zoom = NULL, main = NULL, note = NULL, frequencies = FALSE,
-    tutorial = FALSE, tableButton = FALSE, export = FALSE, colorScheme = 0,
-    language = c("en", "es", "ca"), dir = NULL){
+    mainframeWidth = NULL, image = NULL, zoom = NULL, main = NULL, note = NULL,
+    frequencies = FALSE, tutorial = FALSE, tableButton = FALSE, export = FALSE,
+    colorScheme = 0, language = c("en", "es", "ca"), dir = NULL){
 
   if(is.null(name)){
     name <- colnames(nodes)[1]
@@ -180,10 +180,19 @@ gallery2_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL,
   }
 
   if(!is.null(mainframeHeight)){
-    if(!(is.numeric(mainframeHeight) && mainframeHeight>=0.1 && mainframeHeight<=1)){
-      warning("mainframeHeight: must be numeric between 0.1 and 1")
+    if(!is.numeric(mainframeHeight)){
+      warning("mainframeHeight: must be numeric")
+    }else{
+      options[["mainframeHeight"]] <- mainframeHeight
     }
-    options[["mainframeHeight"]] <- mainframeHeight
+  }
+
+  if(!is.null(mainframeWidth)){
+    if(!is.numeric(mainframeWidth)){
+      warning("mainframeWidth: must be numeric")
+    }else{
+      options[["mainframeWidth"]] <- mainframeWidth
+    }
   }
 
   if(!is.null(zoom)){

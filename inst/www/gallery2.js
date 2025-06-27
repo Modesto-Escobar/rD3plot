@@ -1454,11 +1454,25 @@ function gallery(Graph){
     if(Graph.options.mainframeHeight){
       h = h*Graph.options.mainframeHeight;
     }
+    if(wh<h){
+      h = wh;
+    }
     mainframe.style("height",h+"px");
 
     if(wh>h){
       var nmt = mt + ((wh-h)/2);
       mainframe.style("margin-top",nmt+"px")
+    }
+
+    if(Graph.options.mainframeWidth){
+      var w = parseInt(mainframe.style("max-width")),
+          ww = window.innerWidth-(mt*2);
+      w = w*Graph.options.mainframeWidth;
+      if(ww<w){
+        w = ww;
+      }
+      mainframe.style("max-width",w+"px");
+      mainframe.style("width",w+"px");
     }
 
     function closeMainFrame(){
