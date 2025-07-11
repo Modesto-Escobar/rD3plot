@@ -1417,7 +1417,13 @@ function gallery(Graph){
       if(Graph.options.imageItems){
         mainframe.select(".info-template > div")
           .insert("img",":first-child")
+          .classed("float",Graph.options.mainframeImage==2 ? true : false)
           .attr("src",nodes[index][Graph.options.imageItems])
+          .on("load",Graph.options.mainframeImage==0 ? function(){
+            if(this.naturalHeight>this.naturalWidth){
+              d3.select(this).classed("float",true);
+            }
+          }:null)
       }
 
       if(Tree){

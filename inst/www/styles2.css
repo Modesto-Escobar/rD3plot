@@ -915,7 +915,7 @@ p.window-message {
   padding: 0 56px;
   margin: 0 -56px;
 }
-.info-template > div > img {
+.info-template > div > img.float {
   float: right;
   margin: 0 0 16px 16px;
   width: 50%;

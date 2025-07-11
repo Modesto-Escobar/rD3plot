@@ -3325,8 +3325,7 @@ function transposeNodes(Graphnodes,nodenames,options){
       for(var p in d) {
         if(p!=options.nodeName && p!=options.nodeText && p!=options.nodeInfo){
           if(typeof d[p] == "string" && d[p].indexOf("|")!=-1){
-            var aux = d[p].split("|");
-            d[p] = aux.map(function(d){ return d=="" ? null : (isNaN(parseInt(d)) ? d : +d); });
+            d[p] = d[p].split("|").filter(function(d){ return d; }).map(function(d){ return isNaN(+d) ? d : +d; });
           }
         }
       }

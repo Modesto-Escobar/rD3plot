@@ -450,7 +450,7 @@ rd3_multiPages <- function(x, title = NULL, columns = NULL, imageSize = NULL, de
         file.copy(img,paste0(dir,"/images"))
       }
     }
-    if(identical(show,TRUE)){
+    if(interactive() && identical(show,TRUE)){
       browseURL(normalizePath(paste(dir, "index.html", sep = "/")))
     }else{
       message(paste0("The graph has been generated in the \"",normalizePath(dir),"\" path."))

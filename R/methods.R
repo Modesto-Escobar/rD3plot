@@ -124,7 +124,11 @@ plot.multi_rd3 <- function(x, dir = tempDir(), ...){
   }else{
     multiGraph(x$graphs, dir)
   }
-  browseURL(normalizePath(paste(dir, "index.html", sep = "/")))
+  if(interactive()){
+    browseURL(normalizePath(paste(dir, "index.html", sep = "/")))
+  }else{
+    message(paste0("The graph has been generated in the \"",normalizePath(dir),"\" path."))
+  }
 }
 
 objCreate <- function(x,dir){
@@ -149,7 +153,11 @@ objCreate <- function(x,dir){
 
 plotObj <- function(x,dir){
   objCreate(x,dir)
-  browseURL(normalizePath(paste(dir, "index.html", sep = "/")))
+  if(interactive()){
+    browseURL(normalizePath(paste(dir, "index.html", sep = "/")))
+  }else{
+    message(paste0("The graph has been generated in the \"",normalizePath(dir),"\" path."))
+  }
 }
 
 shiny_rd3 <- function(x) UseMethod("shiny_rd3", x)
