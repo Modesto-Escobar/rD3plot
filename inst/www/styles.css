@@ -1636,6 +1636,7 @@ div.grid-gallery > .gallery-items > .item > .img-wrapper {
   -webkit-box-sizing: border-box;
   border: solid 3px;
   border-color: #ffffff;
+  position: relative;
 }
 div.grid-gallery > .gallery-items.rounded-items > .item > .img-wrapper {
   border-radius: 50%;
@@ -1652,6 +1653,20 @@ div.grid-gallery > .gallery-items > .item > .img-wrapper > img {
 }
 div.grid-gallery > .gallery-items.rounded-items > .item > .img-wrapper > img {
   object-fit: cover;
+}
+div.grid-gallery > .gallery-items > .item > .img-wrapper > .copyright {
+  background: #ffffff;
+  border-radius: 50%;
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  font-weight: bold;
+  line-height: 28px;
+  font-size: 20px;
+  text-align: center;
 }
 div.grid-gallery > .gallery-items > .item > span {
   display: block;

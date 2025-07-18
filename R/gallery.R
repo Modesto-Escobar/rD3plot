@@ -59,8 +59,8 @@ galleryCreate <- function(gallery, dir){
 
 gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
     border = NULL, ntext = NULL, info = NULL, infoFrame = c("right","left"),
-    image = NULL, zoom = 1, itemsPerRow = NULL, main = NULL, note = NULL,
-    showLegend = TRUE, frequencies = FALSE, labelTooltip = TRUE,
+    image = NULL, imageCopy = NULL, zoom = 1, itemsPerRow = NULL, main = NULL,
+    note = NULL, showLegend = TRUE, frequencies = FALSE, labelTooltip = TRUE,
     cexTooltip = 1, help = NULL, helpOn = FALSE, tutorial = FALSE,
     description = NULL, descriptionWidth = NULL, roundedItems = FALSE,
     ntextctrl = FALSE, controls = 1:5, cex = 1, defaultColor = "#1f77b4",
@@ -134,6 +134,7 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
       warning("image: name must match in nodes colnames.")
     }else{
       options[["imageItems"]] <- image
+      options <- checkColumn(options,"imageCopy",imageCopy)
     }
   }
 
@@ -149,12 +150,12 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
   return(gallery)
 }
 
-gallery2_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL,
-    order = NULL, decreasing = FALSE, ntext = NULL, mainframeHeight = NULL,
-    mainframeWidth = NULL, mainframeImage = 0, image = NULL, zoom = NULL,
-    main = NULL, note = NULL, frequencies = FALSE, tutorial = FALSE,
-    tableButton = FALSE, export = FALSE, colorScheme = 0,
-    language = c("en", "es", "ca"), dir = NULL){
+gallery2_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL, order = NULL,
+    decreasing = FALSE, ntext = NULL,
+    mainframeHeight = NULL, mainframeWidth = NULL, mainframeImage = 0,
+    image = NULL, imageCopy = NULL, zoom = NULL, main = NULL, note = NULL,
+    frequencies = FALSE, tutorial = FALSE, tableButton = FALSE, export = FALSE,
+    search = TRUE, colorScheme = 0,  language = c("en", "es", "ca"), dir = NULL){
 
   if(is.null(name)){
     name <- colnames(nodes)[1]
@@ -214,6 +215,7 @@ gallery2_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL,
   if (!is.null(main)) options[["main"]] <- main
   if (!is.null(note)) options[["note"]] <- note
 
+  options <- showSomething(options,"search",search)
   options <- showSomething(options,"tutorial",tutorial)
   options <- showSomething(options,"showTable",tableButton)
   options <- showSomething(options,"exportExcel",export)
@@ -228,6 +230,7 @@ gallery2_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL,
     }else{
       options[["imageItems"]] <- image
       nodes[,image] <- sub('\\|.*','', nodes[,image])
+      options <- checkColumn(options,"imageCopy",imageCopy)
     }
   }
 

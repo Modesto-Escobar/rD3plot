@@ -495,6 +495,14 @@ function gallery(Graph){
             d3.select(this.parentNode.parentNode).style("width",(currentGridHeight*this.ratio)+"px");
           } : null)
           .attr("src",function(n){ return n[options.imageItems]; });
+      if(options.imageCopy){
+        imgWrapper.append("span")
+            .attr("class","copyright")
+            .attr("title",function(n){
+              return n[options.imageCopy];
+            })
+            .html("&copy;")
+      }
     }
 
     itemsEnter.append("span")
