@@ -23,10 +23,17 @@ galleryCreate <- function(gallery, dir){
   script <- "gallery.js"
   style <- "styles.css"
   mode <- 1
-  if(!is.null(gallery$options$mode) && gallery$options$mode==2){
-    mode <- 2
-    script <- "gallery2.js"
-    style <- "styles2.css"
+  if(!is.null(gallery$options$mode)){
+    if(gallery$options$mode==2){
+      mode <- 2
+      script <- "gallery2.js"
+      style <- "styles2.css"
+    }else if(gallery$options$mode==3){
+      mode <- 3
+      script <- "gallery3.js"
+      style <- "styles3.css"
+      gallery$tree <- NULL
+    }
   }
   if(!is.null(gallery$tree)){
     if(mode==2){
@@ -235,6 +242,95 @@ gallery2_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL, orde
   }
 
   options[["mode"]] <- 2
+
+  # create gallery
+  gallery <- structure(list(nodes=nodes,options=options),class="gallery_rd3")
+
+  if(!is.null(dir)){
+    galleryCreate(gallery,dir)
+  }
+  return(gallery)
+}
+
+gallery3_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL, order = NULL,
+    decreasing = FALSE, ntext = NULL,
+    mainframeHeight = NULL, mainframeWidth = NULL, mainframeImage = 0,
+    image = NULL, imageCopy = NULL, zoom = NULL, main = NULL, note = NULL,
+    search = TRUE, language = c("en", "es", "ca"), dir = NULL){
+
+  if(is.null(name)){
+    name <- colnames(nodes)[1]
+  }
+  rownames(nodes) <- nodes[[name]]
+
+  # options
+  options <- list(nodeName = name)
+  if(is.null(label)){
+    options[["nodeLabel"]] <- name
+  }else{
+    options <- checkColumn(options,"nodeLabel",label)
+  }
+  options <- checkColumn(options,"nodeSubtitle",subtitle)
+  if(is.character(order)){
+    options[["nodeOrder"]] <- order
+  }
+  if(is.logical(decreasing)){
+    options[["decreasing"]] <- decreasing
+  }
+  options <- checkColumn(options,"nodeText",ntext)
+  if(!is.null(options[["nodeText"]])){
+    nodes[,options[["nodeText"]]] <- sub('\\|.*','', nodes[,options[["nodeText"]]])
+  }
+
+  if(!is.null(mainframeHeight)){
+    if(!is.numeric(mainframeHeight)){
+      warning("mainframeHeight: must be numeric")
+    }else{
+      options[["mainframeHeight"]] <- mainframeHeight
+    }
+  }
+
+  if(!is.null(mainframeWidth)){
+    if(!is.numeric(mainframeWidth)){
+      warning("mainframeWidth: must be numeric")
+    }else{
+      options[["mainframeWidth"]] <- mainframeWidth
+    }
+  }
+
+  if(!is.null(mainframeImage)){
+    if(!is.numeric(mainframeImage)){
+      warning("mainframeImage: must be numeric")
+    }else{
+      options[["mainframeImage"]] <- mainframeImage
+    }
+  }
+
+  if(!is.null(zoom)){
+    if(!is.numeric(zoom)){
+      warning("zoom: must be numeric")
+    }
+    options[["zoom"]] <- zoom
+  }
+
+  if (!is.null(main)) options[["main"]] <- main
+  if (!is.null(note)) options[["note"]] <- note
+
+  options <- showSomething(options,"search",search)
+  options[["language"]] <- checkLanguage(language)
+
+  if (!is.null(image)){
+    image <- image[1]
+    if(!image %in% colnames(nodes)){
+      warning("image: name must match in nodes colnames.")
+    }else{
+      options[["imageItems"]] <- image
+      nodes[,image] <- sub('\\|.*','', nodes[,image])
+      options <- checkColumn(options,"imageCopy",imageCopy)
+    }
+  }
+
+  options[["mode"]] <- 3
 
   # create gallery
   gallery <- structure(list(nodes=nodes,options=options),class="gallery_rd3")
