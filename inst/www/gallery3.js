@@ -1154,6 +1154,10 @@ function gallery(Graph){
     var infoTemplate = mainframe.select(".mainframe-content > .info-template");
     if(!infoTemplate.empty()){
 
+      infoTemplate
+        .attr("lang",Graph.options.language)
+        .style("hyphens","auto");
+
       if(Graph.options.imageItems){
         mainframe.select(".info-template > div")
           .insert("img",":first-child")
@@ -1285,6 +1289,9 @@ ValueSelector.prototype = {
           }else{
             var values = selectedValues[k].values().map(String);
             if(n[k]===null && values.indexOf("null")!=-1){
+              continue;
+            }
+            if(n[k]==="" && values.indexOf("")!=-1){
               continue;
             }
             if(n[k] && intersection(values,(Array.isArray(n[k]) ? n[k] : [n[k]])).length){

@@ -48,7 +48,22 @@ Modesto Escobar, Department of Sociology and Communication, University of Salama
 data("finches")
 finches$species <- system.file("extdata", finches$species,
         package="rD3plot") # copy path to the species field
-gallery <- gallery2_rd3(finches, image="species")
+finches$attribution <- c(
+  "2009 - Peter Wilton",
+  "2007 - putneymark",
+  "2007 - putneymark",
+  "2012 - Joseph C Boone",
+  "2007 - putneymark",
+  "2007 - putneymark",
+  "2013 - Simon J. Tonge",
+  "2009 - Paul McFarling, Charles Darwin Foundation",
+  "2009 - Mike Comber",
+  "2014 - Lip Kee",
+  "2006 - User:BBODO on english wikipedia",
+  "2010 - Michael Dvorak",
+  "2000 - Paul McFarling, Charles Darwin Foundation"
+)
+gallery <- gallery2_rd3(finches, image="species",imageCopy="attribution")
 \dontrun{
 plot(gallery)
 }

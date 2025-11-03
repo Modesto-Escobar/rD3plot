@@ -73,6 +73,8 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
     ntextctrl = FALSE, controls = 1:5, cex = 1, defaultColor = "#1f77b4",
     language = c("en", "es", "ca"), dir = NULL){
 
+  nodes <- as.data.frame(nodes)
+
   if(is.null(name)){
     name <- colnames(nodes)[1]
   }
@@ -163,6 +165,8 @@ gallery2_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL, orde
     image = NULL, imageCopy = NULL, zoom = NULL, main = NULL, note = NULL,
     frequencies = FALSE, tutorial = FALSE, tableButton = FALSE, export = FALSE,
     search = TRUE, colorScheme = 0,  language = c("en", "es", "ca"), dir = NULL){
+
+  nodes <- as.data.frame(nodes)
 
   if(is.null(name)){
     name <- colnames(nodes)[1]
@@ -257,6 +261,8 @@ gallery3_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL, orde
     mainframeHeight = NULL, mainframeWidth = NULL, mainframeImage = 0,
     image = NULL, imageCopy = NULL, zoom = NULL, main = NULL, note = NULL,
     search = TRUE, language = c("en", "es", "ca"), dir = NULL){
+
+  nodes <- as.data.frame(nodes)
 
   if(is.null(name)){
     name <- colnames(nodes)[1]
