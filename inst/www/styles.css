@@ -702,6 +702,9 @@ div.goback:after {
   width: 20px;
   overflow: hidden;
 }
+.topbar-box > .multi-search > .search-box > div.check-container {
+  margin-top: 5px;
+}
 .multi-search > .search-box > div.check-container > span {
   display: block;
   height: 14px;
@@ -717,6 +720,11 @@ div.goback:after {
   -webkit-transform: rotate(45deg);
   -ms-transform: rotate(45deg);
   transform: rotate(45deg);
+}
+.multi-search > .search-box > div.check-container > span.no:after {
+  content: '\D7';
+  margin: 0 0 0 6px;
+  font-weight: bold;
 }
 .multi-search > .search-box > div.text-wrapper {
   padding: 10px 30px 10px 20px;
@@ -746,6 +754,12 @@ div.goback:after {
   height: 300px;
 }
 .multi-search > .search-box.focused > p {
+  display: block;
+}
+.multi-search > .search-box.noresults > div.text-wrapper > div.text-content > textarea {
+  height: 30px;
+}
+.multi-search > .search-box.noresults > p.noresults {
   display: block;
 }
 .multi-search:after,

@@ -260,7 +260,7 @@ gallery3_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL, orde
     decreasing = FALSE, ntext = NULL,
     mainframeHeight = NULL, mainframeWidth = NULL, mainframeImage = 0,
     image = NULL, imageCopy = NULL, zoom = NULL, main = NULL, note = NULL,
-    search = TRUE, language = c("en", "es", "ca"), dir = NULL){
+    search = TRUE, cex = 1, language = c("en", "es", "ca"), dir = NULL){
 
   nodes <- as.data.frame(nodes)
 
@@ -323,6 +323,7 @@ gallery3_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL, orde
   if (!is.null(note)) options[["note"]] <- note
 
   options <- showSomething(options,"search",search)
+  options[["cex"]] <- check_cex(cex)
   options[["language"]] <- checkLanguage(language)
 
   if (!is.null(image)){

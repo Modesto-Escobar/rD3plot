@@ -91,7 +91,7 @@ function gallery(Graph){
     .attr("class","pagination")
     .append("span")
 
-  // node multi search
+  // node search
   if(Graph.options.search){
     topbarButtons.append("div")
       .attr("class","topbar-search")
@@ -100,9 +100,19 @@ function gallery(Graph){
         .column(Graph.options.nodeLabel)
         .updateSelection(displayGraph)
         .updateFilter(function(){
-          filterSelection();
-          nodes.forEach(function(node){ delete node.selected; });
-          displayGraph();
+          if(!nodes.filter(function(node){ return node.selected; }).length){
+            var noresults = topbarButtons.select(".topbar-search > .simple-search")
+              .append("div")
+                .attr("class","noresults")
+            noresults.append("span").text(texts.noresults);
+            setTimeout(function(){
+              noresults.remove();
+            }, 5000);
+          }else{
+            filterSelection();
+            nodes.forEach(function(node){ delete node.selected; });
+            displayGraph();
+          }
           topbarButtons.select(".show-search-container").style("display",null);
           topbarButtons.select(".topbar-search").style("display",null);
         }))
@@ -249,6 +259,10 @@ function gallery(Graph){
 
   var galleryItems = gallery.append("div")
         .attr("class","gallery-items")
+
+  if(Graph.options.cex){
+    galleryItems.style("font-size", 16*Graph.options.cex + "px")
+  }
 
   var viewMore = gallery.append("div")
     .attr("class","loading-icon")

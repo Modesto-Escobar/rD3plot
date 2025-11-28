@@ -193,7 +193,22 @@ function gallery(Graph){
         .data(itemsFiltered ? itemsFiltered : nodes)
         .column(options.nodeLabel)
         .updateSelection(displayGraph)
-        .updateFilter(searchFunction));
+        .updateFilter(function(){
+          if(selectedNames().length){
+            searchFunction();
+          }else{
+            if(!galleryBox.select(".topbar-box > .multi-search > .search-box.noresults").size()){
+              var searchbox = galleryBox.select(".topbar-box > .multi-search > .search-box");
+              var noresults = searchbox.classed("noresults",true)
+                .append("p").attr("class","noresults")
+                  .text(texts.noresults);
+              setTimeout(function(){
+                searchbox.classed("noresults",false)
+                noresults.remove();
+              }, 5000);
+            }
+          }
+        }));
 
   // count elements
   topBar.addBox(elementsCountInst);

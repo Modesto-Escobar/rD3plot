@@ -128,5 +128,6 @@ var texts = {
     highlightneighbors: "Ressaltar veïns",
     clearfilters: "Filtres nets",
     close: "tancar",
-    filtermenu: "Menu de filtres"
+    filtermenu: "Menu de filtres",
+    noresults: "Sense resultats"
   };

@@ -1006,7 +1006,22 @@ function displaySidebar(){
     multiSearch.data(Graph.nodes.filter(checkSelectableNode))
         .column(options.nodeLabel ? options.nodeLabel : options.nodeName)
         .updateSelection(showTables)
-        .updateFilter(switchEgoNet);
+        .updateFilter(function(){
+          if(Graph.nodes.filter(function(d){ return d.selected; }).length){
+            switchEgoNet();
+          }else{
+            if(!sidebar.select(".subSearch > .multi-search > .search-box.noresults").size()){
+              var searchbox = sidebar.select(".subSearch > .multi-search > .search-box");
+              var noresults = searchbox.classed("noresults",true)
+                .append("p").attr("class","noresults")
+                  .text(texts.noresults);
+              setTimeout(function(){
+                searchbox.classed("noresults",false)
+                noresults.remove();
+              }, 5000);
+            }
+          }
+        });
     sidebar.append("div")
       .attr("class","subSearch")
       .call(multiSearch);

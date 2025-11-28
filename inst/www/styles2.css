@@ -589,7 +589,7 @@ button.switch-button.active:after {
 }
 .multi-search > .search-box > div.check-container {
   position: absolute;
-  margin-top: 10px;
+  margin-top: 18px;
   height: 20px;
   width: 20px;
   overflow: hidden;
@@ -609,6 +609,11 @@ button.switch-button.active:after {
   -webkit-transform: rotate(45deg);
   -ms-transform: rotate(45deg);
   transform: rotate(45deg);
+}
+.multi-search > .search-box > div.check-container > span.no:after {
+  content: '\D7';
+  margin: 0 0 0 6px;
+  font-weight: bold;
 }
 .multi-search > .search-box > div.text-wrapper {
   padding: 12px 40px 12px 20px;
@@ -646,6 +651,12 @@ button.switch-button.active:after {
   content: '';
   display: block;
   clear: both;
+}
+.multi-search > .search-box.noresults > div.text-wrapper > div.text-content > textarea {
+  height: 30px;
+}
+.multi-search > .search-box.noresults > p {
+  display: block;
 }
 
 /* simple search */

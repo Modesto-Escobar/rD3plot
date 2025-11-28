@@ -1,7 +1,7 @@
 Package: rD3plot
 Type: Package
-Version: 1.1.41
-Date: 2025-11-03
+Version: 1.1.42
+Date: 2025-11-28
 Title: Interactive Networks, Timelines, Barplots, Galleries with
         'D3.js'
 Description: Creates interactive analytic graphs with 'R'. It joins the data analysis power of R and the visualization libraries of JavaScript in one package. The package provides interactive networks, timelines, barplots, image galleries and evolving networks. Graphs are represented as 'D3.js' graphs embedded in a web page ready for its interactive analysis and exploration.

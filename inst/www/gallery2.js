@@ -105,10 +105,22 @@ function gallery(Graph){
         .column(Graph.options.nodeLabel)
         .updateSelection(displayGraph)
         .updateFilter(function(){
-          searchFunction();
-          nodes.forEach(function(node){ delete node.selected; });
-          displayGraph();
-          highlightBreadcrumbsButtons();
+          if(!nodes.filter(function(node){ return node.selected; }).length){
+            if(!topbarButtons.select(".topbar-search > .multi-search > .search-box.noresults").size()){
+              var searchbox = topbarButtons.select(".topbar-search > .multi-search > .search-box");
+              var noresults = searchbox.classed("noresults",true)
+                .append("p").text(texts.noresults);
+              setTimeout(function(){
+                searchbox.classed("noresults",false)
+                noresults.remove();
+              }, 5000);
+            }
+          }else{
+            searchFunction();
+            nodes.forEach(function(node){ delete node.selected; });
+            displayGraph();
+            highlightBreadcrumbsButtons();
+          }
           topbarButtons.select(".show-search-container").style("display",null);
           topbarButtons.select(".topbar-search").style("display",null);
         })

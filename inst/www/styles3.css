@@ -178,6 +178,7 @@ button.switch-button.active:after {
   position: relative;
   color: #005ea5;
   line-height: 120%;
+  margin-bottom: 1.5em;
 }
 .grid-gallery-mode3 > .gallery-items > .item-card > .item-card-inner > span.subtitle {
   display: block;
@@ -642,6 +643,18 @@ button.switch-button.active:after {
 .topbar-search > .simple-search > input {
   border: solid 1px #000000;
   font-size: 20px;
+}
+.topbar-search > .simple-search > .noresults {
+  position: absolute;
+  top: unset;
+  left: 0;
+  background-color: #ffffff;
+  z-index: 1;
+  width: 100%;
+  padding: 16px 0;
+}
+.topbar-search > .simple-search > .noresults > span {
+  padding: 0 24px;
 }
 
 /* slider */
