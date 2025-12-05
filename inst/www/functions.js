@@ -1292,24 +1292,28 @@ function displayMultiSearch(){
 
     function doneTyping () {
           var cutoff = data.length>1000 ? 3 : 1,
-              values = searchBoxInput.property("value").split("\n").filter(function(d){
-                return d.length>=cutoff;
-              });
+              values = searchBoxInput.property("value").split("\n");
+
+          if(values.length && !values[values.length-1]){
+            values.pop();
+          }
 
           checkContainer.selectAll("span").remove();
           if(values.length){
             data.forEach(function(node){ delete node.selected; });
 
             values.forEach(function(value){
-            var found = false;
-              value = cleanString(value);
-              data.forEach(function(node){
-                if(cleanString(node[column]).match(value)){
-                  node.selected = found = true;
-                }
-              });
-            checkContainer.append("span")
-              .attr("class",found ? "yes": "no")
+              var found = false;
+              if(value.length>=cutoff){
+                value = cleanString(value);
+                data.forEach(function(node){
+                  if(cleanString(node[column]).match(value)){
+                    node.selected = found = true;
+                  }
+                });
+              }
+              checkContainer.append("span")
+                .attr("class",found ? "yes": "no")
             });
 
             updateSelection();

@@ -955,6 +955,16 @@ p.window-message {
   cursor: pointer;
 }
 
+.links-2-columns {
+  display: block;
+  width: 100%;
+}
+.links-2-columns > ul {
+  display: inline-block;
+  width: 50%;
+  vertical-align: top;
+}
+
 /* loading icon */
 .loading-icon > span,
 .loading-icon > svg {

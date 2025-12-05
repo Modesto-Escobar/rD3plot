@@ -1888,3 +1888,13 @@ pointer-events: none;
 .switch-reverse-order > h3 {
   padding-right: 4px;
 }
+
+.links-2-columns {
+  display: block;
+  width: 100%;
+}
+.links-2-columns > ul {
+  display: inline-block;
+  width: 50%;
+  vertical-align: top;
+}

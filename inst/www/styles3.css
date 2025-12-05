@@ -151,8 +151,7 @@ button.switch-button.active:after {
   background-color: #ffffff;
   border-radius: 0 0 150px 0;
   text-align: center;
-  max-width: 1400px;
-  margin: 0 auto;
+  margin: 0 16px;
 }
 .grid-gallery-mode3 > .gallery-items > h3 {
   font-size: 1.6em;
@@ -192,7 +191,7 @@ button.switch-button.active:after {
   margin: 24px;
 }
 .grid-gallery-mode3 > .gallery-items > .item-card > .item-card-inner > .img-wrapper {
-  height: 270px;
+  height: 267px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -251,14 +250,9 @@ button.switch-button.active:after {
   max-width: unset;
   width: calc(100% - 32px);
   z-index: 1;
-  padding: 8px 16px;
 }
 .fixed-topbar > .topbar > .topbar-topcontent {
-  float: right;
-  padding: 0;
-}
-.fixed-topbar > .topbar > .topbar-topcontent > .topbar-main {
-  display: none;
+  padding: 8px 16px;
 }
 .fixed-topbar > .topbar > .topbar-topcontent > .topbar-buttons {
   margin: 0;
@@ -276,6 +270,9 @@ button.switch-button.active:after {
 .topbar > .topbar-topcontent > .topbar-main {
   float: left;
   margin: 24px 0;
+}
+.fixed-topbar > .topbar > .topbar-topcontent > .topbar-main {
+  margin: 12px 0;
 }
 .topbar > .topbar-topcontent > .topbar-main > div > button.multipages-home {
   margin: 0 16px 0 0;
@@ -935,6 +932,16 @@ p.window-message {
 .info-template > div > .tree-relatives > span.linked {
   color: #005ea5;
   cursor: pointer;
+}
+
+.links-2-columns {
+  display: block;
+  width: 100%;
+}
+.links-2-columns > ul {
+  display: inline-block;
+  width: 50%;
+  vertical-align: top;
 }
 
 /* loading icon */

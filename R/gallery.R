@@ -259,7 +259,7 @@ gallery2_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL, orde
 gallery3_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL, order = NULL,
     decreasing = FALSE, ntext = NULL,
     mainframeHeight = NULL, mainframeWidth = NULL, mainframeImage = 0,
-    image = NULL, imageCopy = NULL, zoom = NULL, main = NULL, note = NULL,
+    image = NULL, imageCopy = NULL, imageRatio = NULL, zoom = NULL, main = NULL, note = NULL,
     search = TRUE, cex = 1, language = c("en", "es", "ca"), dir = NULL){
 
   nodes <- as.data.frame(nodes)
@@ -317,6 +317,13 @@ gallery3_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL, orde
       warning("zoom: must be numeric")
     }
     options[["zoom"]] <- zoom
+  }
+
+  if(!is.null(imageRatio)){
+    if(!is.numeric(imageRatio)){
+      warning("imageRatio: must be numeric")
+    }
+    options[["imageRatio"]] <- imageRatio
   }
 
   if (!is.null(main)) options[["main"]] <- main
