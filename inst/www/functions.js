@@ -1228,7 +1228,9 @@ function displayMultiSearch(){
       .attr("class","search-box")
 
     var checkContainer = searchBox.append("div")
-      .attr("class","check-container")
+      .attr("class","check-wrapper")
+      .append("div")
+        .attr("class","check-container")
 
     var typingTimer;
     var typingInterval = data.length>1000 ? 1000 : 500; 
@@ -1246,7 +1248,9 @@ function displayMultiSearch(){
           searchBox.classed("focused",true);
         })
         .on("blur",function(){
+          this.scrollTop = 0;
           searchBox.classed("focused",false);
+          checkContainer.style("margin-top",null);
         })
         .on("keydown",function(){
           clearTimeout(typingTimer);
@@ -1270,6 +1274,13 @@ function displayMultiSearch(){
             return;
           }
           
+          typingTimer = setTimeout(doneTyping, typingInterval);
+        })
+        .on("scroll",function(){
+          checkContainer.style("margin-top",String(-this.scrollTop)+"px");
+        })
+        .on("paste",function(){
+          clearTimeout(typingTimer);
           typingTimer = setTimeout(doneTyping, typingInterval);
         })
 
@@ -1303,12 +1314,21 @@ function displayMultiSearch(){
             data.forEach(function(node){ delete node.selected; });
 
             values.forEach(function(value){
-              var found = false;
-              if(value.length>=cutoff){
-                value = cleanString(value);
+              var found = false,
+                  subvalues = cleanString(value).split(" ").filter(function(d){ return d.length>=cutoff; });
+              if(subvalues.length){
                 data.forEach(function(node){
-                  if(cleanString(node[column]).match(value)){
-                    node.selected = found = true;
+                  var prevselected = node.selected;
+                  node.selected = true;
+                  subvalues.forEach(function(d){
+                    if(!cleanString(node[column]).match(d)){
+                      node.selected = false;
+                    }
+                  });
+                  if(node.selected){
+                    found = true;
+                  }else if(prevselected){
+                    node.selected = true;
                   }
                 });
               }

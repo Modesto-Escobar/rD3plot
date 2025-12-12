@@ -242,7 +242,7 @@ function gallery(Graph){
     .text(texts.clearfilters)
     .on("click",function(){
       selectedValues.clear();
-      selectedValues.applyFilter();
+      selectedValues.applyFilter(Graph.options);
       displayGraph();
       updateFiltersMarkers();
       sidecontent.selectAll(".plus-minus-button.expanded").dispatch("click");
@@ -436,7 +436,7 @@ function gallery(Graph){
           selectedValues.add(Graph.options.nodeName,n[Graph.options.nodeName]);
         }
       });
-      selectedValues.applyFilter();
+      selectedValues.applyFilter(Graph.options);
       displayGraph();
   }
 
@@ -556,7 +556,7 @@ function gallery(Graph){
       }else{
         selectedValues.remove(self.attr("filter-key"));
       }
-      selectedValues.applyFilter();
+      selectedValues.applyFilter(Graph.options);
       updateFiltersMarkers();
       displayGraph();
     }
@@ -598,7 +598,7 @@ function gallery(Graph){
           },
           removeFilter: function(){
             selectedValues.clear();
-            selectedValues.applyFilter();
+            selectedValues.applyFilter(Graph.options);
             displayGraph();
             displayFrequencies();
           },
@@ -757,7 +757,7 @@ function gallery(Graph){
       .text(texts.clearfilters)
       .on("click", function(){
         selectedValues.clear();
-        selectedValues.applyFilter();
+        selectedValues.applyFilter(Graph.options);
         displayGraph();
         displayTable(tableitem);
       });
@@ -864,7 +864,7 @@ function gallery(Graph){
           selectedValues.add(Graph.options.nodeName,d._name);
         }
       });
-      selectedValues.applyFilter();
+      selectedValues.applyFilter(Graph.options);
       displayGraph();
       updateFiltersMarkers();
     }
@@ -922,7 +922,7 @@ function gallery(Graph){
 
   function removeFilter(){
       selectedValues.clear();
-      selectedValues.applyFilter();
+      selectedValues.applyFilter(Graph.options);
       displayGraph();
   }
 
@@ -1013,7 +1013,7 @@ function gallery(Graph){
               selectedValues.remove(col);
               selectedValues.add(col,s[0]);
               selectedValues.add(col,s[1]);
-              selectedValues.applyFilter();
+              selectedValues.applyFilter(Graph.options);
               updateFiltersMarkers();
               displayGraph();
             }));
@@ -1046,6 +1046,28 @@ function gallery(Graph){
                   .width(16).height(16))
             }
 
+            if(type != 'string'){
+    var jointfilter = container.append("div")
+      .attr("class","joint-filter")
+    jointfilter.append("span")
+      .text('Joint filter')
+    jointfilter.append("button")
+      .attr("class","switch-button")
+      .classed("active",Graph.options.jointfilter)
+      .on("click",function(){
+        var self = d3.select(this);
+        self.classed("active",!self.classed("active"));
+        if(self.classed("active")){
+          Graph.options.jointfilter = true;
+        }else{
+          delete Graph.options.jointfilter;
+        }
+        selectedValues.applyFilter(Graph.options);
+        updateFiltersMarkers();
+        displayGraph();
+      })
+            }
+
             displayTags();
 
             function displayTags(filter){
@@ -1061,7 +1083,7 @@ function gallery(Graph){
                   .on("click",function(){
                     tag.classed("tag-selected",!tag.classed("tag-selected"));
                     selectedValues[tag.classed("tag-selected") ? 'add' : 'remove'](col,d);
-                    selectedValues.applyFilter();
+                    selectedValues.applyFilter(Graph.options);
                     updateFiltersMarkers();
                     displayGraph();
                   })
@@ -1287,7 +1309,7 @@ ValueSelector.prototype = {
       }
     }
   },
-  applyFilter: function(){
+  applyFilter: function(options){
     var selectedValues = this.selectedValues,
         keytypes = this.keytypes,
         data = this.data;
@@ -1314,8 +1336,17 @@ ValueSelector.prototype = {
             if(n[k]==="" && values.indexOf("")!=-1){
               continue;
             }
-            if(n[k] && intersection(values,(Array.isArray(n[k]) ? n[k] : [n[k]])).length){
-              continue;
+            if(n[k]){
+              var len = intersection(values,(Array.isArray(n[k]) ? n[k] : [n[k]])).length;
+              if(type=="object" && options && options.jointfilter){
+                if(len==values.length){
+                  continue;
+                }
+              }else{
+                if(len){
+                  continue;
+                }
+              }
             }
           }
           n['_filtered'] = true;
@@ -1441,16 +1472,18 @@ function displaySimpleSearch(){
 
     function doneTyping () {
           var cutoff = data.length>1000 ? 3 : 1,
-              value = input.property("value");
+              values = cleanString(input.property("value")).split(" ").filter(function(d){ return d.length>=cutoff; });
 
-          if(value.length>=cutoff){
+          if(values.length){
             data.forEach(function(node){ delete node.selected; });
 
-            value = cleanString(value);
             data.forEach(function(node){
-                if(cleanString(node[column]).match(value)){
-                  node.selected =  true;
+              node.selected = true;
+              values.forEach(function(d){
+                if(!cleanString(node[column]).match(d)){
+                  node.selected = false;
                 }
+              });
             });
 
             updateSelection();

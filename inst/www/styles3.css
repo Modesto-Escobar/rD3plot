@@ -444,10 +444,15 @@ button.switch-button.active:after {
   text-align: center;
   padding: 8px 16px;
 }
-.filterpanel > .filter-side-panel > .side-panel-content > .order-container > .items-container > .rev-order {
+.filterpanel > .filter-side-panel > .side-panel-content > .order-container > .items-container > .rev-order,
+.filterpanel > .filter-side-panel > .side-panel-content > .filter-container > .items-container > .joint-filter {
   text-align: right;
 }
-.filterpanel > .filter-side-panel > .side-panel-content > .order-container > .items-container > .rev-order > span {
+.filterpanel > .filter-side-panel > .side-panel-content > .filter-container > .items-container > .joint-filter {
+  margin-bottom: 8px;
+}
+.filterpanel > .filter-side-panel > .side-panel-content > .order-container > .items-container > .rev-order > span,
+.filterpanel > .filter-side-panel > .side-panel-content > .filter-container > .items-container > .joint-filter > span {
   margin-right: 8px;
 }
 

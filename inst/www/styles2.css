@@ -587,18 +587,20 @@ button.switch-button.active:after {
   width: 100%;
   background-color: #ffffff;
 }
-.multi-search > .search-box > div.check-container {
+.multi-search > .search-box > div.check-wrapper {
   position: absolute;
   margin-top: 18px;
   height: 20px;
   width: 20px;
   overflow: hidden;
 }
-.multi-search > .search-box > div.check-container > span {
+.multi-search > .search-box > div.check-wrapper > div.check-container > span {
   display: block;
   height: 32px;
 }
-.multi-search > .search-box > div.check-container > span.yes:after {
+.multi-search > .search-box > div.check-wrapper > div.check-container > span.yes:after {
+  position: relative;
+  top: 4px;
   content: "";
   display: block;
   margin: 0 0 0 6px;
@@ -610,7 +612,7 @@ button.switch-button.active:after {
   -ms-transform: rotate(45deg);
   transform: rotate(45deg);
 }
-.multi-search > .search-box > div.check-container > span.no:after {
+.multi-search > .search-box > div.check-wrapper > div.check-container > span.no:after {
   content: '\D7';
   margin: 0 0 0 6px;
   font-weight: bold;
@@ -641,7 +643,7 @@ button.switch-button.active:after {
 .multi-search > .search-box.focused > div.text-wrapper > div.text-content > textarea {
   height: 300px;
 }
-.multi-search > .search-box.focused > div.check-container {
+.multi-search > .search-box.focused > div.check-wrapper {
   height: 300px;
 }
 .multi-search > .search-box.focused > p {
