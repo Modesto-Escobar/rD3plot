@@ -129,5 +129,6 @@ var texts = {
     clearfilters: "Limpiar filtros",
     close: "Cerrar",
     filtermenu: "Menu de filtros",
-    noresults: "Sin resultados"
+    noresults: "Sin resultados",
+    jointfilter: "Filtro conjunto"
   };

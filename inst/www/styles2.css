@@ -468,10 +468,15 @@ button.switch-button.active:after {
   text-align: center;
   padding: 8px 16px;
 }
-.filterpanel > .filter-side-panel > .side-panel-content > .order-container > .items-container > .rev-order {
+.filterpanel > .filter-side-panel > .side-panel-content > .order-container > .items-container > .rev-order,
+.filterpanel > .filter-side-panel > .side-panel-content > .filter-container > .items-container > .joint-filter {
   text-align: right;
 }
-.filterpanel > .filter-side-panel > .side-panel-content > .order-container > .items-container > .rev-order > span {
+.filterpanel > .filter-side-panel > .side-panel-content > .filter-container > .items-container > .joint-filter {
+  margin-bottom: 8px;
+}
+.filterpanel > .filter-side-panel > .side-panel-content > .order-container > .items-container > .rev-order > span,
+.filterpanel > .filter-side-panel > .side-panel-content > .filter-container > .items-container > .joint-filter > span {
   margin-right: 8px;
 }
 
@@ -960,6 +965,7 @@ p.window-message {
 .links-2-columns {
   display: block;
   width: 100%;
+  clear: both;
 }
 .links-2-columns > ul {
   display: inline-block;

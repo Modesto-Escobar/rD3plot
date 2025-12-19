@@ -64,9 +64,22 @@ galleryCreate <- function(gallery, dir){
   }
 }
 
+mgmtNoFilterCols <- function(options,noFilterCols,nodenames){
+    if(!is.null(noFilterCols)){
+      noFilterCols <- as.character(noFilterCols)
+      coldiff <- setdiff(noFilterCols,nodenames)
+      if(length(coldiff)){
+        noFilterCols <- intersect(noFilterCols,nodenames)
+        warning(paste0("noFilterCols: some columns (",paste0(coldiff,collapse=", "),") mising in nodes data frame"))
+      }
+      options[["noFilterCols"]] <- noFilterCols
+    }
+    return(options)
+}
+
 gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
     border = NULL, ntext = NULL, info = NULL, infoFrame = c("right","left"),
-    image = NULL, imageCopy = NULL, zoom = 1, itemsPerRow = NULL, main = NULL,
+    image = NULL, imageCopy = NULL, noFilterCols = NULL, zoom = 1, itemsPerRow = NULL, main = NULL,
     note = NULL, showLegend = TRUE, frequencies = FALSE, labelTooltip = TRUE,
     cexTooltip = 1, help = NULL, helpOn = FALSE, tutorial = FALSE,
     description = NULL, descriptionWidth = NULL, roundedItems = FALSE,
@@ -147,6 +160,8 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
     }
   }
 
+  options <- mgmtNoFilterCols(options,noFilterCols,colnames(nodes))
+
   # create gallery
   gallery <- structure(list(nodes=nodes,options=options),class="gallery_rd3")
 
@@ -162,7 +177,7 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
 gallery2_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL, order = NULL,
     decreasing = FALSE, ntext = NULL,
     mainframeHeight = NULL, mainframeWidth = NULL, mainframeImage = 0,
-    image = NULL, imageCopy = NULL, zoom = NULL, main = NULL, note = NULL,
+    image = NULL, imageCopy = NULL, noFilterCols = NULL, zoom = NULL, main = NULL, note = NULL,
     frequencies = FALSE, tutorial = FALSE, tableButton = FALSE, export = FALSE,
     search = TRUE, colorScheme = 0,  language = c("en", "es", "ca"), dir = NULL){
 
@@ -245,6 +260,8 @@ gallery2_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL, orde
     }
   }
 
+  options <- mgmtNoFilterCols(options,noFilterCols,colnames(nodes))
+
   options[["mode"]] <- 2
 
   # create gallery
@@ -259,7 +276,7 @@ gallery2_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL, orde
 gallery3_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL, order = NULL,
     decreasing = FALSE, ntext = NULL,
     mainframeHeight = NULL, mainframeWidth = NULL, mainframeImage = 0,
-    image = NULL, imageCopy = NULL, imageRatio = NULL, zoom = NULL, main = NULL, note = NULL,
+    image = NULL, imageCopy = NULL, imageRatio = NULL, noFilterCols = NULL, zoom = NULL, main = NULL, note = NULL,
     search = TRUE, cex = 1, language = c("en", "es", "ca"), dir = NULL){
 
   nodes <- as.data.frame(nodes)
@@ -343,6 +360,8 @@ gallery3_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL, orde
       options <- checkColumn(options,"imageCopy",imageCopy)
     }
   }
+
+  options <- mgmtNoFilterCols(options,noFilterCols,colnames(nodes))
 
   options[["mode"]] <- 3
 

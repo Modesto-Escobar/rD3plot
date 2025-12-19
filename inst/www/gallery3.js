@@ -1050,7 +1050,7 @@ function gallery(Graph){
     var jointfilter = container.append("div")
       .attr("class","joint-filter")
     jointfilter.append("span")
-      .text('Joint filter')
+      .text(texts['jointfilter'])
     jointfilter.append("button")
       .attr("class","switch-button")
       .classed("active",Graph.options.jointfilter)
@@ -1206,7 +1206,7 @@ function gallery(Graph){
           .classed("float",Graph.options.mainframeImage==2 ? true : false)
           .attr("src",nodes[index][Graph.options.imageItems])
           .on("load",Graph.options.mainframeImage==0 ? function(){
-            if(this.naturalHeight>this.naturalWidth){
+            if(this.naturalHeight>=this.naturalWidth){
               d3.select(this).classed("float",true);
             }
           }:null)

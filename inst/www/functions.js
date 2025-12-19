@@ -3383,6 +3383,9 @@ function getSelectOptions(order,Graph,Tree){
           if((d==Graph.options.nodeText || d==Graph.options.nodeInfo) && d!=Graph.options.nodeLabel){
             return false;
           }
+          if(Graph.options.noFilterCols && Graph.options.noFilterCols.indexOf(d)!=-1){
+            return false;
+          }
           if(Tree && Tree.typeFilter && Graph.options.nodeNamesByType && (!Graph.options.nodeNamesByType.hasOwnProperty(Tree.typeFilter) || Graph.options.nodeNamesByType[Tree.typeFilter].indexOf(d)==-1) && d!=Graph.options.nodeType){
             return false;
           }

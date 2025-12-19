@@ -129,5 +129,6 @@ var texts = {
     clearfilters: "Filtres nets",
     close: "tancar",
     filtermenu: "Menu de filtres",
-    noresults: "Sense resultats"
+    noresults: "Sense resultats",
+    jointfilter: "Filtre conjunt"
   };
