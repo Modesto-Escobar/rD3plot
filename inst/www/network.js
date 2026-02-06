@@ -528,7 +528,7 @@ function network(Graph){
     options.colorScalenodeGroup = "RdWhGn"; // default linear scale for groups
     options.colorScalelinkIntensity = "WhBu"; // default linear scale for intensity
 
-    if(options.nodeBipolar){
+    if(options.nodeBipolar || (options.nodeColor && options["nodeScaleLimits_"+options.nodeColor] && options["nodeScaleLimits_"+options.nodeColor].length==3)){
       switch(options.defaultColor) {
         case basicColors.black:
           options.colorScalenodeColor = "RdWhBk";
@@ -566,7 +566,7 @@ function network(Graph){
       }
     }
 
-    if(!options.linkBipolar){
+    if(!options.linkBipolar && !(options.linkColor && options["linkScaleLimits_"+options.linkColor] && options["linkScaleLimits_"+options.linkColor].length==3)){
       options.colorScalelinkColor = "WhGn";
     }
 
@@ -4085,14 +4085,21 @@ function setColorScale(){
         }
         config.datatype = dataType(config.data,config.key,true);
         if(config.datatype == "number"){
-          domain = d3.extent(data);
-          if(options[config.item+"Bipolar"]){
-            var absmax = Math.max(Math.abs(domain[0]),Math.abs(domain[1]));
-            domain = [-absmax,+absmax];
-          }
           range = colorScales[options["colorScale"+config.item+config.attr]];
-          if(range.length==3){
+          if(options[config.item+"ScaleLimits_"+config.key]){
+            domain = options[config.item+"ScaleLimits_"+config.key];
+          }else{
+            domain = d3.extent(data);
+            if(options[config.item+"Bipolar"]){
+              var absmax = Math.max(Math.abs(domain[0]),Math.abs(domain[1]));
+              domain = [-absmax,+absmax];
+            }
+          }
+          if(range.length==3 && domain.length==2){
             domain = [domain[0],d3.mean(domain),domain[1]];
+          }
+          if(range.length==2 && domain.length==3){
+            domain = [domain[0],domain[2]];
           }
           config.scale = d3.scaleLinear()
           .range(range)

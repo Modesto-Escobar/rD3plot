@@ -157,10 +157,10 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
         labelSize = NULL, size = NULL, color = NULL, shape = NULL,
         border = NULL, legend = NULL, sort = NULL, decreasing = FALSE,
         ntext = NULL, info = NULL, image = NULL, imageNames = NULL,
-        nodeBipolar = FALSE, nodeFilter = NULL, degreeFilter = NULL,
+        nodeBipolar = FALSE, nodeScaleLimits = NULL, nodeFilter = NULL, degreeFilter = NULL,
         source = NULL, target = NULL,
         lwidth = NULL, lweight = NULL, lcolor = NULL, ltext = NULL,
-        intensity = NULL, linkBipolar = FALSE, linkFilter = NULL,
+        intensity = NULL, linkBipolar = FALSE, linkScaleLimits = NULL, linkFilter = NULL,
         repulsion = 25, distance = 10, zoom = 1,
         fixed = showCoordinates, limits = NULL,
         main = NULL, note = NULL, showCoordinates = FALSE, showArrows = FALSE,
@@ -272,6 +272,7 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
       options[["limits"]] <- as.numeric(limits)
     }
   }
+
   if (!is.null(main)) options[["main"]] <- main
   if (!is.null(note)) options[["note"]] <- note
   if (!is.null(help)) options[["help"]] <- help
@@ -419,6 +420,32 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
   net <- checkItemValue(net,"nodes","nodeColor",color,"color",isColor,categoryColors,col2hex)
   net <- checkItemValue(net,"nodes","nodeShape",shape,"shape",isShape,getShapes,capitalize)
   net <- checkItemValue(net,"links","linkColor",lcolor,"lcolor",isColor,categoryColors,col2hex)
+
+  # scale limits
+  if(!is.null(nodeScaleLimits)){
+    nodeScaleLimits <- sort(as.numeric(unique(nodeScaleLimits)))
+    if(!(length(nodeScaleLimits) %in% 2:3)){
+      print("nodeScaleLimits: must be a numeric list of length 2 or 3")
+    }else{
+      if(is.null(net$options[["nodeColor"]]) || !is.numeric(net$nodes[[net$options[["nodeColor"]]]])){
+        print("nodeScaleLimits: parameter 'color' must specify a numeric column")
+      }else{
+        net$options[[paste0("nodeScaleLimits_",net$options[["nodeColor"]])]] <- nodeScaleLimits
+      }
+    }
+  }
+  if(!is.null(linkScaleLimits)){
+    linkScaleLimits <- sort(as.numeric(unique(linkScaleLimits)))
+    if(!(length(linkScaleLimits) %in% 2:3)){
+      print("linkScaleLimits: must be a numeric list of length 2 or 3")
+    }else{
+      if(is.null(net$options[["linkColor"]]) || !is.numeric(net$links[[net$options[["linkColor"]]]])){
+        print("linkScaleLimits: parameter 'lcolor' must specify a numeric column")
+      }else{
+        net$options[[paste0("linkScaleLimits_",net$options[["linkColor"]])]] <- linkScaleLimits
+      }
+    }
+  }
 
   #check tree
   if(!is.null(tree)){

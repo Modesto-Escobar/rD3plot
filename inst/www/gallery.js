@@ -301,8 +301,8 @@ function gallery(Graph){
 
   gallery.on("click",deselectAllItems);
 
-  if(!options.hasOwnProperty("zoom"))
-    options.zoom = 1;
+  if(!options.hasOwnProperty("scale"))
+    options.scale = 1;
 
   var getCurrentHeight = function(k){ return gridHeight * k; };
 
@@ -413,10 +413,10 @@ function gallery(Graph){
       }
     }
 
-    options.zoom = 1;
+    options.scale = 1;
 
     var currentItemsPerRow = itemsPerRow(),
-        prevk = options.zoom;
+        prevk = options.scale;
     
     getCurrentHeight = function(k){
           if(k == 1){
@@ -448,7 +448,7 @@ function gallery(Graph){
   }
 
   function resetZoom(){
-    gallery.call(zoom.transform,d3.zoomIdentity.scale(options.zoom));
+    gallery.call(zoom.transform,d3.zoomIdentity.scale(options.scale));
   }
 
   function displayGraphColor(){

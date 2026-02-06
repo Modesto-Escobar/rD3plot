@@ -79,7 +79,7 @@ mgmtNoFilterCols <- function(options,noFilterCols,nodenames){
 
 gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
     border = NULL, ntext = NULL, info = NULL, infoFrame = c("right","left"),
-    image = NULL, imageCopy = NULL, noFilterCols = NULL, zoom = 1, itemsPerRow = NULL, main = NULL,
+    image = NULL, imageCopy = NULL, noFilterCols = NULL, zoom = NULL, scale = 1, itemsPerRow = NULL, main = NULL,
     note = NULL, showLegend = TRUE, frequencies = FALSE, labelTooltip = TRUE,
     cexTooltip = 1, help = NULL, helpOn = FALSE, tutorial = FALSE,
     description = NULL, descriptionWidth = NULL, roundedItems = FALSE,
@@ -108,11 +108,14 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
     options[["infoFrame"]] <- infoFrame[1]
   }
 
-  if(!(is.numeric(zoom) && zoom>=0.1 && zoom<=10)){
-    zoom <- formals(gallery_rd3)[["zoom"]]
-    warning("zoom: must be numeric between 0.1 and 10")
+  if(!is.null(zoom)){
+    warning("zoom: Deprecated. Replaced by argument 'scale'.")
   }
-  options[["zoom"]] <- zoom
+  if(!(is.numeric(scale) && scale>=0.1 && scale<=10)){
+    scale <- formals(gallery_rd3)[["scale"]]
+    warning("scale: must be numeric between 0.1 and 10")
+  }
+  options[["scale"]] <- scale
 
   if(!is.null(itemsPerRow)){
     if(!is.numeric(itemsPerRow) || any(itemsPerRow<=0)){
@@ -177,7 +180,7 @@ gallery_rd3 <- function(nodes, name = NULL, label = NULL, color = NULL,
 gallery2_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL, order = NULL,
     decreasing = FALSE, ntext = NULL,
     mainframeHeight = NULL, mainframeWidth = NULL, mainframeImage = 0,
-    image = NULL, imageCopy = NULL, noFilterCols = NULL, zoom = NULL, main = NULL, note = NULL,
+    image = NULL, imageCopy = NULL, noFilterCols = NULL, zoom = NULL, scale = NULL, main = NULL, note = NULL,
     frequencies = FALSE, tutorial = FALSE, tableButton = FALSE, export = FALSE,
     search = TRUE, colorScheme = 0,  language = c("en", "es", "ca"), dir = NULL){
 
@@ -232,10 +235,13 @@ gallery2_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL, orde
   }
 
   if(!is.null(zoom)){
-    if(!(is.numeric(zoom) && zoom>=0.1 && zoom<=1)){
-      warning("zoom: must be numeric between 0.1 and 1")
+    warning("zoom: Deprecated. Replaced by argument 'scale'.")
+  }
+  if(!is.null(scale)){
+    if(!(is.numeric(scale) && scale>=0.1 && scale<=1)){
+      warning("scale: must be numeric between 0.1 and 1")
     }
-    options[["zoom"]] <- zoom
+    options[["scale"]] <- scale
   }
 
   if (!is.null(main)) options[["main"]] <- main
@@ -276,7 +282,7 @@ gallery2_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL, orde
 gallery3_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL, order = NULL,
     decreasing = FALSE, ntext = NULL,
     mainframeHeight = NULL, mainframeWidth = NULL, mainframeImage = 0,
-    image = NULL, imageCopy = NULL, imageRatio = NULL, noFilterCols = NULL, zoom = NULL, main = NULL, note = NULL,
+    image = NULL, imageCopy = NULL, imageRatio = NULL, noFilterCols = NULL, zoom = NULL, scale = NULL, main = NULL, note = NULL,
     search = TRUE, cex = 1, language = c("en", "es", "ca"), dir = NULL){
 
   nodes <- as.data.frame(nodes)
@@ -330,10 +336,13 @@ gallery3_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL, orde
   }
 
   if(!is.null(zoom)){
-    if(!is.numeric(zoom)){
-      warning("zoom: must be numeric")
+    warning("zoom: Deprecated. Replaced by argument 'scale'.")
+  }
+  if(!is.null(scale)){
+    if(!is.numeric(scale)){
+      warning("scale: must be numeric")
     }
-    options[["zoom"]] <- zoom
+    options[["scale"]] <- scale
   }
 
   if(!is.null(imageRatio)){

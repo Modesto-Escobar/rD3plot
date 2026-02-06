@@ -16,10 +16,11 @@ network_rd3(nodes = NULL, links = NULL, tree = NULL,
         labelSize = NULL, size = NULL, color = NULL, shape = NULL,
         border = NULL, legend = NULL, sort = NULL, decreasing = FALSE,
         ntext = NULL, info = NULL, image = NULL, imageNames = NULL,
-        nodeBipolar = FALSE, nodeFilter = NULL, degreeFilter = NULL,
-        source = NULL, target = NULL,
-        lwidth = NULL, lweight = NULL, lcolor = NULL, ltext = NULL,
-        intensity = NULL, linkBipolar = FALSE, linkFilter = NULL,
+        nodeBipolar = FALSE, nodeScaleLimits = NULL, nodeFilter = NULL,
+        degreeFilter = NULL,
+        source = NULL, target = NULL, lwidth = NULL, lweight = NULL,
+        lcolor = NULL, ltext = NULL, intensity = NULL,
+        linkBipolar = FALSE, linkScaleLimits = NULL, linkFilter = NULL,
         repulsion = 25, distance = 10, zoom = 1,
         fixed = showCoordinates, limits = NULL,
         main = NULL, note = NULL, showCoordinates = FALSE, showArrows = FALSE,
@@ -59,7 +60,9 @@ network_rd3(nodes = NULL, links = NULL, tree = NULL,
 \item{linkFilter}{a character string with a condition for filtering links.}
 \item{degreeFilter}{numeric vector to filter the resulting network by degree. Input can be a number which specifies the minimum degree or two numbers which specify the lower and upper limits of the filter.}
 \item{nodeBipolar}{a logical value that polarizes negative and positive node values in the graphical representation. Indicates whether the color key should be made symmetric about 0.}
+\item{nodeScaleLimits}{vector indicating the node scale limits, must be a numeric vector of length 2 or 3.}
 \item{linkBipolar}{a logical value that polarizes negative and positive link values in the graphical representation. Indicates whether the color key should be made symmetric about 0.}
+\item{linkScaleLimits}{vector indicating the link scale limits, must be a numeric vector of length 2 or 3.}
 \item{defaultColor}{a character vector giving a valid html color for node representation.}
 \item{repulsion}{a percentage for repulsion between nodes.}
 \item{distance}{a percentage for distance of links.}

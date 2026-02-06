@@ -1,5 +1,5 @@
 function gallery(Graph){
-  pageZoom(Graph.options.zoom,Graph.options.imageRatio);
+  pageZoom(Graph.options.scale,Graph.options.imageRatio);
 
   var nodes = transposeNodes(Graph.nodes,Graph.nodenames,Graph.options);
 
@@ -295,9 +295,9 @@ function gallery(Graph){
     window.scrollTo(0, 0);
     var itemw = 230,
         itemh = 304;
-    if(Graph.options.zoom){
-      itemw = itemw * Graph.options.zoom;
-      itemh = itemh * Graph.options.zoom;
+    if(Graph.options.scale){
+      itemw = itemw * Graph.options.scale;
+      itemh = itemh * Graph.options.scale;
     }
     var itemsX = Math.floor(window.innerWidth / itemw),
         itemsY = Math.floor(window.innerHeight / itemh);
@@ -1047,21 +1047,23 @@ function gallery(Graph){
             }
 
             if(type != 'string'){
+              if(!Graph.options.jointfilter){
+                Graph.options.jointfilter = {};
+              }
+              if(!Graph.options.jointfilter.hasOwnProperty(col)){
+                Graph.options.jointfilter[col] = false;
+              }
     var jointfilter = container.append("div")
       .attr("class","joint-filter")
     jointfilter.append("span")
       .text(texts['jointfilter'])
     jointfilter.append("button")
       .attr("class","switch-button")
-      .classed("active",Graph.options.jointfilter)
+      .classed("active",Graph.options.jointfilter[col])
       .on("click",function(){
         var self = d3.select(this);
         self.classed("active",!self.classed("active"));
-        if(self.classed("active")){
-          Graph.options.jointfilter = true;
-        }else{
-          delete Graph.options.jointfilter;
-        }
+        Graph.options.jointfilter[col] = self.classed("active");
         selectedValues.applyFilter(Graph.options);
         updateFiltersMarkers();
         displayGraph();
@@ -1338,7 +1340,7 @@ ValueSelector.prototype = {
             }
             if(n[k]){
               var len = intersection(values,(Array.isArray(n[k]) ? n[k] : [n[k]])).length;
-              if(type=="object" && options && options.jointfilter){
+              if(type=="object" && options && options.jointfilter && options.jointfilter[k]){
                 if(len==values.length){
                   continue;
                 }
