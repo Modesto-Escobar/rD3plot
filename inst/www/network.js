@@ -4127,7 +4127,7 @@ function setColorScale(){
             .active(config.key)
             .list(Graph[config.item+"names"].filter(function(d){ return !hiddenFields.has(d); }))
             .clickAction(function(val){
-              applyAuto("nodeColor",val);
+              applyAuto(config.item+"Color",val);
             });
       var panel = legendPanel.append("div").attr("class","linear-scale "+config.item+"s");
       displayLinearScale(panel,

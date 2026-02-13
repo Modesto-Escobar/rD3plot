@@ -1562,7 +1562,6 @@ function displayLinearScale(sel, value, range, domain, selectScale, selectAttrib
       domInput.addEventListener("keydown",function(event){
         if(this.parentNode && getKey(event)=="Enter"){
             domain[i] = +domInput.value;
-            close(event);
             changeDomain(domain);
         }
       })
