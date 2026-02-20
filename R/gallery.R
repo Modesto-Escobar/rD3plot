@@ -181,6 +181,7 @@ gallery2_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL, orde
     decreasing = FALSE, ntext = NULL,
     mainframeHeight = NULL, mainframeWidth = NULL, mainframeImage = 0,
     image = NULL, imageCopy = NULL, noFilterCols = NULL, zoom = NULL, scale = NULL, main = NULL, note = NULL,
+    logo = TRUE, pages = c("bottom", "dynamic", "top"), mainposition = c("dynamic", "fixed"),
     frequencies = FALSE, tutorial = FALSE, tableButton = FALSE, export = FALSE,
     search = TRUE, colorScheme = 0,  language = c("en", "es", "ca"), dir = NULL){
 
@@ -252,8 +253,18 @@ gallery2_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL, orde
   options <- showSomething(options,"showTable",tableButton)
   options <- showSomething(options,"exportExcel",export)
   options <- showSomething(options,"frequencies",frequencies)
+  options <- showSomething(options,"logo",logo)
+  options <- showSomething(options,"mainFixed",mainposition[1]=="fixed")
   options[["colorScheme"]] <- as.numeric(colorScheme)
   options[["language"]] <- checkLanguage(language)
+  if(is.character(pages)){
+    if(pages[1]=="top"){
+      options[["paginationPosition"]] <- 1
+    }
+    if(pages[1]=="bottom"){
+      options[["paginationPosition"]] <- 2
+    }
+  }
 
   if (!is.null(image)){
     image <- image[1]

@@ -276,7 +276,11 @@ button.switch-button.active:after {
   float: right;
   padding: 0;
 }
-.fixed-topbar > .topbar > .topbar-topcontent > .topbar-main {
+.fixed-topbar > .topbar > .topbar-topcontent.fixed-main {
+  float: none;
+  width: 100%;
+}
+.fixed-topbar > .topbar > .topbar-topcontent:not(.fixed-main) > .topbar-main {
   display: none;
 }
 .fixed-topbar > .topbar > .topbar-topcontent > .topbar-buttons {
@@ -318,7 +322,8 @@ button.switch-button.active:after {
 .topbar > .topbar-topcontent > .topbar-clear {
   clear: both;
 }
-:not(.fixed-topbar) > .topbar > .topbar-topcontent > .topbar-buttons > div.pagination {
+:not(.fixed-topbar):not(.pagination-top) > .topbar > .topbar-topcontent > .topbar-buttons > div.pagination,
+.pagination-bottom > .topbar > .topbar-topcontent > .topbar-buttons > div.pagination {
   display: none;
 }
 .topbar > .topbar-topcontent > .topbar-buttons > div.pagination > span {
@@ -502,8 +507,10 @@ button.switch-button.active:after {
   margin-top: 24px;
 }
 .footer > .footer-logo2 > span.pagination {
-  display: none;
   margin-left: 16px;
+}
+:not(.pagination-bottom) > .footer > .footer-logo2 > span.pagination {
+  display: none;
 }
 @media (min-width: 768px) {
   .topbar-search {
@@ -552,7 +559,7 @@ button.switch-button.active:after {
   height: 24px;
     margin-bottom: -8px;
 }
-:not(.fixed-topbar).fixed-footer > .footer > .footer-logo2 > span.pagination {
+:not(.pagination-top):not(.fixed-topbar).fixed-footer > .footer > .footer-logo2 > span.pagination {
   display: inline;
 }
 
