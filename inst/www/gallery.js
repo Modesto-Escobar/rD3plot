@@ -445,6 +445,9 @@ function gallery(Graph){
 
   if(typeof tutorialTour != "undefined"){
     tutorialTour(options);
+    if(options.tutorial && options.tutorial.help){
+      body.select(".tutorial > .tutorial-buttons > .skip").on("click")();
+    }
   }
 
   function resetZoom(){

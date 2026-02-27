@@ -4,6 +4,10 @@ function tutorialTour(options){
   var body = d3.select(document.body);
   body.select("body > .tutorial").remove();
   var topbar = body.select("body > .topbar");
+  var tutorialIcon = topbar.select(".topbar-buttons > div > .topbar-button.tutorial-icon");
+  if(!tutorialIcon.empty()){
+    tutorialIcon.node().parentNode.remove();
+  }  
 
   var maxtop = topbar.node().getBoundingClientRect().height,
       tutorialWidth = 690;
@@ -33,6 +37,12 @@ function tutorialTour(options){
       tutorial.remove();
       tutorial2.remove();
       tutorialArrow.remove();
+      topbar.select(".topbar-buttons").append("div")
+        .append("button")
+          .attr("class","topbar-button tutorial-icon")
+          .on("click",function(){
+            tutorialTour(options);
+          })
     })
   tutorialButtons.append("button")
     .attr("class","primary next")

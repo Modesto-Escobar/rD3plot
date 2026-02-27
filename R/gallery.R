@@ -712,9 +712,13 @@ treeGallery2_rd3 <- function(tree, initialType = NULL, tableformat = FALSE, ...)
   return(gallery)
 }
 
-add_tutorial_rd3 <- function(x, image=NULL, description=NULL){
+add_tutorial_rd3 <- function(x, image=NULL, description=NULL, help=FALSE){
   if(!inherits(x,"gallery_rd3")){
     stop("x: a gallery must be provided")
+  }
+
+  if(length(x$options$mode) && x$options$mode==3){
+    stop("x: tutorial not available for this type of gallery")
   }
 
   x$options$tutorial <- list()
@@ -732,6 +736,9 @@ add_tutorial_rd3 <- function(x, image=NULL, description=NULL){
   }
   if(!is.null(description) && is.character(description)){
     x$options$tutorial$description <- description
+  }
+  if(help){
+    x$options$tutorial$help <- TRUE
   }
   if(!length(x$options$tutorial)){
     x$options$tutorial <- TRUE

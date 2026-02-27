@@ -323,6 +323,9 @@ function gallery(Graph){
 
   if(typeof tutorialTour != "undefined"){
     tutorialTour(Graph.options);
+    if(Graph.options.tutorial && Graph.options.tutorial.help){
+      body.select(".tutorial > .tutorial-buttons > .skip").on("click")();
+    }
   }
 
   function displayGraph(){
