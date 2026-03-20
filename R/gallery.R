@@ -669,7 +669,6 @@ treeGallery2_rd3 <- function(tree, initialType = NULL, tableformat = FALSE, ...)
   nodes <- gallery$nodes
   relatives <- list()
   relativesTypes <- list()
-  relativesTypes2 <- list()
   for(i in seq_len(nrow(nodes))){
     name <- nodes[i,gallery$options$nodeName]
     aux1 <- character(0)
@@ -699,16 +698,10 @@ treeGallery2_rd3 <- function(tree, initialType = NULL, tableformat = FALSE, ...)
       }
     }
     relatives[[i]] <- aux1
-    if(length(unique(aux2))>1){
-      relativesTypes[[as.character(i-1)]] <- aux2
-    }
-    relativesTypes2[[i]] <- aux3
+    relativesTypes[[i]] <- aux3
   }
   gallery$nodes_relatives <- relatives
-  if(length(unlist(relativesTypes))){
-    gallery$nodes_relativesTypes <- relativesTypes
-  }
-  gallery$nodes_relativesTypes2 <- relativesTypes2
+  gallery$nodes_relativesTypes <- relativesTypes
   return(gallery)
 }
 
