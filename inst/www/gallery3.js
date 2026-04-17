@@ -634,21 +634,6 @@ function gallery(Graph){
           .attr("title",texts.close)
           .on("click",closeTable);
 
-    var onlySelected = selectedNames().length ? true : false;
-
-    var onlySelectedData = tabletopheader.append("div")
-      .attr("class","only-selected-data")
-      .classed("selected",onlySelected)
-      .on("click",function(){
-        onlySelectedData.classed("selected",!onlySelectedData.classed("selected"));
-        tableInst.onlySelectedData(onlySelectedData.classed("selected"));
-        tables.call(tableInst);
-      })
-    onlySelectedData.append("span")
-        .text(texts.showonlyselecteditems+" ")
-    onlySelectedData.append("div")
-        .attr("class","check-box")
-
     if(Graph.options.multigraph || Graph.options.main){
       if(Graph.options.multigraph){
         multiGraphSelect(tabletopheader, Graph.options.multigraph.idx, Graph.options.multigraph.names);
@@ -705,8 +690,6 @@ function gallery(Graph){
       .attr("placeholder",texts.searchintable)
       .on("keyup",function(){
         var txt = cleanString(d3.select(this).property("value"));
-        onlySelectedData.classed("selected",false);
-        tableInst.onlySelectedData(false);
         tables.call(tableInst);
         if(txt.length>1){
           var columns = tableInst.columns();
@@ -719,8 +702,6 @@ function gallery(Graph){
               }
             }
           });
-          onlySelectedData.classed("selected",true);
-          tableInst.onlySelectedData(true);
         }else{
           Graph.filteredOrderedData.forEach(function(d){
             d.selected = false;
@@ -729,18 +710,6 @@ function gallery(Graph){
         tables.call(tableInst);
         displayGraph();
       })
-
-    header.append("button")
-            .attr("class","primary tableselection disabled")
-            .text(texts.select)
-            .on("click",function(){
-              selectFromTable();
-              if(tableitem=="_relations_" ){
-                closeTable();
-              }else{
-                displayTable(tableitem);
-              }
-            })
 
     header.append("button")
             .attr("class","primary tablefilter disabled")
@@ -770,7 +739,7 @@ function gallery(Graph){
 
     var tableInst = tableWrapper()
             .data(Graph.filteredOrderedData)
-            .onlySelectedData(onlySelected)
+            .onlySelectedData(false)
             .columns(Graph.nodenames.filter(filterColumns))
             .id(Graph.options.nodeName)
             .update(function(){
@@ -853,18 +822,10 @@ function gallery(Graph){
         body.style("overflow", null);
     }
 
-    function selectFromTable(){
-      var tableData = tableInst.data();
-      Graph.filteredOrderedData.forEach(function(d,i){
-        d.selected = tableData[i]._selected;
-      });
-      displayGraph();
-    }
-
     function filterFromTable(){
       tableInst.data().forEach(function(d){
         if(d._selected){
-          selectedValues.add(Graph.options.nodeName,d._name);
+          selectedValues.add(Graph.options.nodeName,d[Graph.options.nodeName]);
         }
       });
       selectedValues.applyFilter(Graph.options);

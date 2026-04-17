@@ -13,8 +13,8 @@ gallery3_rd3(nodes, name = NULL, label = NULL, subtitle = NULL, order = NULL,
     decreasing = FALSE, ntext = NULL,
     mainframeHeight = NULL, mainframeWidth = NULL, mainframeImage = 0,
     image = NULL, imageCopy = NULL, imageRatio = NULL, noFilterCols = NULL,
-    zoom = NULL, scale = NULL, main = NULL, note = NULL, search = TRUE,
-    cex = 1, language = c("en", "es", "ca"), dir = NULL)
+    zoom = NULL, scale = NULL, main = NULL, note = NULL, tableButton = FALSE,
+    search = TRUE, cex = 1, language = c("en", "es", "ca"), dir = NULL)
 }
 \arguments{
 \item{nodes}{a data frame with at least one column with the names of the gallery's elements.}
@@ -35,6 +35,7 @@ gallery3_rd3(nodes, name = NULL, label = NULL, subtitle = NULL, order = NULL,
 \item{scale}{a number between 0.1 and 1 as initial displaying scale.}
 \item{main}{upper title of the graph.}
 \item{note}{lower title of the graph.}
+\item{tableButton}{A button will appear to show the data as a table.}
 \item{search}{Should gallery search be displayed? (default: TRUE)}
 \item{cex}{number indicating the amount by which plotting text should be scaled relative to the default.}
 \item{language}{a character string indicating the language of the graph (en=english (default); es=spanish; ca=catalan).}
