@@ -455,7 +455,7 @@ links2table <- function(x){
   }
 }
 
-treeGalleryWrapper <- function(tree, deep, initialType, tableformat, gallery_mode, ...){
+treeGalleryWrapper <- function(tree, deep, initialType, tableformat, gallery_mode, post_function=NULL, ...){
   arguments <- list(...)
 
   tree <- tree[rowSums(is.na(tree)) != ncol(tree), ]
@@ -644,6 +644,10 @@ treeGalleryWrapper <- function(tree, deep, initialType, tableformat, gallery_mod
     gallery$options$roundedItems <- arguments$roundedItems
   }
 
+  if(!is.null(post_function)){
+    gallery <- post_function(gallery)
+  }
+
   if(!is.null(dir)){
     galleryCreate(gallery,dir)
   }
@@ -664,46 +668,51 @@ treeGallery2_rd3 <- function(tree, initialType = NULL, tableformat = FALSE, ...)
     tree[,3] <- colnames(tree)[1]
     tree[,4] <- colnames(tree)[2]
   }
-  gallery <- treeGalleryWrapper(tree, FALSE, initialType, tableformat, gallery2_rd3, ...)
-  tree <- gallery$tree
-  tree <- tree[!is.na(tree[,1]) & !is.na(tree[,2]),]
-  nodes <- gallery$nodes
-  relatives <- list()
-  relativesTypes <- list()
-  for(i in seq_len(nrow(nodes))){
-    name <- nodes[i,gallery$options$nodeName]
-    aux1 <- character(0)
-    aux2 <- character(0)
-    aux3 <- character(0)
-    if(name %in% tree[,1]){
-      aux1 <- tree[tree[,1]==name,2]
-      aux2 <- tree[tree[,1]==name,3]
-      aux3 <- tree[tree[,1]==name,4]
-    }
-    if(name %in% tree[,2]){
-      target <- !is.na(tree[,2]) & tree[,2]==name
-      parents <- tree[target,1]
-      pType <- tree[target,4]
-      pType2 <- tree[target,3]
-      aux1 <- c(aux1,parents)
-      aux2 <- c(aux2,pType)
-      aux3 <- c(aux3,pType2)
-      for(j in seq_along(parents)){
-        target <- tree[,1]==parents[j] & tree[,2]!=name
-        siblings <- tree[target,2]
-        stypes <- rep(pType[j],length(siblings))
-        stypes2 <- tree[target,4]
-        aux1 <- c(aux1,siblings)
-        aux2 <- c(aux2,stypes)
-        aux3 <- c(aux3,stypes2)
+
+  get_nodes_relatives <- function(gallery){
+    tree <- gallery$tree
+    tree <- tree[!is.na(tree[,1]) & !is.na(tree[,2]),]
+    nodes <- gallery$nodes
+    relatives <- list()
+    relativesTypes <- list()
+    for(i in seq_len(nrow(nodes))){
+      name <- nodes[i,gallery$options$nodeName]
+      aux1 <- character(0)
+      aux2 <- character(0)
+      aux3 <- character(0)
+      if(name %in% tree[,1]){
+        aux1 <- tree[tree[,1]==name,2]
+        aux2 <- tree[tree[,1]==name,3]
+        aux3 <- tree[tree[,1]==name,4]
       }
+      if(name %in% tree[,2]){
+        target <- !is.na(tree[,2]) & tree[,2]==name
+        parents <- tree[target,1]
+        pType <- tree[target,4]
+        pType2 <- tree[target,3]
+        aux1 <- c(aux1,parents)
+        aux2 <- c(aux2,pType)
+        aux3 <- c(aux3,pType2)
+        for(j in seq_along(parents)){
+          target <- tree[,1]==parents[j] & tree[,2]!=name
+          siblings <- tree[target,2]
+          stypes <- rep(pType[j],length(siblings))
+          stypes2 <- tree[target,4]
+          aux1 <- c(aux1,siblings)
+          aux2 <- c(aux2,stypes)
+          aux3 <- c(aux3,stypes2)
+        }
+      }
+      relatives[[i]] <- aux1
+      relativesTypes[[i]] <- aux3
     }
-    relatives[[i]] <- aux1
-    relativesTypes[[i]] <- aux3
+    gallery$nodes_relatives <- relatives
+    gallery$nodes_relativesTypes <- relativesTypes
+
+    return(gallery)
   }
-  gallery$nodes_relatives <- relatives
-  gallery$nodes_relativesTypes <- relativesTypes
-  return(gallery)
+
+  return(treeGalleryWrapper(tree, FALSE, initialType, tableformat, gallery2_rd3, get_nodes_relatives, ...))
 }
 
 add_tutorial_rd3 <- function(x, image=NULL, description=NULL, help=FALSE){
