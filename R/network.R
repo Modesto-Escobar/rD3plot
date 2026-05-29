@@ -182,6 +182,13 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
     stop("You must explicit a nodes or links data frame.")
   }
 
+  if(!is.null(nodes)){
+    if(all(inherits(nodes,c("tbl_df","tbl","data.frame"),TRUE))) nodes <- as.data.frame(nodes)
+  }
+  if(!is.null(links)){
+    if(all(inherits(links,c("tbl_df","tbl","data.frame"),TRUE))) links <- as.data.frame(links)
+  }
+
   options <- list()
 
   if(!is.null(links)){
