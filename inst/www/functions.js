@@ -268,10 +268,14 @@ function displayWindow(w,h){
         .style("width",docSize.width+"px")
         .style("height",docSize.height+"px")
 
+  if(w && (w+60)>docSize.width){
+    w = docSize.width-60;
+  }
+
   var win = bg.append("div")
     .attr("class","window")
     .on("click",function(){ d3.event.stopPropagation(); })
-    .style("margin-top",(docSize.height/5)+"px")
+    .style("margin-top",(h ? (docSize.height-h-60)/2 : docSize.height/5)+"px")
     .style("width",(w ? w : (docSize.width/2))+"px");
 
   win.append("div")
@@ -2934,6 +2938,7 @@ function tableWrapper(){
       update = false,
       selectAction = false,
       onlySelectedData = true,
+      ifemptyshowall = false,
       renderCell = function(item,key){
         var txt = item[key];
         if(txt == null){
@@ -2996,6 +3001,12 @@ function tableWrapper(){
         delete d._selected;
         return !onlySelectedData || d.selected;
     })
+
+    if(onlySelectedData && ifemptyshowall && !selectedData.length){
+      selectedData = currentData.filter(function(d){
+          return true;
+      })
+    }
 
     rightAlign = columns.map(function(col){
           if(dataType(currentData,col) == 'number'){
@@ -3246,6 +3257,12 @@ function tableWrapper(){
   exports.onlySelectedData = function(x){
     if (!arguments.length) return onlySelectedData;
     onlySelectedData = x ? true : false;
+    return exports;
+  }
+
+  exports.ifemptyshowall = function(x){
+    if (!arguments.length) return ifemptyshowall;
+    ifemptyshowall = x ? true : false;
     return exports;
   }
 

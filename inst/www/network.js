@@ -4687,6 +4687,7 @@ function showTables() {
   var tables = body.select("div.tables");
 
   var tableInst = tableWrapper()
+    .ifemptyshowall(true)
     .update(function(){
       if(!options.heatmap){
         simulation.restart()
