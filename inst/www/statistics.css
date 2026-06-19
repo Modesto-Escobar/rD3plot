@@ -1,0 +1,382 @@
+/* statistics section styles */
+.statistics-section {
+  font-size: 12px;
+}
+
+.statistics-section button,
+.statistics-section input,
+.statistics-section select {
+  -webkit-appearance: none;
+  -ms-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border: solid 1px #c6c6c6;
+  font-family: 'Roboto', sans-serif;
+  font-size: 100%;
+  color: #000000;
+  background-color: #ffffff;
+  border-radius: 3px;
+  padding: 4px 8px;
+}
+.statistics-section input.disabled + label,
+.statistics-section input.disabled,
+.statistics-section button.disabled {
+  pointer-events: none;
+  cursor: default;
+  opacity: 0.5;
+}
+
+.statistics-section > .stats-go-main {
+  position: absolute;
+  top: 0;
+  right: 32px;
+  border: none;
+  width: 14px;
+  height: 14px;
+  margin: 8px 0 0 10px;
+  cursor: pointer;
+  opacity: 0.5;
+}
+.statistics-section > .stats-go-main:hover {
+  opacity: 1;
+}
+.statistics-section > .main-selectors + .stats-go-main {
+  display: none;
+}
+
+.statistics-section > .main-selectors {
+  text-align: center;
+}
+.statistics-section > .main-selectors fieldset > button {
+  width: 170px;
+  border: none;
+  padding: 0;
+  padding-bottom: 8px;
+}
+.statistics-section > .main-selectors fieldset > button > img {
+  width: 170px;
+}
+.statistics-section > .main-selectors > .col-1,
+.statistics-section > .main-selectors > .col-2 {
+  width: 400px;
+  display: inline-block;
+  vertical-align: top;
+}
+
+.statistics-section > .selectors {
+  margin-bottom: 32px;
+  display: flex;
+  align-items: flex-start;
+}
+.statistics-section > .selectors > .select-wrapper {
+  margin-right: 16px;
+}
+.stats-table{
+  margin-bottom: 16px;
+  overflow-x: auto;
+  width: 100%;
+}
+.stats-table > table {
+  color: #000000;
+  border-spacing: 0;
+  border-collapse: collapse;
+  font-family: monospace;
+  width: max-content;
+  table-layout: fixed;
+}
+.stats-table > table > tr > td {
+  text-align: right;
+  width: 120px;
+  border: solid 0px #ffffff;
+  padding: 4px;
+  border-top: 1px solid #ddd;
+  border-left: 1px solid #ddd;
+}
+.stats-table > table > tr:first-child > td {
+  text-align: center;
+  background: #ddd;
+}
+.stats-table > table > tr > td:first-child {
+  background: #ddd;
+}
+.stats-table > table > tr:last-child > td {
+  border-bottom: 1px solid #ddd;
+}
+.stats-table > table > tr > td:last-child {
+  border-right: 1px solid #ddd;
+}
+.stats-table > table > tr > td:first-child {
+  text-align: left;
+}
+.stats-table > table > tr:first-child > td:first-child {
+  font-weight: bold;
+}
+.stats-table > table > tr > td > span.percentage {
+  display: inline-block;
+  width: 9ch;
+}
+
+.statistics-section input[type="checkbox"] {
+  background-color: #ffffff;
+  border: solid 1px #2f7bee;
+  display: inline-block;
+  border-radius: 3px;
+  width: 14px;
+  height: 14px;
+  margin-bottom: -1px;
+  margin-right: 4px;
+  padding: 0;
+  vertical-align: baseline;
+}
+.statistics-section input[type="checkbox"]:checked {
+  background-color: #2f7bee;
+  border-color: #2f7bee;
+}
+.statistics-section input[type="checkbox"]:checked:after {
+  content: "";
+  display: block;
+  margin: 0 0 0 3px;
+  width: 3px;
+  height: 7px;
+  border: solid #ffffff;
+  border-width: 0 2px 2px 0;
+  -webkit-transform: rotate(45deg);
+  -ms-transform: rotate(45deg);
+  transform: rotate(45deg);
+}
+
+.statistics-section fieldset {
+  border: 1px solid #c6c6c6;
+  padding: 8px;
+  border-radius: 5px;
+  display: inline-block;
+  margin-right: 16px;
+  margin-bottom: 16px;
+}
+.statistics-section fieldset > legend {
+  padding: 0 10px;
+  font-weight: bold;
+  color: #c6c6c6;
+  font-size: 120%;
+}
+.statistics-section fieldset > .field-div {
+  display: inline-block;
+  margin-left: 8px;
+  margin-bottom: 8px;
+  white-space: nowrap;
+}
+
+.statistics-section .bar-chart {
+  margin-bottom: 16px;
+}
+.statistics-section .bar-chart > .content {
+  display: flex;
+}
+.statistics-section .bar-chart > .content > .bars-container {
+  padding-bottom: 80px;
+  padding-top: 24px;
+  position: relative;
+  white-space: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  margin-right: 8px;
+}
+
+.statistics-section .bar-chart > .content > .bars-container::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 20px;
+  background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1));
+  pointer-events: none;
+}
+.statistics-section .bar-chart > .content > .bars-container > svg.bar-scale {
+  display: inline-block;
+  overflow: visible !important;
+}
+.statistics-section .bar-chart > .content > .bars-container > span {
+  vertical-align: bottom;
+  display: inline-block;
+}
+.statistics-section .bar-chart > .content > .bars-container > span.label {
+  width: 0;
+  height: 0;
+  transform: rotate(45deg);
+  position: relative;
+  left: 15px;
+  top: 4px;
+}
+.statistics-section .bar-chart > .content > .bars-container > span.label2 {
+  width: 0;
+  height: 0;
+  position: absolute;
+  left: initial;
+  top: 8px;
+  z-index: 1;
+  text-align: center;
+}
+.statistics-section .bar-chart > .content > .bars-container > span.bar {
+  width: 30px;
+  border-bottom: 1px solid #000;
+  position: relative;
+}
+.statistics-section .bar-chart > .content > .bars-container > span.bar > span {
+  display: inline-block;
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+.statistics-section .bar-chart > .content > .legend > div.observed > span:first-child,
+.statistics-section .bar-chart > .content > .bars-container > span.observed,
+.statistics-section .bar-chart > .content > .bars-container > span.bar > span.observed {
+  background-color: #cbdefb;
+}
+.statistics-section .bar-chart > .content > .legend > div.expected > span:first-child,
+.statistics-section .bar-chart > .content > .bars-container > span.expected,
+.statistics-section .bar-chart > .content > .bars-container > span.bar > span.expected {
+  background-color: #c6c6c6;
+}
+.statistics-section .bar-chart > .content > .bars-container > span.separator {
+  padding: 0 4px;
+  border-bottom: 1px solid #000;
+}
+.statistics-section .bar-chart > .header:after {
+  content: "";
+  display: block;
+  clear: both;
+}
+.statistics-section .bar-chart > .content > .legend {
+  width: 200px;
+  overflow-x: hidden;
+  white-space: nowrap;
+  position: relative;
+}
+.statistics-section .bar-chart > .content > .legend::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 20px;
+  background: linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,1));
+  pointer-events: none;
+}
+.statistics-section .bar-chart > .content > .legend > div > span {
+  display: inline-block;
+}
+.statistics-section .bar-chart > .content > .legend > div > span:first-child {
+  width: 20px;
+  height: 20px;
+  margin-right: 4px;
+}
+
+.statistics-section > .selectors > fieldset > div.columns-display {
+  display: flex;
+}
+.statistics-section > .selectors > fieldset > div.columns-display > div {
+  margin-left: 16px;
+  text-align: right;
+}
+.statistics-section > .selectors select {
+  width: 120px;
+}
+.statistics-section > .selectors > fieldset > div.columns-display > div > div:not(:first-child) {
+  margin-top: 8px;
+}
+
+.statistics-section .results > pre {
+  margin-bottom: 16px;
+}
+
+.statistics-section .stats-boxplots {
+  margin-bottom: 16px;
+  white-space: nowrap;
+  overflow-x: auto;
+  
+}
+.statistics-section .stats-boxplots > div {
+  display: inline-block;
+  text-align: center;
+}
+
+.statistics-section .scatter-row {
+  white-space: nowrap;
+}
+
+.boxplot line, .boxplot rect, .boxplot circle { stroke: #000; stroke-width: 1px; }
+.boxplot rect { fill: #cbdefb; }
+.boxplot .center { stroke-dasharray: 3,3; }
+.boxplot .outlier { fill: none;  stroke: #000; }
+
+.statistics-section .scatter-wrapper {
+  position: relative;
+}
+.statistics-section .scatter-row > .scatter-wrapper {
+  display: inline-block;
+}
+.statistics-section .scatter-wrapper > .scatter-tooltip {
+position:absolute;
+padding:4px 8px;
+background:#fff;
+border:1px solid #333;
+display:none;
+pointer-events:none;
+}
+
+.statistics-section .bar-plot {
+  width: 200px;
+  padding: 0 8px;
+  margin-bottom: 32px;
+}
+.statistics-section .bar-plot > .freq-bar {
+  position: relative;
+  margin-bottom: 4px;
+  cursor: pointer;
+}
+.statistics-section .bar-plot > .freq-bar > div.freq1 {
+  background-color: #cbdefb;
+  height: 100%;
+  width: 100%;
+  padding: 4px 0;
+}
+.statistics-section .bar-plot > .freq-bar > span {
+  position: absolute;
+  display: inline-block;
+  padding: 4px;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  white-space: nowrap;
+}
+.statistics-section .bar-plot > .freq-axis {
+  position: relative;
+  border-top: solid 1px #777777;
+  padding-bottom: 20px;
+}
+.statistics-section .bar-plot > .freq-axis > span {
+  position: absolute;
+  display: block;
+  width: 30px;
+  text-align: center;
+  margin-left: -15px;
+  margin-top: 4px;
+}
+.statistics-section .bar-plot > .freq-axis > span:after {
+  content: "";
+  border-left: solid 1px #777777;
+  height: 4px;
+  display: block;
+  position: absolute;
+  top: -4px;
+  left: 15px;
+}
+
+.statistics-section .row-descriptive-numeric > .stats-table,
+.statistics-section .row-descriptive-numeric > .stats-boxplots {
+  width: 280px;
+  display: inline-block;
+  vertical-align: middle;
+}

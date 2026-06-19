@@ -14,6 +14,7 @@ function network(Graph){
       VisualHandlers = {},
       Controllers = {},
       frequencyBars = false,
+      statistics = false,
       linePlots = false,
       GraphNodesLength = 0,
       GraphLinksLength = 0,
@@ -445,6 +446,8 @@ function network(Graph){
       delete options.frames;
     }
 
+    Graph.nodenames = Graph.nodenames.map(String);
+
     var nodes = [],
         len = 0;
 
@@ -482,6 +485,8 @@ function network(Graph){
       if(!options.linkTarget){
         options.linkTarget = "Target";
       }
+
+      Graph.linknames = Graph.linknames.map(String);
 
       var links = [];
 
@@ -775,6 +780,40 @@ function displayMain(){
         .job(function(){
           options.frequencies = true;
           showTables();
+        }));
+  }
+  if(options.statistics){
+      options.statistics = false;
+      var names = Graph.nodenames.filter(function(d){ return !hiddenFields.has(d) && d!=options.nodeName; }),
+          types = names.map(function(d){
+            var idx = Graph.nodenames.indexOf(d);
+            if(idx!=-1){
+              return Graph.nodetypes[idx];
+            }
+          });
+      if(options.showCoordinates && !options.heatmap){
+        names.push("x");
+        types.push("number");
+        names.push("y");
+        types.push("number");
+      }
+      statistics = displayStatistics()
+        .nodeLabel(options.nodeLabel ? options.nodeLabel : options.nodeName)
+        .names(names)
+        .categories(options.categories)
+        .types(types)
+      infoPanel.closeAction(function(){ options.statistics = false; });
+      main.call(iconButton()
+        .alt("statistics")
+        .width(24)
+        .height(24)
+        .src(b64Icons.stats)
+        .title("statistics")
+        .job(function(){
+          options.statistics = true;
+          var win = displayWindow(1400,780);
+          statistics.nodes(Graph.nodes.filter(checkSelectableNode));
+          statistics(win);
         }));
   }
   if(frameControls && options.lineplotsKeys){
