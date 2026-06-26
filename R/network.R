@@ -176,7 +176,7 @@ netCreate <- function(net, dir){
   scripts <- c("d3.min.js","jspdf.min.js","jszip.min.js","iro.min.js")
   if(!is.null(net$options[["statistics"]]) && net$options[["statistics"]]){
     styles <- c(styles, "statistics.css")
-    scripts <- c(scripts, "stdlib.bundle.js")
+    scripts <- c(scripts, "stdlib.bundle.js", paste0("statistics_",language))
   }
   scripts <- c(scripts,"images.js","colorScales.js","functions.js",language,"network.js")
 
