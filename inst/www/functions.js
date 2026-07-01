@@ -1702,9 +1702,13 @@ function displayInfoPanel(){
       infopanel.style("display",null);
       infopanel.transition().duration(transitionDuration)
         .style("left",(viewport().width-infoWidth)+"px")
-        .on("end",callback ? function(){ contentDiv.style("display",null); } : null)
-    }
-    if(callback){
+        .on("end",function(){
+          contentDiv.style("display",null);
+          if(callback){
+            callback(contentDiv);
+          }
+        })
+    }else if(callback){
       callback(contentDiv);
     }
   }
@@ -1964,7 +1968,7 @@ function displayStatistics(){
       .text(statistics_texts["ANOVA"])
     button.classed("disabled",!somecategorical || !somenumeric)
 
-    function displaySelector(fieldvariables,title,data,change){
+    function displaySelector(fieldvariables,title,data){
       fieldvariables.append("span").text(title+": ");
       var selector = fieldvariables.append("div")
       .attr("class","select-wrapper")
@@ -1976,12 +1980,6 @@ function displayStatistics(){
         .enter().append("option")
           .property("value",String)
           .text(String)
-      }
-
-      if(change){
-        selector.on("change",function(){
-          change(this.value);
-        });
       }
         
       return selector;
@@ -2218,21 +2216,40 @@ function displayStatistics(){
       fieldvariables.append("legend").text(statistics_texts["Variables"]);
 
       var selector1 = displaySelector(fieldvariables.append("div").attr("class","field-div"), statistics_texts["Categorical"], catnames);
-      selector1.on("change",function(){
-        calculateDescriptive(this.value);
-      })
+      selector1.on("change",calculateDescriptive)
       .insert("option", ":first-child")
         .text(statistics_texts["_All_"])
         .property("value","")
         .attr("selected","selected")
+
+      var fieldorder = selectordiv.append("fieldset");
+      fieldorder.append("legend").text(statistics_texts["Charts"]);
+
+      var fieldDiv = fieldorder.append("div")
+      .attr("class","field-div");
+      var checkOrder = fieldDiv.append("input")
+        .attr("id","checkbox-order")
+        .attr("type","checkbox")
+        .attr("value","1");
+      fieldDiv.append("label")
+      .attr("for","checkbox-order")
+      .text(statistics_texts["Order_by_frequency"]);
+      checkOrder.on("change",calculateDescriptive);
 
       var results = div.append("div")
         .attr("class","results")
 
       calculateDescriptive();
 
-      function calculateDescriptive(var1){
+      function calculateDescriptive(){
         results.selectAll("*").remove();
+
+        var var1 = selector1.property("value"),
+            orderbyfreq = checkOrder.node().checked;
+
+        if(catnames.indexOf(var1)==-1){
+          var1 = false;
+        }
 
         (var1 ? [var1] : catnames).forEach(function(var1){
           var data1 = {},
@@ -2255,9 +2272,11 @@ function displayStatistics(){
         }
 
         var orderedkeys = categories[var1].slice();
-        orderedkeys.sort(function(a,b){
-          return sortAsc(data1[a],data1[b]);
-        });
+        if(orderbyfreq){
+          orderedkeys.sort(function(a,b){
+            return sortAsc(data1[a],data1[b]);
+          });
+        }
 
         var table = results.append("div")
           .attr("class","stats-table");
@@ -2406,34 +2425,24 @@ function displayStatistics(){
           .attr("value",d)
           .attr("selected","selected")
       })
+      selector1.on("change",calculateCorrelation);
 
       var fieldstats = selectordiv.append("fieldset");
       fieldstats.append("legend").text(statistics_texts["Statistics"]);
 
       fieldDiv = fieldstats.append("div").attr("class","field-div");
-      fieldDiv.append("button")
-      .attr("type","button")
-      .text("Pearson")
-      .on("click",function(){
-        calculateCorrelation("pearson");
-      })
-
-      fieldDiv = fieldstats.append("div").attr("class","field-div");
-      fieldDiv.append("button")
-      .attr("type","button")
-      .text("Spearman")
-      .on("click",function(){
-        calculateCorrelation("spearman");
-      })
-      .style("margin-left","8px")
+      var selector2 = displaySelector(fieldDiv, statistics_texts["Method"], ['pearson','spearman']);
+      selector2.on("change",calculateCorrelation);
 
       var results = div.append("div")
         .attr("class","results")
 
-      calculateCorrelation("pearson");
+      calculateCorrelation();
 
-      function calculateCorrelation(correlation){
+      function calculateCorrelation(){
         results.selectAll("*").remove();
+
+        var correlation = selector2.property("value");
 
         var cats = [];
         var opts = selector1.node().selectedOptions;
@@ -2445,7 +2454,7 @@ function displayStatistics(){
         .attr("class","heatmap")
 
       var dendroWidth = 100,
-          heatmapColorScale = ["#d62728","#000000","#1f77b4"],
+          heatmapColorScale = colorScales.RdWhBu,
           heatmapDomain = [-1,0,1];
 
       var heatmapScale = divHeatmap.append("div")
@@ -2555,14 +2564,15 @@ function displayStatistics(){
         for (var j = 0; j < cols; j++) {
           var c = order[j];
           ctx.fillStyle = scaleColor(pcorr[r][c]);
-          ctx.fillRect(
-              scaleX(j),
-              scaleY(i),
-              cellWidth,
-              cellHeight
-          );
+          ctx.fillRect(scaleX(j), scaleY(i), cellWidth, cellHeight);
+          ctx.strokeStyle = basicColors.mediumGrey;
+          ctx.lineWidth = 1;
+          ctx.strokeRect(scaleX(j), scaleY(i), cellWidth, cellHeight);
           ctx.font = "20px sans-serif";
-          ctx.fillStyle = "#fff";
+          ctx.fillStyle = basicColors.white;
+          if(d3.hsl(scaleColor(pcorr[r][c])).l>0.75){
+            ctx.fillStyle = basicColors.black;
+          }
           ctx.textAlign = "center";
           var text = ""
           if(pvalue[r][c]<=0.05){
@@ -2611,40 +2621,30 @@ function displayStatistics(){
 
       fieldDiv = fieldvariables.append("div").attr("class","field-div");
       var selector1 = displaySelector(fieldDiv, statistics_texts["Variable_1"], numnames);
+      selector1.on("change",calculateCorrelation);
       fieldDiv = fieldvariables.append("div").attr("class","field-div");
       var selector2 = displaySelector(fieldDiv, statistics_texts["Variable_2"], numnames);
       selector2.select("option:nth-child(2)").attr("selected","selected");
+      selector2.on("change",calculateCorrelation);
 
       var fieldstats = selectordiv.append("fieldset");
       fieldstats.append("legend").text(statistics_texts["Statistics"]);
 
       fieldDiv = fieldstats.append("div").attr("class","field-div");
-      fieldDiv.append("button")
-      .attr("type","button")
-      .text("Pearson")
-      .on("click",function(){
-        calculateCorrelation("pearson");
-      })
-
-      fieldDiv = fieldstats.append("div").attr("class","field-div");
-      fieldDiv.append("button")
-      .attr("type","button")
-      .text("Spearman")
-      .on("click",function(){
-        calculateCorrelation("spearman");
-      })
-      .style("margin-left","8px")
+      var selector3 = displaySelector(fieldDiv, statistics_texts["Method"], ['pearson','spearman']);
+      selector3.on("change",calculateCorrelation);
 
       var results = div.append("div")
         .attr("class","results")
 
-      calculateCorrelation("pearson");
+      calculateCorrelation();
 
-      function calculateCorrelation(correlation){
+      function calculateCorrelation(){
         results.selectAll("*").remove();
 
         var var1 = selector1.property("value"),
             var2 = selector2.property("value"),
+            correlation = selector3.property("value");
             data1 = [],
             data2 = [];
 
@@ -2685,24 +2685,16 @@ function displayStatistics(){
 
       fieldDiv = fieldvariables.append("div").attr("class","field-div");
       var selector1 = displaySelector(fieldDiv, statistics_texts["Variable_1"], numnames);
+      selector1.on("change",calculateWilcoxon);
 
       fieldDiv = fieldvariables.append("div").attr("class","field-div");
       var selector2 = displaySelector(fieldDiv, statistics_texts["Variable_2"], numnames);
       selector2.select("option:nth-child(2)").attr("selected","selected");
+      selector2.on("change",calculateWilcoxon);
 
       fieldDiv = fieldvariables.append("div").attr("class","field-div");
       var selector5 = displaySelector(fieldDiv, statistics_texts["Tail"], ['two-sided','less','greater']);
-
-      var fieldstats = selectordiv.append("fieldset");
-      fieldstats.append("legend").text(statistics_texts["Statistics"]);
-
-      fieldDiv = fieldstats.append("div").attr("class","field-div");
-      fieldDiv.append("button")
-      .attr("type","button")
-      .text("Wilcoxon Test")
-      .on("click",function(){
-        calculateWilcoxon();
-      })
+      selector5.on("change",calculateWilcoxon);
 
       var results = div.append("div")
         .attr("class","results")
@@ -2768,24 +2760,16 @@ function displayStatistics(){
 
       fieldDiv = fieldvariables.append("div").attr("class","field-div");
       var selector1 = displaySelector(fieldDiv, statistics_texts["Variable_1"], numnames);
+      selector1.on("change",calculateTtest);
 
       fieldDiv = fieldvariables.append("div").attr("class","field-div");
       var selector2 = displaySelector(fieldDiv, statistics_texts["Variable_2"], numnames);
       selector2.select("option:nth-child(2)").attr("selected","selected");
+      selector2.on("change",calculateTtest);
 
       fieldDiv = fieldvariables.append("div").attr("class","field-div");
       var selector5 = displaySelector(fieldDiv, statistics_texts["Tail"], ['two-sided','less','greater']);
-
-      var fieldstats = selectordiv.append("fieldset");
-      fieldstats.append("legend").text(statistics_texts["Statistics"]);
-
-      fieldDiv = fieldstats.append("div").attr("class","field-div");
-      fieldDiv.append("button")
-      .attr("type","button")
-      .text("t-test")
-      .on("click",function(){
-        calculateTtest();
-      })
+      selector5.on("change",calculateTtest);
 
       var results = div.append("div")
         .attr("class","results")
@@ -2852,33 +2836,28 @@ function displayStatistics(){
 
       fieldDiv = fieldvariables.append("div").attr("class","field-div");
       var selector1 = displaySelector(fieldDiv, statistics_texts["Numeric"], numnames);
+      selector1.on("change",calculateTtest);
 
       fieldDiv = fieldvariables.append("div").attr("class","field-div");
-      var selector2 = displaySelector(fieldDiv, statistics_texts["Categorical"], catnames, function(value){
-        listCategories(selector3,selector4,value);
+      var selector2 = displaySelector(fieldDiv, statistics_texts["Categorical"], catnames);
+      selector2.on("change", function(value){
+        listCategories(selector3,selector4,this.value);
+        calculateTtest();
       });
 
       fieldDiv = fieldvariables.append("div").attr("class","field-div");
       var selector3 = displaySelector(fieldDiv, statistics_texts["Group_1"]);
+      selector3.on("change",calculateTtest);
 
       fieldDiv = fieldvariables.append("div").attr("class","field-div");
       var selector4 = displaySelector(fieldDiv, statistics_texts["Group_2"]);
+      selector4.on("change",calculateTtest);
 
       listCategories(selector3,selector4,catnames[0]);
 
       fieldDiv = fieldvariables.append("div").attr("class","field-div");
       var selector5 = displaySelector(fieldDiv, statistics_texts["Tail"], ['two-sided','less','greater']);
-
-      var fieldstats = selectordiv.append("fieldset");
-      fieldstats.append("legend").text(statistics_texts["Statistics"]);
-
-      fieldDiv = fieldstats.append("div").attr("class","field-div");
-      fieldDiv.append("button")
-      .attr("type","button")
-      .text("t-test")
-      .on("click",function(){
-        calculateTtest();
-      })
+      selector5.on("change",calculateTtest);
 
       var results = div.append("div")
         .attr("class","results")
@@ -2956,17 +2935,22 @@ function displayStatistics(){
 
       fieldDiv = fieldvariables.append("div").attr("class","field-div");
       var selector1 = displaySelector(fieldDiv, statistics_texts["Numeric"], numnames);
+      selector1.on("change",calculateUtest);
 
       fieldDiv = fieldvariables.append("div").attr("class","field-div");
-      var selector2 = displaySelector(fieldDiv, statistics_texts["Categorical"], catnames, function(value){
-        listCategories(selector3,selector4,value);
+      var selector2 = displaySelector(fieldDiv, statistics_texts["Categorical"], catnames);
+      selector2.on("change",function(){
+        listCategories(selector3,selector4,this.value);
+        calculateUtest();
       });
 
       fieldDiv = fieldvariables.append("div").attr("class","field-div");
       var selector3 = displaySelector(fieldDiv, statistics_texts["Group_1"]);
+      selector3.on("change",calculateUtest);
 
       fieldDiv = fieldvariables.append("div").attr("class","field-div");
       var selector4 = displaySelector(fieldDiv, statistics_texts["Group_2"]);
+      selector4.on("change",calculateUtest);
 
       listCategories(selector3,selector4,catnames[0]);
 
@@ -2979,17 +2963,7 @@ function displayStatistics(){
       fieldDiv.append("label")
       .attr("for","checkbox-correction")
       .text(statistics_texts["Use_continuity_correction"]);
-
-      var fieldstats = selectordiv.append("fieldset");
-      fieldstats.append("legend").text(statistics_texts["Statistics"]);
-
-      fieldDiv = fieldstats.append("div").attr("class","field-div");
-      fieldDiv.append("button")
-      .attr("type","button")
-      .text("Mann-Whitney U test")
-      .on("click",function(){
-        calculateUtest();
-      })
+      checkCorrection.on("change",calculateUtest);
 
       var results = div.append("div")
         .attr("class","results")
@@ -3069,28 +3043,19 @@ function displayStatistics(){
       var fieldcol1 = columnsDisplay.append("div");
 
       var selector1 = displaySelector(fieldcol1.append("div").attr("class","field-div"), statistics_texts["Numeric"], numnames);
-      var selector2 = displaySelector(fieldcol1.append("div").attr("class","field-div"), statistics_texts["Categorical"], catnames, function(value){
-        listCategories(selector3,value);
+      selector1.on("change",calculateAnova);
+      var selector2 = displaySelector(fieldcol1.append("div").attr("class","field-div"), statistics_texts["Categorical"], catnames);
+      selector2.on("change",function(){
+        listCategories(selector3,this.value);
+        calculateAnova();
       });
 
       var fieldcol2 = columnsDisplay.append("div");
       var selector3 = fieldcol2.append("select")
         .attr("multiple","multiple")
         .attr("class","category-values")
+      selector3.on("change",calculateAnova);
       listCategories(selector3,catnames[0]);
-
-      var fieldstats = selectordiv.append("fieldset");
-      fieldstats.append("legend").text(statistics_texts["Statistics"]);
-
-      fieldstats.append("div")
-      .attr("class","field-div")
-      .append("button")
-      .attr("id","button-anova")
-      .attr("type","button")
-      .text("ANOVA")
-      .on("click",function(){
-        calculateAnova();
-      })
 
       var results = div.append("div")
         .attr("class","results")

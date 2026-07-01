@@ -854,8 +854,10 @@ function displayPanelButtons(){
     var buttonsSelect = panel.append("div")
         .attr("class","panel-buttons");
     displayButton(buttonsSelect,"selectall",selectAllItems,"ctrl + s",true,"primary");
-    displayButton(buttonsSelect,"selectneighbors",addNeighbors,"ctrl + b",false,"primary");
-    displayButton(buttonsSelect,"filter",switchEgoNet,texts.filterInfo+" (ctrl + e)",false,"primary");
+    if(GraphLinksLength){
+      displayButton(buttonsSelect,"selectneighbors",addNeighbors,"ctrl + b",false,"primary");
+      displayButton(buttonsSelect,"filter",switchEgoNet,texts.filterInfo+" (ctrl + e)",false,"primary");
+    }
     displayButton(buttonsSelect,"isolate",filterSelection,texts.isolateInfo+" (ctrl + f)",false,"primary");
     if(Graph.tree){
       displayButton(buttonsSelect,"expand",treeActionExpand,"ctrl + p",false,"primary");
@@ -1679,6 +1681,7 @@ function addFilterController(){
       .style("margin-bottom",0);
 
     if(items=="nodes"){
+      if(GraphLinksLength){
         itemFilter.append("button")
         .attr("class","primary")
         .text(texts.filter)
@@ -1687,6 +1690,7 @@ function addFilterController(){
           applyValueSelection();
           switchEgoNet();
         });
+      }
 
       itemFilter.append("button")
         .attr("class","primary")
@@ -3123,7 +3127,9 @@ function drawNet(){
       gHighNeigh.append("span")
         .text(texts["highlightneighbors"])
 
-      displayBottomButton(legendBottomControls,"filter",texts.filterInfo+" (ctrl + e)",switchEgoNet,filterLinkSelection);
+      if(GraphLinksLength){
+        displayBottomButton(legendBottomControls,"filter",texts.filterInfo+" (ctrl + e)",switchEgoNet,filterLinkSelection);
+      }
       displayBottomButton(legendBottomControls,"isolate",texts.isolateInfo+" (ctrl + f)",filterSelection,isolateLinkSelection);
     }
     // end legends

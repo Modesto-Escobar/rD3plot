@@ -20,6 +20,7 @@ var statistics_texts = {
     Statistics: "Statistics",
     Variable_1: "Variable 1",
     Variable_2: "Variable 2",
+    Method: "Method",
     Rows: "Rows",
     Columns: "Columns",
     Rows2: "Rows2",
@@ -37,5 +38,8 @@ var statistics_texts = {
     _All_: "-All-",
     _None_: "-None-",
     Some_cases_has_been_ignored: "Some cases has been ignored due to invalid values.",
-    Some_correlations_are_unavailable: "Some correlations are unavailable because one or both variables have insufficient variability (all or most values are identical)."
+    Some_correlations_are_unavailable: "Some correlations are unavailable because one or both variables have insufficient variability (all or most values are identical).",
+    The_test_cannot_be_performed_with_the_same_two_variables: "The test cannot be performed with the same two variables.",
+    The_test_cannot_be_performed_with_with_only_one_variable: "The test cannot be performed with with only one variable.",
+    Order_by_frequency: "Order by frequency"
   };
