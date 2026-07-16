@@ -2712,7 +2712,7 @@ function displayStatistics(){
 
         if(var1==var2){
           results.append("pre")
-            .text("The test cannot be performed with the same two variables.");
+            .text(statistics_texts["The_test_cannot_be_performed_with_the_same_two_variables"]);
           return;
         }
 
@@ -2734,8 +2734,16 @@ function displayStatistics(){
           'alpha': 0.05
         });
 
-        results.append("pre")
-          .text(res.print());
+        var table = results.append("div")
+          .attr("class","stats-table")
+          .append("table")
+        var tr;
+        tr = table.append("tr").style("display","none");
+        ["pValue","statistic"].forEach(function(d){
+          tr = table.append("tr");
+          tr.append("td").text(d);
+          tr.append("td").text(formatter(res[d]));
+        });
 
         var boxplotData = {};
         boxplotData[var1] = data1.sort();
@@ -2787,7 +2795,7 @@ function displayStatistics(){
 
         if(var1==var2){
           results.append("pre")
-            .text("The test cannot be performed with the same two variables.");
+            .text(statistics_texts["The_test_cannot_be_performed_with_the_same_two_variables"]);
           return;
         }
 
@@ -2809,8 +2817,19 @@ function displayStatistics(){
           'alpha': 0.05
         });
 
-        results.append("pre")
-          .text(res.print());
+        var table = results.append("div")
+          .attr("class","stats-table")
+          .append("table")
+        var tr;
+        tr = table.append("tr").style("display","none");
+        ["pValue","statistic","df"].forEach(function(d){
+          tr = table.append("tr");
+          tr.append("td").text(d);
+          tr.append("td").text(formatter(res[d]));
+        });
+        tr = table.append("tr");
+        tr.append("td").text("95% confidence interval");
+        tr.append("td").text("["+formatter(res['ci'][0])+","+formatter(res['ci'][1])+"]");
 
         var boxplotData = {};
         boxplotData[var1] = data1.sort();
@@ -2873,22 +2892,24 @@ function displayStatistics(){
             group2 = selector4.property("value"),
             tail = selector5.property("value"),
             data1 = [],
-            data2 = [];
+            data2 = [],
+            someignored = false;
 
         for(var i=0; i<nodes.length; i++){
+          var d = nodes[i][var1];
           if(nodes[i][var2]==group1){
-            data1.push(nodes[i][var1]);
+            if(checkComplete(d)){
+              data1.push(d);
+            }else{
+              someignored = true;
+            }
           }else if(nodes[i][var2]==group2){
-            data2.push(nodes[i][var1]);
+            if(checkComplete(d)){
+              data2.push(d);
+            }else{
+              someignored = true;
+            }
           }
-        }
-
-        var cleaned = cleanForCorrelation(data1, data2);
-        if(data1.length!=cleaned.x.length || data2.length!=cleaned.y.length){
-          results.append("pre")
-            .text(statistics_texts["Some_cases_has_been_ignored"]);
-          data1 = cleaned.x;
-          data2 = cleaned.y;
         }
 
         var res = stdlib.stats.ttest2(data1, data2, {
@@ -2896,8 +2917,24 @@ function displayStatistics(){
           'alpha': 0.05
         });
 
-        results.append("pre")
-          .text(res.print());
+        if(someignored){
+          results.append("pre")
+            .text(statistics_texts["Some_cases_has_been_ignored"]);
+        }
+
+        var table = results.append("div")
+          .attr("class","stats-table")
+          .append("table")
+        var tr;
+        tr = table.append("tr").style("display","none");
+        ["pValue","statistic","df"].forEach(function(d){
+          tr = table.append("tr");
+          tr.append("td").text(d);
+          tr.append("td").text(formatter(res[d]));
+        });
+        tr = table.append("tr");
+        tr.append("td").text("95% confidence interval");
+        tr.append("td").text("["+formatter(res['ci'][0])+","+formatter(res['ci'][1])+"]");
 
         var boxplotData = {};
         boxplotData[group1] = data1.sort();
@@ -2979,32 +3016,43 @@ function displayStatistics(){
             group2 = selector4.property("value"),
             correction = checkCorrection.node().checked,
             data1 = [],
-            data2 = [];
+            data2 = [],
+            someignored = false;
 
         for(var i=0; i<nodes.length; i++){
+          var d = nodes[i][var1];
           if(nodes[i][var2]==group1){
-            data1.push(nodes[i][var1]);
+            if(checkComplete(d)){
+              data1.push(d);
+            }else{
+              someignored = true;
+            }
           }else if(nodes[i][var2]==group2){
-            data2.push(nodes[i][var1]);
+            if(checkComplete(d)){
+              data2.push(d);
+            }else{
+              someignored = true;
+            }
           }
-        }
-
-        var cleaned = cleanForCorrelation(data1, data2);
-        if(data1.length!=cleaned.x.length || data2.length!=cleaned.y.length){
-          results.append("pre")
-            .text(statistics_texts["Some_cases_has_been_ignored"]);
-          data1 = cleaned.x;
-          data2 = cleaned.y;
         }
 
         var res = stdlib.stats.mannWhitneyU(data1, data2, correction);
 
-        results.append("pre")
-          .text("U1: " + res.U1 +
-            "\nU2: " + res.U2 +
-            "\nU: " + res.U +
-            "\nz: " + formatter(res.z) +
-            "\npValue: " + formatter(res.pValue));
+        if(someignored){
+          results.append("pre")
+            .text(statistics_texts["Some_cases_has_been_ignored"]);
+        }
+
+        var table = results.append("div")
+          .attr("class","stats-table")
+          .append("table")
+        var tr;
+        tr = table.append("tr").style("display","none");
+        ["U1","U2","U","z","pValue"].forEach(function(d){
+          tr = table.append("tr");
+          tr.append("td").text(d);
+          tr.append("td").text(formatter(res[d]));
+        });
 
         var boxplotData = {};
         boxplotData[group1] = data1.sort();
@@ -3072,7 +3120,7 @@ function displayStatistics(){
         var opts = selector3.node().selectedOptions;
         if(opts.length==1){
           results.append("pre")
-            .text("The test cannot be performed with only one variable.");
+            .text(statistics_texts["The_test_cannot_be_performed_with_the_same_two_variables"]);
           return;
         }
         for (var i = 0; i < opts.length; i++) {
@@ -3082,7 +3130,7 @@ function displayStatistics(){
         var someignored = false;
 
         var subnodes = nodes.filter(function(node){
-          if(node[var1] === null || node[var1] === undefined || isNaN(node[var1])){
+          if(!checkComplete(node[var1])){
             someignored = true;
             return false;
           }
@@ -3101,9 +3149,6 @@ function displayStatistics(){
           results.append("pre")
             .text(statistics_texts["Some_cases_has_been_ignored"]);
         }
-
-        results.append("pre")
-          .text(res.method+"\n\nNull Hypothesis: All Means Equal\nAlternate Hypothesis: At Least one Mean not Equal")
 
         var tableColumns = {"df":"df","ss":"SS","ms":"MS","statistic":"F Score","pValue":"P Value"};
         var table = results.append("div")
@@ -5915,15 +5960,17 @@ function drawDendrogram(canvas, root){
     drawNode(root);
 }
 
+function checkComplete(a){
+  return a !== null && a !== undefined && !isNaN(a);
+}
+
 function cleanForCorrelation(a, b) {
     var x = [];
     var y = [];
     var i;
 
     for (i = 0; i < a.length && i < b.length; i++) {
-        if (a[i] !== null && b[i] !== null &&
-            a[i] !== undefined && b[i] !== undefined &&
-            !isNaN(a[i]) && !isNaN(b[i])) {
+        if (checkComplete(a[i]) && checkComplete(b[i])) {
             x.push(a[i]);
             y.push(b[i]);
         }

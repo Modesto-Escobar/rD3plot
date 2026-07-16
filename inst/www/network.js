@@ -812,7 +812,15 @@ function displayMain(){
         .job(function(){
           options.statistics = true;
           var win = displayWindow(1400,780);
-          statistics.nodes(Graph.nodes.filter(checkSelectableNode));
+          var data = Graph.nodes.filter(checkSelectableNode);
+          if(options.showCoordinates && !options.heatmap){
+            data = JSON.parse(JSON.stringify(data));
+            for(var i=0; i<data.length; i++){
+              data[i]['x'] = scaleCoorX.invert(data[i]['x']);
+              data[i]['y'] = scaleCoorY.invert(data[i]['y']);
+            }
+          }
+          statistics.nodes(data);
           statistics(win);
         }));
   }
