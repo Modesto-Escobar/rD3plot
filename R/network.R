@@ -64,8 +64,27 @@ networkJSON<-function(net){
   if(length(layouts)){
     json$layouts <- layouts
   }
+  if(!is.null(options[["statistics"]]) && options[["statistics"]]){
+    json$nodetypes <- vapply(nodes,function(x){
+      if(is.numeric(x)){
+        return("number")
+      }else{
+        return("string")
+      }
+    },character(1))
+
+    categories <- list()
+    for(i in seq_along(nodenames)){
+      if(is.factor(nodes[[i]])){
+        categories[[nodenames[i]]] <- levels(nodes[[i]])
+      }
+    }
+    if(length(categories)){
+      options$categories <- categories
+    }
+  }
   json$options <- options
-  
+
   return(toJSON(json))
 }
 
@@ -139,6 +158,12 @@ imgWrapper <- function(net,callback,dir){
       net$options[["background"]] <- paste0('url("',paste("images",rawname,sep="/"),'")')
     }
   }
+  if(!is.null(net$options[["statistics"]]) && net$options[["statistics"]]){
+    src  <- paste(wwwDirectory(), "stats-icons", sep = "/")
+    dest <- paste(dir, "stats-icons", sep="/")
+    dir.create(dest, showWarnings = FALSE)
+    file.copy(dir(src, full.names = TRUE), dest)
+  }
   return(callback(net))
 }
 
@@ -147,7 +172,15 @@ netCreate <- function(net, dir){
   #get language
   language <- getLanguageScript(net)
 
-  createHTML(dir, c("reset.css","styles.css"), c("d3.min.js","jspdf.min.js","jszip.min.js","iro.min.js","images.js","colorScales.js","functions.js",language,"network.js"),function(){ return(imgWrapper(net,networkJSON,dir)) })
+  styles <- c("reset.css","styles.css")
+  scripts <- c("d3.min.js","jspdf.min.js","jszip.min.js","iro.min.js")
+  if(!is.null(net$options[["statistics"]]) && net$options[["statistics"]]){
+    styles <- c(styles, "statistics.css")
+    scripts <- c(scripts, "stdlib.bundle.js", paste0("statistics_",language))
+  }
+  scripts <- c(scripts,"images.js","colorScales.js","functions.js",language,"network.js")
+
+  createHTML(dir, styles, scripts,function(){ return(imgWrapper(net,networkJSON,dir)) })
 }
 
 # network graph function 
@@ -164,7 +197,7 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
         repulsion = 25, distance = 10, zoom = 1,
         fixed = showCoordinates, limits = NULL,
         main = NULL, note = NULL, showCoordinates = FALSE, showArrows = FALSE,
-        showLegend = TRUE, frequencies = FALSE, showAxes = FALSE,
+        showLegend = TRUE, frequencies = FALSE, statistics = FALSE, showAxes = FALSE,
         axesLabels = NULL, scenarios = NULL, help = NULL, helpOn = FALSE,
         mode = c("network","heatmap"), roundedItems = FALSE, controls = 1:8,
         cex = 1, background = NULL, defaultColor = "#1f77b4",
@@ -183,10 +216,10 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
   }
 
   if(!is.null(nodes)){
-    if(all(inherits(nodes,c("tbl_df","tbl","data.frame"),TRUE))) nodes <- as.data.frame(nodes)
+    nodes <- as.data.frame(nodes)
   }
   if(!is.null(links)){
-    if(all(inherits(links,c("tbl_df","tbl","data.frame"),TRUE))) links <- as.data.frame(links)
+    links <- as.data.frame(links)
   }
 
   options <- list()
@@ -305,6 +338,7 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
   options <- showSomething(options,"linkBipolar",linkBipolar)
   options <- showSomething(options,"helpOn",helpOn)
   options <- showSomething(options,"frequencies",frequencies)
+  options <- showSomething(options,"statistics",statistics)
   if (!is.null(controls)) options[["controls"]] <- as.numeric(controls)
   if (!is.null(mode)) options[["mode"]] <- tolower(substr(as.character(mode),1,1))
   if (!is.null(axesLabels)) options[["axesLabels"]] <- as.character(axesLabels)

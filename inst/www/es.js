@@ -130,5 +130,7 @@ var texts = {
     close: "Cerrar",
     filtermenu: "Menu de filtros",
     noresults: "Sin resultados",
-    jointfilter: "Filtro conjunto"
+    jointfilter: "Filtro conjunto",
+    typeatleast: "Teclea al menos [n] caracteres",
+    typesomething: "Escribe algo"
   };

@@ -14,6 +14,7 @@ function network(Graph){
       VisualHandlers = {},
       Controllers = {},
       frequencyBars = false,
+      statistics = false,
       linePlots = false,
       GraphNodesLength = 0,
       GraphLinksLength = 0,
@@ -445,6 +446,8 @@ function network(Graph){
       delete options.frames;
     }
 
+    Graph.nodenames = Graph.nodenames.map(String);
+
     var nodes = [],
         len = 0;
 
@@ -482,6 +485,8 @@ function network(Graph){
       if(!options.linkTarget){
         options.linkTarget = "Target";
       }
+
+      Graph.linknames = Graph.linknames.map(String);
 
       var links = [];
 
@@ -777,6 +782,48 @@ function displayMain(){
           showTables();
         }));
   }
+  if(options.statistics){
+      options.statistics = false;
+      var names = Graph.nodenames.filter(function(d){ return !hiddenFields.has(d) && d!=options.nodeName; }),
+          types = names.map(function(d){
+            var idx = Graph.nodenames.indexOf(d);
+            if(idx!=-1){
+              return Graph.nodetypes[idx];
+            }
+          });
+      if(options.showCoordinates && !options.heatmap){
+        names.push("x");
+        types.push("number");
+        names.push("y");
+        types.push("number");
+      }
+      statistics = displayStatistics()
+        .nodeLabel(options.nodeLabel ? options.nodeLabel : options.nodeName)
+        .names(names)
+        .categories(options.categories)
+        .types(types)
+      infoPanel.closeAction(function(){ options.statistics = false; });
+      main.call(iconButton()
+        .alt("statistics")
+        .width(24)
+        .height(24)
+        .src(b64Icons.stats)
+        .title("statistics")
+        .job(function(){
+          options.statistics = true;
+          var win = displayWindow(1400,780);
+          var data = Graph.nodes.filter(checkSelectableNode);
+          if(options.showCoordinates && !options.heatmap){
+            data = JSON.parse(JSON.stringify(data));
+            for(var i=0; i<data.length; i++){
+              data[i]['x'] = scaleCoorX.invert(data[i]['x']);
+              data[i]['y'] = scaleCoorY.invert(data[i]['y']);
+            }
+          }
+          statistics.nodes(data);
+          statistics(win);
+        }));
+  }
   if(frameControls && options.lineplotsKeys){
       options.lineplots = false;
       options.lineplotsItems = "nodes";
@@ -815,8 +862,10 @@ function displayPanelButtons(){
     var buttonsSelect = panel.append("div")
         .attr("class","panel-buttons");
     displayButton(buttonsSelect,"selectall",selectAllItems,"ctrl + s",true,"primary");
-    displayButton(buttonsSelect,"selectneighbors",addNeighbors,"ctrl + b",false,"primary");
-    displayButton(buttonsSelect,"filter",switchEgoNet,texts.filterInfo+" (ctrl + e)",false,"primary");
+    if(GraphLinksLength){
+      displayButton(buttonsSelect,"selectneighbors",addNeighbors,"ctrl + b",false,"primary");
+      displayButton(buttonsSelect,"filter",switchEgoNet,texts.filterInfo+" (ctrl + e)",false,"primary");
+    }
     displayButton(buttonsSelect,"isolate",filterSelection,texts.isolateInfo+" (ctrl + f)",false,"primary");
     if(Graph.tree){
       displayButton(buttonsSelect,"expand",treeActionExpand,"ctrl + p",false,"primary");
@@ -1640,6 +1689,7 @@ function addFilterController(){
       .style("margin-bottom",0);
 
     if(items=="nodes"){
+      if(GraphLinksLength){
         itemFilter.append("button")
         .attr("class","primary")
         .text(texts.filter)
@@ -1648,6 +1698,7 @@ function addFilterController(){
           applyValueSelection();
           switchEgoNet();
         });
+      }
 
       itemFilter.append("button")
         .attr("class","primary")
@@ -3084,7 +3135,9 @@ function drawNet(){
       gHighNeigh.append("span")
         .text(texts["highlightneighbors"])
 
-      displayBottomButton(legendBottomControls,"filter",texts.filterInfo+" (ctrl + e)",switchEgoNet,filterLinkSelection);
+      if(GraphLinksLength){
+        displayBottomButton(legendBottomControls,"filter",texts.filterInfo+" (ctrl + e)",switchEgoNet,filterLinkSelection);
+      }
       displayBottomButton(legendBottomControls,"isolate",texts.isolateInfo+" (ctrl + f)",filterSelection,isolateLinkSelection);
     }
     // end legends

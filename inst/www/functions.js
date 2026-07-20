@@ -1702,9 +1702,13 @@ function displayInfoPanel(){
       infopanel.style("display",null);
       infopanel.transition().duration(transitionDuration)
         .style("left",(viewport().width-infoWidth)+"px")
-        .on("end",callback ? function(){ contentDiv.style("display",null); } : null)
-    }
-    if(callback){
+        .on("end",function(){
+          contentDiv.style("display",null);
+          if(callback){
+            callback(contentDiv);
+          }
+        })
+    }else if(callback){
       callback(contentDiv);
     }
   }
@@ -1793,6 +1797,2155 @@ function attrSelectionWindow(){
   exports.clickAction = function(x) {
     if (!arguments.length) return clickAction;
     clickAction = x;
+    return exports;
+  };
+
+  return exports;
+}
+
+// display frequency tables
+function displayStatistics(){
+  var names,
+      nodes,
+      categories = {},
+      types = [],
+      nodeLabel = false;
+
+  function exports(sel){
+    sel.selectAll("*").remove();
+
+    var div = sel.append("div")
+    .attr("class","statistics-section")
+
+    var mainselectors = div.append("div")
+      .attr("class","main-selectors")
+
+    div.append("svg")
+    .attr("class","stats-go-main")
+    .on("click",function(){
+      exports(sel);
+    })
+    .attr("width",14)
+    .attr("height",14)
+    .attr("viewBox","0 0 14 14")
+    .append("path")
+      .attr("stroke","currentColor")
+      .attr("stroke-width",2)
+      .attr("stroke-linecap","round")
+      .attr("stroke-linejoin","round")
+      .attr("d","M13 7 H1 L7 2 L1 7 L7 12 L1 7")
+
+    var somenumeric = getNumNames().length,
+        somecategorical = getCatNames().length;
+        
+    var button;
+
+    var column1 = mainselectors.append("div").attr("class","col-1"),
+        column2 = mainselectors.append("div").attr("class","col-2");
+
+    var fieldDescriptive = column1.append("fieldset");
+    fieldDescriptive.append("legend").text(statistics_texts["Descriptive"]+":");
+
+    button = fieldDescriptive.append("button")
+      .on("click",function(){
+          descriptiveEnvironment();
+      })
+    button.append("img")
+      .attr("src","stats-icons/numeric_variables.png")
+    button.append("span")
+      .text(statistics_texts["Numeric_variables"])
+    button.classed("disabled",!somenumeric)
+
+    button = fieldDescriptive.append("button")
+      .on("click",function(){
+          descriptiveCatEnvironment();
+      })
+    button.append("img")
+      .attr("src","stats-icons/categorical_variables.png")
+    button.append("span")
+      .text(statistics_texts["Categorical_variables"])
+    button.classed("disabled",!somecategorical)
+
+    var fieldCorrelation = column1.append("fieldset");
+    fieldCorrelation.append("legend").text(statistics_texts["Correlation"]+":");
+
+    button = fieldCorrelation.append("button")
+      .on("click",function(){
+          corEnvironment();
+      })
+    button.append("img")
+      .attr("src","stats-icons/2-variables.png")
+    button.append("span")
+      .text(statistics_texts["two_variables"])
+    button.classed("disabled",!somenumeric)
+
+    button = fieldCorrelation.append("button")
+      .on("click",function(){
+          allvsallEnvironment();
+      })
+    button.append("img")
+      .attr("src","stats-icons/n-variables.png")
+    button.append("span")
+      .text(statistics_texts["k_variables"])
+    button.classed("disabled",!somenumeric)
+
+    var fieldAssociation = column1.append("fieldset");
+    fieldAssociation.append("legend").text(statistics_texts["Association_Categorical_test"]+":");
+
+    button = fieldAssociation.append("button")
+      .on("click",function(){
+          categoryTables();
+      })
+    button.append("img")
+      .attr("src","stats-icons/cross-table.png")
+    button.append("span")
+      .text(statistics_texts["Cross_Tables"])
+    button.classed("disabled",!somecategorical)
+
+    button = fieldAssociation.append("button")
+      .on("click",function(){
+          categoryTables(true);
+      })
+    button.append("img")
+      .attr("src","stats-icons/chi-square.png")
+    button.append("span")
+      .text(statistics_texts["Chi_square"])
+    button.classed("disabled",!somecategorical)
+
+    var fieldDifference1 = column2.append("fieldset");
+    fieldDifference1.append("legend").text(statistics_texts["Mean_difference_tests_non_parametric"]+":");
+
+    button = fieldDifference1.append("button")
+      .on("click",function(){
+          wilcoxonEnvironment();
+      })
+    button.append("img")
+      .attr("src","stats-icons/wilcoxon.png")
+    button.append("span")
+      .text(statistics_texts["Wilcoxon_Test_paired"])
+    button.classed("disabled",!somenumeric)
+
+    button = fieldDifference1.append("button")
+      .on("click",function(){
+          mannWhitneyUEnvironment();
+      })
+    button.append("img")
+      .attr("src","stats-icons/utest.png")
+    button.append("span")
+      .text("Mann-Whitney U Test")
+    button.classed("disabled",!somecategorical || !somenumeric)
+
+    var fieldDifference2 = column2.append("fieldset");
+    fieldDifference2.append("legend").text(statistics_texts["Mean_difference_tests_parametric"]+":");
+
+    button = fieldDifference2.append("button")
+      .on("click",function(){
+          pairedTtestEnvironment();
+      })
+    button.append("img")
+      .attr("src","stats-icons/paired-ttest.png")
+    button.append("span")
+      .text(statistics_texts["Paired_t_test"])
+    button.classed("disabled",!somenumeric)
+
+    button = fieldDifference2.append("button")
+      .on("click",function(){
+          unpairedTtestEnvironment();
+      })
+    button.append("img")
+      .attr("src","stats-icons/unpaired-ttest.png")
+    button.append("span")
+      .text(statistics_texts["Unpaired_t_test"])
+    button.classed("disabled",!somecategorical || !somenumeric)
+
+    button = fieldDifference2.append("button")
+      .on("click",function(){
+          anovaEnvironment();
+      })
+    button.append("img")
+      .attr("src","stats-icons/anova.png")
+    button.append("span")
+      .text(statistics_texts["ANOVA"])
+    button.classed("disabled",!somecategorical || !somenumeric)
+
+    function displaySelector(fieldvariables,title,data){
+      fieldvariables.append("span").text(title+": ");
+      var selector = fieldvariables.append("div")
+      .attr("class","select-wrapper")
+      .append("select")
+
+      if(data){
+        selector.selectAll("option")
+          .data(data)
+        .enter().append("option")
+          .property("value",String)
+          .text(String)
+      }
+        
+      return selector;
+    }
+
+    function displayMeansTable(div, data){
+      var divMeansTable = div.append("div")
+          .attr("class","stats-table")
+      var table = divMeansTable.append("table")
+      var tr = table.append("tr");
+      tr.append("td");
+      d3.keys(data).forEach(function(k){
+        tr.append("td").text(k);
+      })
+      tr = table.append("tr");
+      tr.append("td").text("mean");
+      d3.values(data).forEach(function(values){
+        tr.append("td").text(formatter(d3.mean(values)));
+      })
+      tr = table.append("tr");
+      tr.append("td").text("sd");
+      d3.values(data).forEach(function(values){
+        tr.append("td").text(formatter(stdlib.stats.stdev(values.length,1,values,1)));
+      })
+    }
+
+    function displayScatter(div, points, var1, var2, width, height, tooltip){
+
+      var wrapper = div.append("div")
+        .attr("class","scatter-wrapper")
+
+      // Canvas setup
+      var canvas = wrapper.append("canvas").node();
+      canvas.setAttribute("width",width);
+      canvas.setAttribute("height",height);
+      var ctx    = canvas.getContext("2d");
+
+      var radius = 3;
+
+      // Margins for axes
+      var margin = 40;
+      var left   = margin;
+      var right  = canvas.width  - margin;
+      var top    = margin;
+      var bottom = canvas.height - margin;
+
+      // Compute data ranges
+      var minX = d3.min(points,function(d){ return d[var1]; });
+      var maxX = d3.max(points,function(d){ return d[var1]; });
+      var minY = d3.min(points,function(d){ return d[var2]; });
+      var maxY = d3.max(points,function(d){ return d[var2]; });
+
+      // scales
+      var scaleX = d3.scaleLinear()
+        .range([left,right])
+        .domain([minX,maxX])
+
+      var scaleY = d3.scaleLinear()
+        .range([bottom,top])
+        .domain([minY,maxY])
+
+      // Draw axes
+      ctx.beginPath();
+      ctx.moveTo(left, top);
+      ctx.lineTo(left, bottom);
+      ctx.lineTo(right, bottom);
+      ctx.strokeStyle = basicColors.black;
+      ctx.stroke();
+
+      // Tick settings
+      var ticks = 5;  // number of ticks per axis
+
+      // Draw Y ticks + labels
+      ctx.font = "12px sans-serif";
+      ctx.fillStyle = basicColors.black;
+      ctx.textAlign = "end"; 
+
+      scaleY.ticks(ticks).forEach(function(value){
+          var y = scaleY(value);
+
+          // Tick mark
+          ctx.beginPath();
+          ctx.moveTo(left - 5, y);
+          ctx.lineTo(left, y);
+          ctx.stroke();
+
+          // Label
+          ctx.fillText(value, left - 10, y + 4);
+      });
+
+      ctx.textAlign = "center"; 
+
+      // Draw X ticks + labels
+      scaleX.ticks(ticks).forEach(function(value){
+          var x = scaleX(value);
+
+          // Tick mark
+          ctx.beginPath();
+          ctx.moveTo(x, bottom);
+          ctx.lineTo(x, bottom + 5);
+          ctx.stroke();
+
+          // Label
+          ctx.fillText(value, x, bottom + 20);
+      });
+
+      // Axis labels
+      ctx.fillStyle = basicColors.black;
+      ctx.font = "10px sans-serif";
+      ctx.textAlign = "end"; 
+
+      // Y label
+      ctx.save();
+      ctx.translate(left + 14, top);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText(var2, 0, 0);
+      ctx.restore();
+
+      // X label
+      ctx.fillText(var1, right, bottom - 8);
+
+      // Draw points
+      ctx.fillStyle = categoryColors[0];
+      for (var i = 0; i < points.length; i++) {
+          var cx = scaleX(points[i][var1]);
+          var cy = scaleY(points[i][var2]);
+          ctx.beginPath();
+          ctx.arc(cx, cy, radius, 0, Math.PI * 2, false);
+          ctx.fill();
+      }
+
+      if(tooltip && nodeLabel){
+        tooltip = wrapper.append("div")
+          .attr("class","scatter-tooltip")
+
+      function getMousePos(evt) {
+        var rect = canvas.getBoundingClientRect();
+        return [
+          evt.clientX - rect.left,
+          evt.clientY - rect.top
+        ];
+      }
+
+      canvas.addEventListener('mousemove', function (evt) {
+        var pos = getMousePos(evt);
+        var i, p, dx, dy, dist;
+        var found = null;
+
+        for (i = 0; i < points.length; i++) {
+          p = points[i];
+          dx = pos[0] - scaleX(p[var1]);
+          dy = pos[1] - scaleY(p[var2]);
+          dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < radius + 2) { // small tolerance
+            found = p;
+            break;
+          }
+        }
+
+        if (found) {
+          tooltip.style("left", (pos[0] + 10) + 'px');
+          tooltip.style("top", (pos[1] + 10) + 'px');
+          tooltip.html(found[nodeLabel]);
+          tooltip.style('display', 'block');
+        } else {
+          tooltip.style('display', 'none');
+        }
+      });
+      }
+    }
+
+    function displayBoxplot(div, data){
+        var divBoxplot = div.append("div")
+          .attr("class","stats-boxplots")
+
+        var svgWidth = 150,
+            svgHeight = 200,
+            boxWidth = svgWidth-100,
+            boxHeight = svgHeight-50;
+
+        var scale = d3.scaleLinear()
+          .domain(d3.extent(d3.merge(d3.values(data))))
+          .range([boxHeight,0])
+
+        var chart = d3_box()
+          .whiskers(iqr(1.5))
+          .height(boxHeight)
+          .width(boxWidth)
+          .domain(scale.domain())
+          .tickFormat(formatter)
+
+        var divBox = divBoxplot.append("div")
+        var svg = divBox.append("svg")
+            .attr("width", 50)
+            .attr("height", svgHeight);
+        var gyaxis = svg.append("g")
+        .attr("class", "y axis")
+        .attr("transform", "translate(49,"+(svgHeight-boxHeight)/2+")")
+        gyaxis.call(d3.axisLeft(scale));
+        divBox.append("p").html("&nbsp;")
+
+        for(cat in data){
+          divBox = divBoxplot.append("div")
+          svg = divBox.append("svg")
+            .attr("width", svgWidth)
+            .attr("height", svgHeight);
+          svg.append("g")
+            .attr("transform","translate("+(svgWidth-boxWidth)/2+","+(svgHeight-boxHeight)/2+")")
+            .attr("class","boxplot")
+            .datum(data[cat])
+            .call(chart);
+          divBox.append("p").text(cat)
+          svg.selectAll("text")
+            .style("opacity",0)
+          svg.on("mouseenter",function(){
+            d3.select(this).selectAll("text").style("opacity",1);
+          })
+          svg.on("mouseleave",function(){
+            d3.select(this).selectAll("text").style("opacity",0);
+          })
+        }
+    }
+
+    function descriptiveCatEnvironment(){
+      mainselectors.remove();
+
+      var catnames = getCatNames();
+
+      var selectordiv = div.append("div")
+        .attr("class","selectors")
+
+      var fieldvariables = selectordiv.append("fieldset");
+      fieldvariables.append("legend").text(statistics_texts["Variables"]);
+
+      var selector1 = displaySelector(fieldvariables.append("div").attr("class","field-div"), statistics_texts["Categorical"], catnames);
+      selector1.on("change",calculateDescriptive)
+      .insert("option", ":first-child")
+        .text(statistics_texts["_All_"])
+        .property("value","")
+        .attr("selected","selected")
+
+      var fieldorder = selectordiv.append("fieldset");
+      fieldorder.append("legend").text(statistics_texts["Charts"]);
+
+      var fieldDiv = fieldorder.append("div")
+      .attr("class","field-div");
+      var checkOrder = fieldDiv.append("input")
+        .attr("id","checkbox-order")
+        .attr("type","checkbox")
+        .attr("value","1");
+      fieldDiv.append("label")
+      .attr("for","checkbox-order")
+      .text(statistics_texts["Order_by_frequency"]);
+      checkOrder.on("change",calculateDescriptive);
+
+      var results = div.append("div")
+        .attr("class","results")
+
+      calculateDescriptive();
+
+      function calculateDescriptive(){
+        results.selectAll("*").remove();
+
+        var var1 = selector1.property("value"),
+            orderbyfreq = checkOrder.node().checked;
+
+        if(catnames.indexOf(var1)==-1){
+          var1 = false;
+        }
+
+        (var1 ? [var1] : catnames).forEach(function(var1){
+          var data1 = {},
+              max = 0;
+
+          results.append("h2")
+            .text(var1)
+            .style("padding","8px")
+            .style("text-align","left");
+
+        categories[var1].forEach(function(cat){
+          data1[cat] = 0;
+        });
+
+        for(var i=0; i<nodes.length; i++){
+          data1[nodes[i][var1]]++;
+          if(data1[nodes[i][var1]]>max){
+            max = data1[nodes[i][var1]];
+          }
+        }
+
+        var orderedkeys = categories[var1].slice();
+        if(orderbyfreq){
+          orderedkeys.sort(function(a,b){
+            return sortAsc(data1[a],data1[b]);
+          });
+        }
+
+        var table = results.append("div")
+          .attr("class","stats-table");
+        var table = table.append("table")
+        var tr = table.append("tr");
+        tr.append("td").style("display","none");
+        categories[var1].forEach(function(k){
+          tr.append("td").text(k);
+        });
+        tr = table.append("tr");
+        tr.append("td").style("display","none");
+        categories[var1].forEach(function(k){
+          tr.append("td").text(data1[k]);
+        });
+
+        var barplot = results.append("div")
+          .attr("class","bar-plot")
+
+        orderedkeys.forEach(function(k){
+          var bar = barplot.append("div")
+            .attr("class","freq-bar")
+          bar.append("div")
+            .attr("class","freq1")
+            .html("&nbsp;")
+            .style("width",(data1[k]/max*100)+"%")
+          bar.append("span")
+            .text(k)
+        });
+
+        var axis = barplot.append("div")
+          .attr("class","freq-axis")
+
+        var x = d3.scaleLinear()
+          .domain([0,max])
+
+        x.ticks(5).forEach(function(t){
+          axis.append("span").style("left",(t/max*100)+"%").text(t);
+        })
+
+        });
+      }
+    }
+
+    function descriptiveEnvironment(){
+      mainselectors.remove();
+
+      var numnames = getNumNames();
+
+      var selectordiv = div.append("div")
+        .attr("class","selectors")
+
+      var fieldvariables = selectordiv.append("fieldset");
+      fieldvariables.append("legend").text(statistics_texts["Variables"]);
+
+      var selector1 = displaySelector(fieldvariables.append("div").attr("class","field-div"), statistics_texts["Numeric"], numnames);
+      selector1.on("change",function(){
+        calculateDescriptive(this.value);
+      })
+      .insert("option", ":first-child")
+        .text(statistics_texts["_All_"])
+        .property("value","")
+        .attr("selected","selected")
+
+      var results = div.append("div")
+        .attr("class","results")
+
+      calculateDescriptive();
+
+      function calculateDescriptive(var1){
+        results.selectAll("*").remove();
+
+        (var1 ? [var1] : numnames).forEach(function(var1){
+          var data1 = [],
+              boxplotData = {};
+
+          results.append("h2")
+            .text(var1)
+            .style("padding","8px")
+            .style("text-align","left");
+
+          var row = results.append("div")
+            .attr("class","row-descriptive-numeric")
+
+        var table = row.append("div")
+          .attr("class","stats-table")
+        table = table.append("table")
+
+        for(var i=0; i<nodes.length; i++){
+          data1.push(nodes[i][var1]);
+        }
+
+        data1.sort();
+
+        var min = d3.min(data1),
+            max = d3.max(data1),
+            mean = d3.mean(data1),
+            q1 = d3_quantile(data1, 0.25),
+            median = d3_quantile(data1, 0.50),
+            q3 = d3_quantile(data1, 0.75);
+
+        tr = table.append("tr").style("display","none");
+        tr = table.append("tr");
+        tr.append("td").text("Min.");
+        tr.append("td").text(formatter(min));
+        tr = table.append("tr");
+        tr.append("td").text("1st Qu.");
+        tr.append("td").text(formatter(q1));
+        tr = table.append("tr");
+        tr.append("td").text("Median");
+        tr.append("td").text(formatter(median));
+        tr = table.append("tr");
+        tr.append("td").text("Mean");
+        tr.append("td").text(formatter(mean));
+        tr = table.append("tr");
+        tr.append("td").text("3rd Qu.");
+        tr.append("td").text(formatter(q3));
+        tr = table.append("tr");
+        tr.append("td").text("Max.");
+        tr.append("td").text(formatter(max));
+
+          boxplotData[var1] = data1;
+          displayBoxplot(row, boxplotData);
+        });
+      }
+    }
+
+    function allvsallEnvironment(){
+      mainselectors.remove();
+
+      var numnames = getNumNames();
+
+      var selectordiv = div.append("div")
+        .attr("class","selectors")
+
+      var fieldDiv;
+
+      var fieldvariables = selectordiv.append("fieldset")
+      fieldvariables.append("legend").text(statistics_texts["Variables"]);
+
+      fieldDiv = fieldvariables.append("div").attr("class","field-div");
+      var selector1 = fieldDiv.append("select")
+        .attr("multiple","multiple")
+      numnames.forEach(function(d){
+        selector1.append("option")
+          .text(d)
+          .attr("value",d)
+          .attr("selected","selected")
+      })
+      selector1.on("change",calculateCorrelation);
+
+      var fieldstats = selectordiv.append("fieldset");
+      fieldstats.append("legend").text(statistics_texts["Statistics"]);
+
+      fieldDiv = fieldstats.append("div").attr("class","field-div");
+      var selector2 = displaySelector(fieldDiv, statistics_texts["Method"], ['pearson','spearman']);
+      selector2.on("change",calculateCorrelation);
+
+      var results = div.append("div")
+        .attr("class","results")
+
+      calculateCorrelation();
+
+      function calculateCorrelation(){
+        results.selectAll("*").remove();
+
+        var correlation = selector2.property("value");
+
+        var cats = [];
+        var opts = selector1.node().selectedOptions;
+        for (var i = 0; i < opts.length; i++) {
+          cats.push(opts[i].value);
+        }
+
+      var divHeatmap = results.append("div")
+        .attr("class","heatmap")
+
+      var dendroWidth = 100,
+          heatmapColorScale = colorScales.RdWhBu,
+          heatmapDomain = [-1,0,1];
+
+      var heatmapScale = divHeatmap.append("div")
+        .attr("class","heatmap-scale")
+        .style("padding-left",dendroWidth+"px")
+        .style("width","100px")
+        .style("margin-bottom","16px")
+      heatmapScale.append("div")
+        .style("height","20px")
+        .style("background-image", "linear-gradient(to right, "+heatmapColorScale.join(",")+")")
+      var heatmapScaleNumbers = heatmapScale.append("div")
+        .style("position","relative")
+      heatmapDomain.forEach(function(d,i){
+        heatmapScaleNumbers.append("span")
+          .style("position","absolute")
+          .style("left",(100/(heatmapDomain.length-1)*i-5)+"px")
+          .text(d)
+      });
+
+      var canvasDendrogram = divHeatmap
+        .append("canvas")
+          .attr("width",dendroWidth)
+          .attr("height",300)
+          .style("margin-bottom","100px")
+          .node();
+
+      var canvas = divHeatmap
+        .append("canvas")
+          .attr("width",400)
+          .attr("height",400)
+          .node();
+
+      var ctx = canvas.getContext("2d");
+
+      var rows = cats.length;
+      var cols = cats.length;
+
+      var margin = 100;
+
+      var cellWidth = (canvas.width-margin) / cols;
+      var cellHeight = (canvas.height-margin) / rows;
+
+      var pcorr = [],
+          pvalue = [],
+          novariability = false,
+          invalidvalues = false;
+
+      for (var r = 0; r < rows; r++) {
+        var scatterrow = results.append("div")
+          .attr("class","scatter-row");
+        pcorr.push([]);
+        pvalue.push([]);
+        for (var c = 0; c < cols; c++) {
+          displayScatter(scatterrow, nodes, cats[r], cats[c], 200, 200);
+          if(c<r){
+            pcorr[r].push(pcorr[c][r]);
+            pvalue[r].push(pvalue[c][r]);
+          }else{
+            var data1 = nodes.map(function(node){ return node[cats[r]]; });
+            var data2 = nodes.map(function(node){ return node[cats[c]]; });
+            var cleaned = cleanForCorrelation(data1, data2);
+            if(data1.length!=cleaned.x.length || data2.length!=cleaned.y.length){
+              invalidvalues = true;
+            }
+            if(new Set(cleaned.x).size <= 1 || new Set(cleaned.y).size <= 1){
+              novariability = true;
+              pcorr[r].push(1);
+              pvalue[r].push(null);
+            }else{
+              var res = stdlib.stats[correlation](cleaned.x, cleaned.y);
+              pcorr[r].push(res.pcorr);
+              pvalue[r].push(res.pValue);
+            }
+          }
+        }
+      }
+
+      if(invalidvalues){
+        results.insert("pre",":first-child")
+          .text(statistics_texts["Some_cases_has_been_ignored"]);
+      }
+      if(novariability){
+        results.insert("pre",":first-child")
+          .text(statistics_texts["Some_correlations_are_unavailable"]);
+      }
+
+      var dendrogram = upgma(pcorr,function(data, i, j) {
+        return Math.abs(1-data[i][j]);
+      });
+      var order = getLeafOrder(dendrogram);
+
+      var scaleX = d3.scaleLinear()
+        .range([0,canvas.width-margin])
+        .domain([0,cols])
+
+      var scaleY = d3.scaleLinear()
+        .range([0,canvas.height-margin])
+        .domain([0,rows])
+
+      var scaleColor = d3.scaleLinear()
+        .range(heatmapColorScale)
+        .domain(heatmapDomain)
+
+      // Draw cells
+      for (var i = 0; i < rows; i++) {
+        var r = order[i];
+        for (var j = 0; j < cols; j++) {
+          var c = order[j];
+          ctx.fillStyle = scaleColor(pcorr[r][c]);
+          ctx.fillRect(scaleX(j), scaleY(i), cellWidth, cellHeight);
+          ctx.strokeStyle = basicColors.mediumGrey;
+          ctx.lineWidth = 1;
+          ctx.strokeRect(scaleX(j), scaleY(i), cellWidth, cellHeight);
+          ctx.font = "20px sans-serif";
+          ctx.fillStyle = basicColors.white;
+          if(d3.hsl(scaleColor(pcorr[r][c])).l>0.75){
+            ctx.fillStyle = basicColors.black;
+          }
+          ctx.textAlign = "center";
+          var text = ""
+          if(pvalue[r][c]<=0.05){
+            text = "*";
+            if(pvalue[r][c]<=0.01){
+              text = "**";
+              if(pvalue[r][c]<=0.001){
+                text = "***";
+              }
+            }
+          }
+          ctx.fillText(text, scaleX(j) + cellWidth/2, scaleY(i) + cellHeight/1.5);
+          if(!i){
+            ctx.save();
+            ctx.font = "12px sans-serif";
+            ctx.fillStyle = basicColors.black;
+            ctx.translate(scaleX(j) + cellWidth/2, scaleY(rows) + 10);
+            ctx.rotate(45 * Math.PI / 180);
+            ctx.textAlign = "start";
+            ctx.fillText(cats[c], 0, 0);
+            ctx.restore(); 
+          }
+        }
+        ctx.font = "12px sans-serif";
+        ctx.fillStyle = basicColors.black;
+        ctx.textAlign = "start"; 
+        ctx.fillText(cats[r], scaleX(cols)+10, scaleY(i) + cellHeight/2);
+      }
+
+        drawDendrogram(canvasDendrogram, dendrogram);
+      }
+    }
+
+    function corEnvironment(){
+      mainselectors.remove();
+
+      var numnames = getNumNames();
+
+      var selectordiv = div.append("div")
+        .attr("class","selectors")
+
+      var fieldDiv;
+
+      var fieldvariables = selectordiv.append("fieldset");
+      fieldvariables.append("legend").text(statistics_texts["Variables"]);
+
+      fieldDiv = fieldvariables.append("div").attr("class","field-div");
+      var selector1 = displaySelector(fieldDiv, statistics_texts["Variable_1"], numnames);
+      selector1.on("change",calculateCorrelation);
+      fieldDiv = fieldvariables.append("div").attr("class","field-div");
+      var selector2 = displaySelector(fieldDiv, statistics_texts["Variable_2"], numnames);
+      selector2.select("option:nth-child(2)").attr("selected","selected");
+      selector2.on("change",calculateCorrelation);
+
+      var fieldstats = selectordiv.append("fieldset");
+      fieldstats.append("legend").text(statistics_texts["Statistics"]);
+
+      fieldDiv = fieldstats.append("div").attr("class","field-div");
+      var selector3 = displaySelector(fieldDiv, statistics_texts["Method"], ['pearson','spearman']);
+      selector3.on("change",calculateCorrelation);
+
+      var results = div.append("div")
+        .attr("class","results")
+
+      calculateCorrelation();
+
+      function calculateCorrelation(){
+        results.selectAll("*").remove();
+
+        var var1 = selector1.property("value"),
+            var2 = selector2.property("value"),
+            correlation = selector3.property("value");
+            data1 = [],
+            data2 = [];
+
+        for(var i=0; i<nodes.length; i++){
+          data1.push(nodes[i][var1]);
+          data2.push(nodes[i][var2]);
+        }
+        var cleaned = cleanForCorrelation(data1, data2);
+        if(data1.length!=cleaned.x.length || data2.length!=cleaned.y.length){
+          results.append("pre")
+            .text(statistics_texts["Some_cases_has_been_ignored"]);
+          data1 = cleaned.x;
+          data2 = cleaned.y;
+        }
+        var res = stdlib.stats[correlation](data1, data2);
+
+        results.append("h3")
+          .text("r: "+res.pcorr.toFixed(3));
+        results.append("h3")
+          .text("pValue: "+formatter(res.pValue));
+
+        displayScatter(results, nodes, var1, var2, 450, 450, true);
+      }
+    }
+
+    function wilcoxonEnvironment(){
+      mainselectors.remove();
+
+      var numnames = getNumNames();
+
+      var selectordiv = div.append("div")
+        .attr("class","selectors")
+
+      var fieldDiv;
+
+      var fieldvariables = selectordiv.append("fieldset");
+      fieldvariables.append("legend").text(statistics_texts["Variables"]);
+
+      fieldDiv = fieldvariables.append("div").attr("class","field-div");
+      var selector1 = displaySelector(fieldDiv, statistics_texts["Variable_1"], numnames);
+      selector1.on("change",calculateWilcoxon);
+
+      fieldDiv = fieldvariables.append("div").attr("class","field-div");
+      var selector2 = displaySelector(fieldDiv, statistics_texts["Variable_2"], numnames);
+      selector2.select("option:nth-child(2)").attr("selected","selected");
+      selector2.on("change",calculateWilcoxon);
+
+      fieldDiv = fieldvariables.append("div").attr("class","field-div");
+      var selector5 = displaySelector(fieldDiv, statistics_texts["Tail"], ['two-sided','less','greater']);
+      selector5.on("change",calculateWilcoxon);
+
+      var results = div.append("div")
+        .attr("class","results")
+
+      calculateWilcoxon();
+
+      function calculateWilcoxon(){
+        results.selectAll("*").remove();
+
+        var var1 = selector1.property("value"),
+            var2 = selector2.property("value"),
+            tail = selector5.property("value"),
+            data1 = [],
+            data2 = [];
+
+        if(var1==var2){
+          results.append("pre")
+            .text(statistics_texts["The_test_cannot_be_performed_with_the_same_two_variables"]);
+          return;
+        }
+
+        for(var i=0; i<nodes.length; i++){
+          data1.push(nodes[i][var1]);
+          data2.push(nodes[i][var2]);
+        }
+
+        var cleaned = cleanForCorrelation(data1, data2);
+        if(data1.length!=cleaned.x.length || data2.length!=cleaned.y.length){
+          results.append("pre")
+            .text(statistics_texts["Some_cases_has_been_ignored"]);
+          data1 = cleaned.x;
+          data2 = cleaned.y;
+        }
+
+        var res = stdlib.stats.wilcoxon(data1, data2, {
+          'alternative': tail,
+          'alpha': 0.05
+        });
+
+        var table = results.append("div")
+          .attr("class","stats-table")
+          .append("table")
+        var tr;
+        tr = table.append("tr").style("display","none");
+        ["pValue","statistic"].forEach(function(d){
+          tr = table.append("tr");
+          tr.append("td").text(d);
+          tr.append("td").text(formatter(res[d]));
+        });
+
+        var boxplotData = {};
+        boxplotData[var1] = data1.sort();
+        boxplotData[var2] = data2.sort();
+        displayMeansTable(results, boxplotData);
+        displayBoxplot(results, boxplotData);
+      }
+    }
+
+    function pairedTtestEnvironment(){
+      mainselectors.remove();
+
+      var numnames = getNumNames();
+
+      var selectordiv = div.append("div")
+        .attr("class","selectors")
+
+      var fieldDiv;
+
+      var fieldvariables = selectordiv.append("fieldset");
+      fieldvariables.append("legend").text(statistics_texts["Variables"]);
+
+      fieldDiv = fieldvariables.append("div").attr("class","field-div");
+      var selector1 = displaySelector(fieldDiv, statistics_texts["Variable_1"], numnames);
+      selector1.on("change",calculateTtest);
+
+      fieldDiv = fieldvariables.append("div").attr("class","field-div");
+      var selector2 = displaySelector(fieldDiv, statistics_texts["Variable_2"], numnames);
+      selector2.select("option:nth-child(2)").attr("selected","selected");
+      selector2.on("change",calculateTtest);
+
+      fieldDiv = fieldvariables.append("div").attr("class","field-div");
+      var selector5 = displaySelector(fieldDiv, statistics_texts["Tail"], ['two-sided','less','greater']);
+      selector5.on("change",calculateTtest);
+
+      var results = div.append("div")
+        .attr("class","results")
+
+      calculateTtest();
+
+      function calculateTtest(){
+        results.selectAll("*").remove();
+
+        var var1 = selector1.property("value"),
+            var2 = selector2.property("value"),
+            tail = selector5.property("value"),
+            data1 = [],
+            data2 = [];
+
+        if(var1==var2){
+          results.append("pre")
+            .text(statistics_texts["The_test_cannot_be_performed_with_the_same_two_variables"]);
+          return;
+        }
+
+        for(var i=0; i<nodes.length; i++){
+          data1.push(nodes[i][var1]);
+          data2.push(nodes[i][var2]);
+        }
+
+        var cleaned = cleanForCorrelation(data1, data2);
+        if(data1.length!=cleaned.x.length || data2.length!=cleaned.y.length){
+          results.append("pre")
+            .text(statistics_texts["Some_cases_has_been_ignored"]);
+          data1 = cleaned.x;
+          data2 = cleaned.y;
+        }
+
+        var res = stdlib.stats.ttest(data1, data2, {
+          'alternative': tail,
+          'alpha': 0.05
+        });
+
+        var table = results.append("div")
+          .attr("class","stats-table")
+          .append("table")
+        var tr;
+        tr = table.append("tr").style("display","none");
+        ["pValue","statistic","df"].forEach(function(d){
+          tr = table.append("tr");
+          tr.append("td").text(d);
+          tr.append("td").text(formatter(res[d]));
+        });
+        tr = table.append("tr");
+        tr.append("td").text("95% confidence interval");
+        tr.append("td").text("["+formatter(res['ci'][0])+","+formatter(res['ci'][1])+"]");
+
+        var boxplotData = {};
+        boxplotData[var1] = data1.sort();
+        boxplotData[var2] = data2.sort();
+        displayMeansTable(results, boxplotData);
+        displayBoxplot(results, boxplotData);
+      }
+    }
+
+    function unpairedTtestEnvironment(){
+      mainselectors.remove();
+
+      var catnames = getCatNames();
+      var numnames = getNumNames();
+
+      var selectordiv = div.append("div")
+        .attr("class","selectors")
+
+      var fieldDiv;
+
+      var fieldvariables = selectordiv.append("fieldset");
+      fieldvariables.append("legend").text(statistics_texts["Variables"]);
+
+      fieldDiv = fieldvariables.append("div").attr("class","field-div");
+      var selector1 = displaySelector(fieldDiv, statistics_texts["Numeric"], numnames);
+      selector1.on("change",calculateTtest);
+
+      fieldDiv = fieldvariables.append("div").attr("class","field-div");
+      var selector2 = displaySelector(fieldDiv, statistics_texts["Categorical"], catnames);
+      selector2.on("change", function(value){
+        listCategories(selector3,selector4,this.value);
+        calculateTtest();
+      });
+
+      fieldDiv = fieldvariables.append("div").attr("class","field-div");
+      var selector3 = displaySelector(fieldDiv, statistics_texts["Group_1"]);
+      selector3.on("change",calculateTtest);
+
+      fieldDiv = fieldvariables.append("div").attr("class","field-div");
+      var selector4 = displaySelector(fieldDiv, statistics_texts["Group_2"]);
+      selector4.on("change",calculateTtest);
+
+      listCategories(selector3,selector4,catnames[0]);
+
+      fieldDiv = fieldvariables.append("div").attr("class","field-div");
+      var selector5 = displaySelector(fieldDiv, statistics_texts["Tail"], ['two-sided','less','greater']);
+      selector5.on("change",calculateTtest);
+
+      var results = div.append("div")
+        .attr("class","results")
+
+      calculateTtest();
+
+      function calculateTtest(){
+        results.selectAll("*").remove();
+
+        var var1 = selector1.property("value"),
+            var2 = selector2.property("value"),
+            group1 = selector3.property("value"),
+            group2 = selector4.property("value"),
+            tail = selector5.property("value"),
+            data1 = [],
+            data2 = [],
+            someignored = false;
+
+        for(var i=0; i<nodes.length; i++){
+          var d = nodes[i][var1];
+          if(nodes[i][var2]==group1){
+            if(checkComplete(d)){
+              data1.push(d);
+            }else{
+              someignored = true;
+            }
+          }else if(nodes[i][var2]==group2){
+            if(checkComplete(d)){
+              data2.push(d);
+            }else{
+              someignored = true;
+            }
+          }
+        }
+
+        var res = stdlib.stats.ttest2(data1, data2, {
+          'alternative': tail,
+          'alpha': 0.05
+        });
+
+        if(someignored){
+          results.append("pre")
+            .text(statistics_texts["Some_cases_has_been_ignored"]);
+        }
+
+        var table = results.append("div")
+          .attr("class","stats-table")
+          .append("table")
+        var tr;
+        tr = table.append("tr").style("display","none");
+        ["pValue","statistic","df"].forEach(function(d){
+          tr = table.append("tr");
+          tr.append("td").text(d);
+          tr.append("td").text(formatter(res[d]));
+        });
+        tr = table.append("tr");
+        tr.append("td").text("95% confidence interval");
+        tr.append("td").text("["+formatter(res['ci'][0])+","+formatter(res['ci'][1])+"]");
+
+        var boxplotData = {};
+        boxplotData[group1] = data1.sort();
+        boxplotData[group2] = data2.sort();
+        displayMeansTable(results, boxplotData);
+        displayBoxplot(results, boxplotData);
+      }
+
+      function listCategories(selector1,selector2,cat){
+        [selector1,selector2].forEach(function(selector,i){
+          selector.selectAll("option").remove();
+          categories[cat].forEach(function(d,j){
+            selector.append("option")
+            .text(d)
+            .property("value",d)
+            .property("selected",(i==0&&j==0)||(i==1&&j==1))
+          });
+        })
+      }
+    }
+
+    function mannWhitneyUEnvironment(){
+      mainselectors.remove();
+
+      var catnames = getCatNames();
+      var numnames = getNumNames();
+
+      var selectordiv = div.append("div")
+        .attr("class","selectors")
+
+      var fieldDiv;
+
+      var fieldvariables = selectordiv.append("fieldset");
+      fieldvariables.append("legend").text(statistics_texts["Variables"]);
+
+      fieldDiv = fieldvariables.append("div").attr("class","field-div");
+      var selector1 = displaySelector(fieldDiv, statistics_texts["Numeric"], numnames);
+      selector1.on("change",calculateUtest);
+
+      fieldDiv = fieldvariables.append("div").attr("class","field-div");
+      var selector2 = displaySelector(fieldDiv, statistics_texts["Categorical"], catnames);
+      selector2.on("change",function(){
+        listCategories(selector3,selector4,this.value);
+        calculateUtest();
+      });
+
+      fieldDiv = fieldvariables.append("div").attr("class","field-div");
+      var selector3 = displaySelector(fieldDiv, statistics_texts["Group_1"]);
+      selector3.on("change",calculateUtest);
+
+      fieldDiv = fieldvariables.append("div").attr("class","field-div");
+      var selector4 = displaySelector(fieldDiv, statistics_texts["Group_2"]);
+      selector4.on("change",calculateUtest);
+
+      listCategories(selector3,selector4,catnames[0]);
+
+      fieldDiv = fieldvariables.append("div").attr("class","field-div");
+      var checkCorrection = fieldDiv.append("input")
+        .style("margin-left","16px")
+        .attr("id","checkbox-correction")
+        .attr("type","checkbox")
+        .attr("value","1");
+      fieldDiv.append("label")
+      .attr("for","checkbox-correction")
+      .text(statistics_texts["Use_continuity_correction"]);
+      checkCorrection.on("change",calculateUtest);
+
+      var results = div.append("div")
+        .attr("class","results")
+
+      calculateUtest();
+
+      function calculateUtest(){
+        results.selectAll("*").remove();
+
+        var var1 = selector1.property("value"),
+            var2 = selector2.property("value"),
+            group1 = selector3.property("value"),
+            group2 = selector4.property("value"),
+            correction = checkCorrection.node().checked,
+            data1 = [],
+            data2 = [],
+            someignored = false;
+
+        for(var i=0; i<nodes.length; i++){
+          var d = nodes[i][var1];
+          if(nodes[i][var2]==group1){
+            if(checkComplete(d)){
+              data1.push(d);
+            }else{
+              someignored = true;
+            }
+          }else if(nodes[i][var2]==group2){
+            if(checkComplete(d)){
+              data2.push(d);
+            }else{
+              someignored = true;
+            }
+          }
+        }
+
+        var res = stdlib.stats.mannWhitneyU(data1, data2, correction);
+
+        if(someignored){
+          results.append("pre")
+            .text(statistics_texts["Some_cases_has_been_ignored"]);
+        }
+
+        var table = results.append("div")
+          .attr("class","stats-table")
+          .append("table")
+        var tr;
+        tr = table.append("tr").style("display","none");
+        ["U1","U2","U","z","pValue"].forEach(function(d){
+          tr = table.append("tr");
+          tr.append("td").text(d);
+          tr.append("td").text(formatter(res[d]));
+        });
+
+        var boxplotData = {};
+        boxplotData[group1] = data1.sort();
+        boxplotData[group2] = data2.sort();
+        displayMeansTable(results, boxplotData);
+        displayBoxplot(results, boxplotData);
+      }
+
+      function listCategories(selector1,selector2,cat){
+        [selector1,selector2].forEach(function(selector,i){
+          selector.selectAll("option").remove();
+          categories[cat].forEach(function(d,j){
+            selector.append("option")
+            .text(d)
+            .property("value",d)
+            .property("selected",(i==0&&j==0)||(i==1&&j==1))
+          });
+        })
+      }
+    }
+
+    function anovaEnvironment(){
+      mainselectors.remove();
+
+      var catnames = getCatNames();
+      var numnames = getNumNames();
+
+      var selectordiv = div.append("div")
+        .attr("class","selectors")
+
+      var fieldvariables = selectordiv.append("fieldset")
+      fieldvariables.append("legend").text(statistics_texts["Variables"]);
+      var columnsDisplay = fieldvariables.append("div")
+        .attr("class","columns-display");
+
+      var fieldcol1 = columnsDisplay.append("div");
+
+      var selector1 = displaySelector(fieldcol1.append("div").attr("class","field-div"), statistics_texts["Numeric"], numnames);
+      selector1.on("change",calculateAnova);
+      var selector2 = displaySelector(fieldcol1.append("div").attr("class","field-div"), statistics_texts["Categorical"], catnames);
+      selector2.on("change",function(){
+        listCategories(selector3,this.value);
+        calculateAnova();
+      });
+
+      var fieldcol2 = columnsDisplay.append("div");
+      var selector3 = fieldcol2.append("select")
+        .attr("multiple","multiple")
+        .attr("class","category-values")
+      selector3.on("change",calculateAnova);
+      listCategories(selector3,catnames[0]);
+
+      var results = div.append("div")
+        .attr("class","results")
+
+      calculateAnova();
+
+      function calculateAnova(){
+        results.selectAll("*").remove();
+
+        var var1 = selector1.property("value"),
+            var2 = selector2.property("value");
+
+        var cats = [];
+        var opts = selector3.node().selectedOptions;
+        if(opts.length==1){
+          results.append("pre")
+            .text(statistics_texts["The_test_cannot_be_performed_with_the_same_two_variables"]);
+          return;
+        }
+        for (var i = 0; i < opts.length; i++) {
+          cats.push(opts[i].value);
+        }
+
+        var someignored = false;
+
+        var subnodes = nodes.filter(function(node){
+          if(!checkComplete(node[var1])){
+            someignored = true;
+            return false;
+          }
+          return cats.indexOf(node[var2])!=-1;
+        });
+        var data = subnodes.map(function(node){
+          return node[var1];
+        });
+        var factor = subnodes.map(function(node){
+          return node[var2];
+        });
+
+        var res = stdlib.stats.anova1(data, factor);
+
+        if(someignored){
+          results.append("pre")
+            .text(statistics_texts["Some_cases_has_been_ignored"]);
+        }
+
+        var tableColumns = {"df":"df","ss":"SS","ms":"MS","statistic":"F Score","pValue":"P Value"};
+        var table = results.append("div")
+          .attr("class","stats-table")
+          .append("table")
+        var tr;
+        ["","treatment","error"].forEach(function(d,i){
+          tr = table.append("tr");
+          tr.append("td").text(d);
+          d3.keys(tableColumns).forEach(function(k){
+            if(!i){
+              tr.append("td").text(tableColumns[k]);
+            }else{
+              if(res[d].hasOwnProperty(k)){
+                tr.append("td").text(formatter(res[d][k]));
+              }else{
+                if(i==1 && res.hasOwnProperty(k)){
+                  tr.append("td").text(formatter(res[k]));
+                }else{
+                  tr.append("td");
+                }
+              }
+            }
+          });
+        });
+        
+
+        results.append("div")
+          .html("eta<sup>2</sup> = "+(res.treatment.ss/(res.treatment.ss+res.error.ss)).toFixed(3))
+          .style("margin-bottom","16px")
+
+        var boxplotData = {};
+        cats.forEach(function(cat,i){
+          boxplotData[cat] = data.filter(function(d,i){
+            return factor[i]==cat;
+          }).sort();
+        });
+
+        displayMeansTable(results, boxplotData);
+
+        displayBoxplot(results, boxplotData);
+      }
+
+      function listCategories(selector,cat){
+      selector.selectAll("option").remove();
+      categories[cat].forEach(function(d){
+        selector.append("option")
+          .text(d)
+          .property("value",d)
+          .property("selected",true)
+      });
+      }
+    }
+
+    function categoryTables(chiselected){
+
+    mainselectors.remove();
+
+    var catnames = getCatNames();
+
+    var selectordiv = div.append("div")
+      .attr("class","selectors")
+
+    var fieldvariables = selectordiv.append("fieldset");
+    fieldvariables.append("legend").text(statistics_texts["Variables"]);
+
+    var fieldDiv;
+
+    fieldDiv = fieldvariables.append("div")
+      .attr("class","field-div");
+    fieldDiv.append("span").text(statistics_texts["Rows"]+": ");
+    var selector1 = fieldDiv.append("div")
+      .attr("class","select-wrapper")
+      .append("select")
+      .on("change",function(){
+        calculateTables();
+      })
+      selector1.selectAll("option")
+        .data(catnames)
+      .enter().append("option")
+        .property("value",String)
+        .text(String)
+
+    fieldDiv = fieldvariables.append("div")
+      .attr("class","field-div");
+    fieldDiv.append("span").text(statistics_texts["Columns"]+": ");
+    var selector2 = fieldDiv.append("div")
+      .attr("class","select-wrapper")
+      .append("select")
+      .on("change",function(){
+        calculateTables();
+      })
+      selector2.selectAll("option")
+        .data(catnames)
+      .enter().append("option")
+        .property("value",String)
+        .text(String)
+    selector2.select("option:nth-child(2)").attr("selected","selected");
+
+    fieldDiv = fieldvariables.append("div")
+      .attr("class","field-div");
+    fieldDiv.append("span").text(statistics_texts["Rows2"]+": ");
+    var selector3 = fieldDiv.append("div")
+      .attr("class","select-wrapper")
+      .append("select")
+      .on("change",function(){
+        calculateTables();
+      })
+      selector3.selectAll("option")
+        .data(d3.merge([[statistics_texts["_None_"]],catnames]))
+      .enter().append("option")
+        .property("value",String)
+        .text(String)
+
+    var fieldtables = selectordiv.append("fieldset");
+    fieldtables.append("legend").text("Tables");
+
+    fieldDiv = fieldtables.append("div")
+      .attr("class","field-div");
+    var checkObserved = fieldDiv.append("input")
+      .attr("id","checkbox-counts-observed")
+      .attr("type","checkbox")
+      .attr("value","observed")
+      .property("checked",true)
+      .on("change",function(){
+        calculateTables();
+      })
+    fieldDiv.append("label")
+      .attr("for","checkbox-counts-observed")
+      .text(statistics_texts["Observed_Counts"]);
+
+    fieldDiv = fieldtables.append("div")
+      .attr("class","field-div");
+    var checkExpected = fieldDiv.append("input")
+      .attr("id","checkbox-counts-expected")
+      .attr("type","checkbox")
+      .attr("value","expected")
+      .on("change",function(){
+        calculateTables();
+      })
+    fieldDiv.append("label")
+      .attr("for","checkbox-counts-expected")
+      .text(statistics_texts["Expected_Counts"]);
+
+    fieldDiv = fieldtables.append("div")
+      .attr("class","field-div");
+    fieldDiv.append("span").text(statistics_texts["Percentages"]+": ");
+    var selectorPercentage = fieldDiv.append("div")
+      .attr("class","select-wrapper")
+      .append("select")
+      .on("change",function(){
+        calculateTables();
+      })
+      selectorPercentage.selectAll("option")
+        .data([statistics_texts["_None_"],"row","column","total"])
+      .enter().append("option")
+        .property("value",String)
+        .text(String)
+
+    var fieldstats = selectordiv.append("fieldset");
+    fieldstats.append("legend").text(statistics_texts["Statistics"]);
+
+    fieldDiv = fieldstats.append("div")
+      .attr("class","field-div");
+    var checkChi2 = fieldDiv.append("input")
+      .attr("id","checkbox-chi-square")
+      .attr("type","checkbox")
+      .property("checked",chiselected ? true : false)
+      .attr("value","1")
+      .on("change",function(){
+        calculateTables();
+      })
+    fieldDiv.append("label")
+      .attr("for","checkbox-chi-square")
+      .text(statistics_texts["Chi_square"]);
+
+    var fieldcharts = selectordiv.append("fieldset");
+    fieldcharts.append("legend").text(statistics_texts["Charts"]);
+
+    fieldDiv = fieldcharts.append("div")
+      .attr("class","field-div");
+    var checkBars = fieldDiv.append("input")
+      .attr("id","checkbox-bars")
+      .attr("type","checkbox")
+      .attr("value","1")
+      .on("change",function(){
+        calculateTables();
+      })
+    fieldDiv.append("label")
+      .attr("for","checkbox-bars")
+      .text(statistics_texts["Bar_chart"]);
+
+    fieldDiv = fieldcharts.append("div")
+      .attr("class","field-div");
+    var stackChart = fieldDiv.append("input")
+      .attr("id","checkbox-stack")
+      .attr("type","checkbox")
+      .attr("value","1")
+      .on("change",function(){
+        calculateTables();
+      })
+    fieldDiv.append("label")
+      .attr("for","checkbox-stack")
+      .text(statistics_texts["Stack_chart"]);
+
+    selectordiv.call(iconButton()
+        .alt("xlsx")
+        .float("none")
+        .src(b64Icons.xlsx)
+        .title(texts.downloadtable)
+        .job(tables2xlsx))
+
+    var results = div.append("div")
+      .attr("class","results")
+
+    calculateTables();
+
+    function tables2xlsx(){
+      var tables = {};
+      results.selectAll(".stats-table > table").each(function(){
+        var table = d3.select(this),
+            mode = table.attr("data-mode");
+        tables[mode] = [];
+        table.selectAll("tr").each(function(){
+          tables[mode].push(Array.from(this.querySelectorAll("td"),function(td){ return td.textContent.trim(); }));
+        })
+        if(!table.select("tr > td > .percentage").empty()){
+          for(var i = 0; i<tables[mode].length; i++){
+            for(var j = tables[mode][i].length-1; j > 1; j--) {
+              tables[mode][i].splice(j,0,"");
+              var match = tables[mode][i][j-1].match(/\(([^)]+)\)/);
+              if(match){
+                tables[mode][i][j] = match[1];
+                tables[mode][i][j-1] = tables[mode][i][j-1].replace(match[0],"");
+              }
+            }        
+          }
+        }
+      })
+      downloadExcel(tables, "frequencies");
+    }
+
+    function calculateTables(){
+      results.selectAll("*").remove();
+
+      var var1 = selector1.property("value"),
+          var2 = selector2.property("value"),
+          var3 = selector3.property("value"),
+          countsexpected = checkExpected.node().checked,
+          countsobserved = checkObserved.node().checked,
+          percentage = selectorPercentage.property("value"),
+          chi2 = checkChi2.node().checked,
+          bars = checkBars.node().checked,
+          stack = stackChart.node().checked,
+          observed = [],
+          expected = [],
+          percentageobserved = [],
+          percentageexpected = [];
+
+      stackChart.classed("disabled",countsexpected && countsobserved);
+      if(stackChart.classed("disabled")){
+        stack = false;
+        stackChart.node().checked = false;
+      }
+      if(var3==statistics_texts["_None_"]){
+        var3 = false;
+      }
+      if(percentage==statistics_texts["_None_"]){
+        percentage = false;
+      }
+      if(stack){
+        bars = true;
+      }
+
+      if(var3){
+          observed = Array.from({ length: categories[var3].length+1 }, function(){ return initArrays(); });
+      }else{
+          observed = initArrays();
+      }
+
+      expected = JSON.parse(JSON.stringify(observed));
+      percentageobserved = JSON.parse(JSON.stringify(observed));
+      percentageexpected = JSON.parse(JSON.stringify(observed));
+
+      if(var3){
+          for(var k=0; k<categories[var3].length; k++){
+            var value3 = categories[var3][k];
+            for(var i=0; i<categories[var1].length; i++){
+              for(var j=0; j<categories[var2].length; j++){
+                observed[k][i][j] = nodes.filter(function(n){
+                  return n[var1]==categories[var1][i] && n[var2]==categories[var2][j] && n[var3]==value3;
+                }).length
+              }
+            }
+          }
+          getObserved(observed[observed.length-1]);
+      }else{
+          getObserved(observed);
+      }
+
+      function initArrays(){
+          return Array.from({ length: categories[var1].length }, function(){ return Array.from({ length: categories[var2].length }, function(){ return 0; }); });
+      }
+
+      function getObserved(observed){
+          for(var i=0; i<categories[var1].length; i++){
+            for(var j=0; j<categories[var2].length; j++){
+              observed[i][j] = nodes.filter(function(n){
+                return n[var1]==categories[var1][i] && n[var2]==categories[var2][j];
+              }).length;
+            }
+          }
+      }
+
+      if(countsobserved){
+        createtable("observed",var1,var2,var3);
+      }
+      if(countsexpected){
+        createtable("expected",var1,var2,var3);
+      }
+      if(chi2){
+        var tablediv = results.append("div");
+        tablediv.attr("class","stats-table");
+        var table = tablediv.append("table");
+        table.attr("data-mode","chi-square")
+        var tr = table.append("tr");
+        var td = tr.append("td");
+        td.text("chi-square test");
+        td = tr.append("td");
+        td.text("stat");
+        td = tr.append("td");
+        td.text("df");
+        td = tr.append("td");
+        td.text("pvalue");
+        td = tr.append("td");
+        td.text("vcramer");
+
+        var chi2res;
+        if(var3){
+          for(var k=0; k<categories[var3].length; k++){
+            chi2res = stdlib.stats.chi2test(observed[k]);
+            addCramer(chi2res,observed[k]);
+            chi2row(categories[var3][k],chi2res);
+          }
+          chi2res = stdlib.stats.chi2test(observed[observed.length-1]);
+          addCramer(chi2res,observed[observed.length-1]);
+          chi2row("Total",chi2res);
+        }else{
+          chi2res = stdlib.stats.chi2test(observed);
+          addCramer(chi2res,observed);
+          chi2row("chi-square",chi2res);
+        }
+
+        function addCramer(chi2res,observed){
+           var nrow = observed.length,
+               ncol = observed[0].length,
+               n = d3.sum(d3.merge(observed));
+           chi2res['_vCramer'] = Math.sqrt(chi2res['_statistic']/(n*(Math.min(nrow,ncol)-1)))
+        }
+
+        function chi2row(text,chi2res){
+          var tr = table.append("tr");
+          var td = tr.append("td");
+          td.text(text);
+          td = tr.append("td");
+          td.text(formatter(chi2res['_statistic']));
+          td = tr.append("td");
+          td.text(formatter(chi2res['_df']));
+          td = tr.append("td");
+          td.text(formatter(chi2res['_pValue']));
+          td = tr.append("td");
+          td.text(formatter(chi2res['_vCramer']));
+        }
+      }
+
+      if(bars && (countsobserved || countsexpected)){
+        if(var3){
+          for(var k=0; k<categories[var3].length; k++){
+            displayBars(categories[var3][k],
+              percentage ? percentageobserved[k] : observed[k],
+              percentage ? percentageexpected[k] : expected[k]);
+          }
+          displayBars("Total",
+            percentage ? percentageobserved[percentageobserved.length-1] : observed[observed.length-1],
+            percentage ? percentageexpected[percentageexpected.length-1] : expected[expected.length-1]);
+        }else{
+          displayBars(false,
+            percentage ? percentageobserved : observed,
+            percentage ? percentageexpected : expected);
+        }
+
+        function displayBars(text,obsdata,expdata){
+          var barsdiv = results.append("div");
+          barsdiv.attr("class","bar-chart");
+
+          var v1 = var2,
+              v2 = var1;
+          if(percentage=="row"){
+            v1 = var1;
+            v2 = var2;
+          }
+
+          var colorScale = false;
+          if(!(countsobserved && countsexpected)){
+            colorScale = d3.scaleOrdinal()
+            .domain(categories[v2])
+            .range(categoryColors)
+          }
+
+          var header = barsdiv.append("div")
+              .attr("class","header")
+          if(text || (countsobserved && countsexpected)){
+
+            if(text){
+              header.append("h3")
+                .text(text)
+            }
+          }
+
+          var max;
+          if(!stack){
+            max = d3.max(d3.merge([d3.merge(expdata),d3.merge(obsdata)]));
+          }else{
+            if(countsobserved && countsexpected){
+                var addMatrices = function(A, B){
+                  return A.map(function(row, i){ return row.map(function(val, j){ return val + B[i][j]; }); });
+                };
+                max = d3.max(d3.merge(addMatrices(expdata,obsdata)));
+            }else{
+              if(percentage){
+                max = 100;
+              }else{
+                var colSums = function(matrix){
+                  return matrix[0].map(function (_, colIndex) {
+                    return matrix.reduce(function (sum, row) {
+                      return sum + row[colIndex];
+                    }, 0);
+                  });
+                }
+                if(countsobserved){
+                  max = d3.max(colSums(obsdata));
+                }
+                if(countsexpected){
+                  max = d3.max(colSums(expdata));
+                }
+              }
+            }
+          }
+          max = Math.ceil(max/10)*10;
+
+          var scale = d3.scaleLinear()
+             .domain([0, max])
+             .range([0, 120]);
+
+          var content = barsdiv.append("div")
+            .attr("class","content")
+
+          var barscontainer = content.append("div")
+            .attr("class","bars-container")
+
+          if(colorScale || (countsobserved && countsexpected)){
+            var legend = content.append("div")
+                .attr("class","legend")
+                .style("height",scale.range()[1]+"px")
+
+            if(countsobserved && countsexpected){
+              var item = legend.append("div")
+                .attr("class","observed")
+                .attr("title","observed");
+              item.append("span")
+              item.append("span")
+                  .text("observed")
+              item = legend.append("div")
+                .attr("class","expected")
+                .attr("title","expected");
+              item.append("span")
+              item.append("span")
+                  .text("expected")
+            }
+
+            if(colorScale){
+              colorScale.domain().forEach(function(d){
+                var item = legend.append("div")
+                  .attr("title",d);
+                item.append("span")
+                    .style("background-color",colorScale(d))
+                item.append("span")
+                    .text(d)
+              });
+            }
+          }
+
+          var scalebar = barscontainer.append("svg")
+              .attr("class","bar-scale")
+              .attr("width",45)
+              .attr("height",scale.range()[1])
+              .attr("overflow","visible")
+          var gyaxis = scalebar.append("g")
+              .attr("class", "y axis")
+              .attr("transform", "translate("+(scalebar.attr("width")-1)+",0)")
+          var axisScale = scale.copy();
+          axisScale.range(scale.range().reverse());
+          gyaxis.call(d3.axisLeft(axisScale)
+            .ticks(4)
+            .tickFormat(valueformat))
+
+          barscontainer.append("span")
+            .attr("class","separator")
+          barscontainer.append("span")
+            .attr("class","separator")
+          for(var i=0; i<categories[v1].length; i++){
+            for(var j=0; j<categories[v2].length; j++){
+              var label = "",
+                  label2 = "";
+              if(colorScale){
+                label = (stack&&!j) || (!stack&&j==Math.ceil(categories[v2].length/2)-1) ? categories[v1][i] : "";
+              }else{
+                label2 = !j ? categories[v1][i] : "";
+                label = categories[v2][j];
+              }
+              if(label){
+                barscontainer.append("span")
+                .attr("class","label")
+                .attr("title",label)
+                .text(label)
+              }
+              if(label2){
+                var spanlabel2 = barscontainer.append("span")
+                .attr("class","label2")
+                .text(label2)
+                if(!stack){
+                  spanlabel2.style("width",((30*2*categories[v2].length)+(8*(categories[v2].length-1)))+"px")
+                }else{
+                  spanlabel2.style("width",((30*categories[v2].length)+(8*(categories[v2].length-1)))+"px")
+                }
+              }
+
+              var observed = false;
+              var value = 0;
+              if(countsobserved){
+                var obsval = percentage=="row" ? obsdata[i][j] : obsdata[j][i];
+                observed = { value: obsval, title: categories[v1][i]+" - "+categories[v2][j]+": "+valueformat(obsval) };
+                value = obsval;
+              }
+              var expected = false;
+              if(countsexpected){
+                var expval = percentage=="row" ? expdata[i][j] : expdata[j][i];
+                expected = { value: expval, title: categories[v1][i]+" - "+categories[v2][j]+": "+valueformat(expval) };
+                if(!value){
+                  value = expval;
+                }
+              }
+              var color = false;
+              if(colorScale){
+                color = colorScale(categories[v2][j]);
+              }
+
+              if(stack){
+                var stackbar;
+                if(!colorScale || !j){
+                  stackbar = barscontainer.append("span")
+                    .attr("class","bar stack-"+i)
+                    .style("height",scale.range()[1]+"px")
+                }else{
+                  stackbar = barscontainer.select(".bar.stack-"+i);
+                }
+                if(colorScale){
+                  var currentheight = stackbar.selectAll("span").nodes()
+                    .map(function(el){ return el.getBoundingClientRect().height; })
+                    .reduce(function(total, n){ return total + n; }, 0);
+                  var bardata = expected ? expected : observed;
+                  stackbar.append("span")
+                    .attr("class",expected ? 'expected' : 'observed')
+                    .style("height",scale(bardata.value)+"px")
+                    .style("bottom",currentheight+"px")
+                    .attr("title",bardata.title)
+                    .style("background-color",color ? color : null)
+                }else{
+                  stackbar.append("span")
+                    .attr("class",'observed')
+                    .style("height",scale(observed.value)+"px")
+                    .attr("title",observed.title)
+                  stackbar.append("span")
+                    .attr("class",'expected')
+                    .style("height",scale(expected.value)+"px")
+                    .style("bottom",scale(observed.value)+"px")
+                    .attr("title",expected.title)
+                }
+              }else{
+                if(observed){
+                  barscontainer.append("span")
+                  .attr("class","bar observed")
+                  .style("height",scale(observed.value)+"px")
+                  .attr("title",observed.title)
+                  .style("background-color",color ? color : null)
+                }
+                if(expected){
+                  barscontainer.append("span")
+                  .attr("class","bar expected")
+                  .style("height",scale(expected.value)+"px")
+                  .attr("title",expected.title)
+                  .style("background-color",color && !observed ? color : null)
+                }
+              }
+              if(j==categories[v2].length-1){
+                barscontainer.append("span")
+                  .attr("class","separator")
+                barscontainer.append("span")
+                  .attr("class","separator")
+                barscontainer.append("span")
+                  .attr("class","separator")
+                barscontainer.append("span")
+                  .attr("class","separator")
+              }else if(expected && observed){
+                barscontainer.append("span")
+                  .attr("class","separator")
+              }
+            }
+          }
+
+          function valueformat(x){
+            return percentage ? x.toFixed(1)+"%" : formatter(x);
+          }
+        }
+      }
+
+      function createtable(mode,var1,var2,var3){
+
+      var tablediv = results.append("div");
+      tablediv.attr("class","stats-table")
+      var table = tablediv.append("table");
+      table.attr("data-mode",mode)
+      var tr = table.append("tr");
+      var td = tr.append("td");
+      td.text(mode);
+      for(var j=0; j<categories[var2].length; j++){
+        td = tr.append("td");
+        td.text(categories[var2][j]);
+      }
+      td = tr.append("td");
+      td.text("Total");
+
+      if(var3){
+        for(var k=0; k<categories[var3].length; k++){
+          subTable(mode,var1,var2,categories[var3][k],
+            mode=="expected" ? expected[k] : observed[k],
+            mode=="expected" ? percentageexpected[k] : percentageobserved[k]);
+        }
+        table.selectAll("tr:last-child > td").style("border-bottom","1px solid #aaa");
+        subTable(mode,var1,var2,false,
+          mode=="expected" ? expected[expected.length-1] : observed[observed.length-1],
+          mode=="expected" ? percentageexpected[percentageexpected.length-1] : percentageobserved[percentageobserved.length-1]);
+      }else{
+        subTable(mode,var1,var2,false,
+          mode=="expected" ? expected : observed,
+          mode=="expected" ? percentageexpected : percentageobserved);
+      }
+
+      function subTable(mode,var1,var2,value3,data,percentages){
+
+      var total = value3 ? nodes.filter(function(n){
+        return n[var3]==value3;
+      }).length : nodes.length,
+          rowtotal = categories[var1].map(function(v){
+            return nodes.filter(value3 ? function(n){
+              return n[var1]==v && n[var3]==value3;
+            } : function(n){
+              return n[var1]==v;
+            }).length;
+          }),
+          coltotal = categories[var2].map(function(v){
+            return nodes.filter(value3 ? function(n){
+              return n[var2]==v && n[var3]==value3;
+            } : function(n){
+              return n[var2]==v;
+            }).length;
+          });
+
+      for(var i=0; i<categories[var1].length; i++){
+        tr = table.append("tr");
+        td = tr.append("td");
+        if(value3){
+          td.html(twoColumn(i?"":value3,categories[var1][i]));
+        }else{
+          td.text(categories[var1][i]);
+        }
+        if(!i){
+          td.style("border-top","1px solid #aaa");
+        }
+        for(var j=0; j<categories[var2].length; j++){
+          td = tr.append("td");
+          td.attr("class","data")
+          var value = 0;
+          if(mode=="expected"){
+            data[i][j] = coltotal[j]*(rowtotal[i]/total);
+            value = formatter(data[i][j]);
+          }else{
+            value = data[i][j];
+          }
+          if(percentage){
+            var pervalue;
+            if(percentage=="row"){
+              pervalue = value / rowtotal[i] * 100;
+            }else if(percentage=="column"){
+              pervalue = value / coltotal[j] * 100;
+            }else if(percentage=="total"){
+              pervalue = value / total * 100;
+            }
+            if(isNaN(pervalue)){
+              pervalue = 0;
+            }
+            percentages[i][j] = pervalue;
+            value = value + '<span class="percentage">(' + pervalue.toFixed(1) +'%)</span>';
+            td.html(value);
+          }else{
+            td.text(value);
+          }
+        }
+        td = tr.append("td");
+        td.text(rowtotal[i]);
+      }
+      tr = table.append("tr");
+      td = tr.append("td");
+      if(value3){
+        td.html(twoColumn("","Total"));
+      }else{
+        td.text("Total");
+      }
+      for(var j=0; j<categories[var2].length; j++){
+        td = tr.append("td");
+        td.text(coltotal[j]);
+      }
+      td = tr.append("td");
+      td.text(total);
+      }
+
+        function twoColumn(text1,text2){
+          return '<div style="display:flex;"><div style="flex:1;">' + text1 + '</div><div style="flex:1;">' + text2 + '</div></div>';
+        }
+
+      }
+    }
+
+    }
+
+    function getCatNames(){
+      return names.filter(function(name){
+        if(types[names.indexOf(name)]!="number"){
+          if(!categories.hasOwnProperty(name)){
+            categories[name] = d3.map(nodes,function(n){
+              return n[name];
+            }).keys();
+          }
+        }else{
+          delete categories[name];
+        }
+        return categories.hasOwnProperty(name);
+      });
+    }
+
+    function getNumNames(){
+      return names.filter(function(name){
+        if(types[names.indexOf(name)]=="number"){
+          return true;
+        }
+        return false;
+      });
+    }
+  }
+
+  exports.names = function(x) {
+    if (!arguments.length) return names;
+    names = x;
+    return exports;
+  };
+
+  exports.nodes = function(x) {
+    if (!arguments.length) return nodes;
+    nodes = x;
+    return exports;
+  };
+
+  exports.categories = function(x) {
+    if (!arguments.length) return categories;
+    categories = x ? JSON.parse(JSON.stringify(x)) : {};
+    return exports;
+  };
+
+  exports.types = function(x) {
+    if (!arguments.length) return types;
+    types = x ? x.slice() : [];
+    return exports;
+  };
+
+  exports.nodeLabel = function(x) {
+    if (!arguments.length) return nodeLabel;
+    nodeLabel = x;
     return exports;
   };
 
@@ -3408,4 +5561,419 @@ function getSelectOptions(order,Graph,Tree){
           return true;
         })
         .sort(order ? order : function(){ return 0; });
+}
+
+// Inspired by http://informationandvisualization.de/blog/box-plot
+d3_box = function() {
+  var width = 1,
+      height = 1,
+      domain = null,
+      value = Number,
+      whiskers = function(d){
+        return [0, d.length - 1];
+      },
+      quartiles = function(d){
+        return [
+          d3_quantile(d, .25),
+          d3_quantile(d, .5),
+          d3_quantile(d, .75)
+         ];
+      },
+      tickFormat = null;
+
+  // For each small multiple…
+  function box(g) {
+    g.each(function(d, i) {
+      d = d.map(value).sort(sortAsc);
+      var g = d3.select(this),
+          n = d.length,
+          min = d[0],
+          max = d[n - 1];
+
+      // Compute quartiles. Must return exactly 3 elements.
+      var quartileData = d.quartiles = quartiles(d);
+
+      // Compute whiskers. Must return exactly 2 elements, or null.
+      var whiskerIndices = whiskers && whiskers.call(this, d, i),
+          whiskerData = whiskerIndices && whiskerIndices.map(function(i) { return d[i]; });
+
+      // Compute outliers. If no whiskers are specified, all data are "outliers".
+      // We compute the outliers as indices, so that we can join across transitions!
+      var outlierIndices = whiskerIndices
+          ? d3.range(0, whiskerIndices[0]).concat(d3.range(whiskerIndices[1] + 1, n))
+          : d3.range(n);
+
+      // Compute the new x-scale.
+      var x1 = d3.scaleLinear()
+          .domain(domain && domain.call(this, d, i) || [min, max])
+          .range([height, 0]);
+
+      // Retrieve the old x-scale, if this is an update.
+      var x0 = this.__chart__ || d3.scaleLinear()
+          .domain([0, Infinity])
+          .range(x1.range());
+
+      // Stash the new scale.
+      this.__chart__ = x1;
+
+      // Note: the box, median, and box tick elements are fixed in number,
+      // so we only have to handle enter and update. In contrast, the outliers
+      // and other elements are variable, so we need to exit them! Variable
+      // elements also fade in and out.
+
+      // Update center line: the vertical line spanning the whiskers.
+      var center = g.selectAll("line.center")
+          .data(whiskerData ? [whiskerData] : []);
+
+      center.enter().insert("line", "rect")
+          .attr("class", "center")
+          .attr("x1", width / 2)
+          .attr("x2", width / 2)
+          .attr("y1", function(d) { return x1(d[0]); })
+          .attr("y2", function(d) { return x1(d[1]); });
+
+      center.exit().remove();
+
+      // Update innerquartile box.
+      var box = g.selectAll("rect.boxplot")
+          .data([quartileData]);
+
+      box.enter().append("rect")
+          .attr("class", "boxplot")
+          .attr("x", 0)
+          .attr("width", width)
+          .attr("y", function(d) { return x1(d[2]); })
+          .attr("height", function(d) { return x1(d[0]) - x1(d[2]); });
+
+      // Update median line.
+      var medianLine = g.selectAll("line.median")
+          .data([quartileData[1]]);
+
+      medianLine.enter().append("line")
+          .attr("class", "median")
+          .attr("x1", 0)
+          .attr("x2", width)
+          .attr("y1", x1)
+          .attr("y2", x1);
+
+      // Update whiskers.
+      var whisker = g.selectAll("line.whisker")
+          .data(whiskerData || []);
+
+      whisker.enter().insert("line", "circle, text")
+          .attr("class", "whisker")
+          .attr("x1", 0)
+          .attr("x2", width)
+          .attr("y1", x1)
+          .attr("y2", x1);
+
+      whisker.exit().remove();
+
+      // Update outliers.
+      var outlier = g.selectAll("circle.outlier")
+          .data(outlierIndices, Number);
+
+      outlier.enter().insert("circle", "text")
+          .attr("class", "outlier")
+          .attr("r", 5)
+          .attr("cx", width / 2)
+          .attr("cy", function(i) { return x1(d[i]); });
+
+      outlier.exit().remove();
+
+      // Compute the tick format.
+      var format = tickFormat || x1.tickFormat(8);
+
+      // Update box ticks.
+      var boxTick = g.selectAll("text.boxplot")
+          .data(quartileData);
+
+      boxTick.enter().append("text")
+          .attr("class", "boxplot")
+          .attr("dy", ".3em")
+          .attr("dx", function(d, i) { return i & 1 ? 6 : -6 })
+          .attr("x", function(d, i) { return i & 1 ? width : 0 })
+          .attr("text-anchor", function(d, i) { return i & 1 ? "start" : "end"; })
+          .text(format)
+          .attr("y", x1);
+
+      // Update whisker ticks. These are handled separately from the box
+      // ticks because they may or may not exist, and we want don't want
+      // to join box ticks pre-transition with whisker ticks post-.
+      var whiskerTick = g.selectAll("text.whisker")
+          .data(whiskerData || []);
+
+      whiskerTick.enter().append("text")
+          .attr("class", "whisker")
+          .attr("dy", ".3em")
+          .attr("dx", 6)
+          .attr("x", width)
+          .text(format)
+          .attr("y", x1);
+
+      whiskerTick.exit().remove();
+    });
+  }
+
+  box.width = function(x) {
+    if (!arguments.length) return width;
+    width = x;
+    return box;
+  };
+
+  box.height = function(x) {
+    if (!arguments.length) return height;
+    height = x;
+    return box;
+  };
+
+  box.tickFormat = function(x) {
+    if (!arguments.length) return tickFormat;
+    tickFormat = x;
+    return box;
+  };
+
+  box.domain = function(x) {
+    if (!arguments.length) return domain;
+    domain = x == null ? x : d3_functor(x);
+    return box;
+  };
+
+  box.value = function(x) {
+    if (!arguments.length) return value;
+    value = x;
+    return box;
+  };
+
+  box.whiskers = function(x) {
+    if (!arguments.length) return whiskers;
+    whiskers = x;
+    return box;
+  };
+
+  box.quartiles = function(x) {
+    if (!arguments.length) return quartiles;
+    quartiles = x;
+    return box;
+  };
+
+  return box;
+};
+
+function d3_quantile(values, p) {
+    var H = (values.length - 1) * p + 1,
+        h = Math.floor(H),
+        v = +values[h - 1],
+        e = H - h;
+    return e ? v + e * (values[h] - v) : v;
+}
+
+d3_functor = function(v) {
+  return typeof v === "function" ? v : function() { return v; };
+}
+
+function iqr(k) {
+    return function(d, i) {
+      var q1 = d.quartiles[0],
+          q3 = d.quartiles[2],
+          iqr = (q3 - q1) * k,
+          i = -1,
+          j = d.length;
+      while (d[++i] < q1 - iqr);
+      while (d[--j] > q3 + iqr);
+      return [i, j];
+    };
+}
+
+function getLeafOrder(node, out) {
+  if (!out) { out = []; }
+
+  if (node.left === null && node.right === null) {
+    out.push(node.items[0]);
+  } else {
+    getLeafOrder(node.left, out);
+    getLeafOrder(node.right, out);
+  }
+  return out;
+}
+
+function upgma(data, distance) {
+  var n = data.length;
+  var clusters = [];
+  var distances = [];
+  var i, j;
+
+  // initial clusters
+  for (i = 0; i < n; i++) {
+    clusters.push({
+      items: [i],
+      size: 1,
+      left: null,
+      right: null,
+      height: 0
+    });
+  }
+
+  // distance matrix
+  for (i = 0; i < n; i++) {
+    distances[i] = [];
+    for (j = 0; j < n; j++) {
+      if (i === j) {
+        distances[i][j] = 0;
+      } else {
+        distances[i][j] = distance(data,i,j);
+      }
+    }
+  }
+
+  // merge until one cluster remains
+  while (clusters.length > 1) {
+    var minDist = Infinity;
+    var a = -1, b = -1;
+
+    // find closest pair
+    for (i = 0; i < clusters.length; i++) {
+      for (j = i + 1; j < clusters.length; j++) {
+        var ci = clusters[i].items[0];
+        var cj = clusters[j].items[0];
+        var d = distances[ci][cj];
+        if (d < minDist) {
+          minDist = d;
+          a = i;
+          b = j;
+        }
+      }
+    }
+
+    // merge clusters a and b
+    var c1 = clusters[a];
+    var c2 = clusters[b];
+    var merged = {
+      items: c1.items.concat(c2.items),
+      size: c1.size + c2.size,
+      left: c1,
+      right: c2,
+      height: minDist
+    };
+
+    // remove b first (higher index)
+    clusters.splice(b, 1);
+    clusters.splice(a, 1);
+
+    clusters.push(merged);
+  }
+
+  return clusters[0];
+}
+
+function drawDendrogram(canvas, root){
+    var ctx = canvas.getContext('2d');
+
+    var width = canvas.width;
+    var height = canvas.height;
+
+    // 1) Collect leaves top->bottom
+    var leaves = [];
+    function collectLeaves(node) {
+        if (!node) return;
+        if (!node.left && !node.right) {
+            leaves.push(node);
+        } else {
+            collectLeaves(node.left);
+            collectLeaves(node.right);
+        }
+    }
+    collectLeaves(root);
+
+    // 2) Assign Y positions to leaves
+    var marginY = height / root.items.length / 2;
+    var usableHeight = height - 2 * marginY;
+    var stepY = leaves.length > 1 ? usableHeight / (leaves.length - 1) : 0;
+
+    var leafY = {};
+    var i;
+    for (i = 0; i < leaves.length; i++) {
+        leafY[leaves[i].items[0]] = marginY + i * stepY;
+    }
+
+    // 3) Map height -> X (root at left, leaves at right)
+    var maxHeight = root.height;
+    var marginLeft = 10;
+    var marginRight = 10;
+    var usableWidth = width - marginLeft - marginRight;
+
+    function heightToX(h) {
+        // h = 0 -> right (leaves)
+        // h = maxHeight -> left (root)
+        return marginLeft + (1 - h / maxHeight) * usableWidth;
+    }
+
+    // 4) Draw recursively
+    function drawNode(node) {
+        if (!node) return null;
+
+        // Leaf
+        if (!node.left && !node.right) {
+            var xLeaf = heightToX(0);
+            var yLeaf = leafY[node.items[0]];
+
+            ctx.beginPath();
+            ctx.arc(xLeaf, yLeaf, 3, 0, Math.PI * 2);
+            ctx.fill();
+            //ctx.fillText(node.items[0], xLeaf + 5, yLeaf - 5);
+
+            return { x: xLeaf, y: yLeaf };
+        }
+
+        // Internal node
+        var leftPos = drawNode(node.left);
+        var rightPos = drawNode(node.right);
+
+        var x = heightToX(node.height);
+        var y = (leftPos.y + rightPos.y) / 2;
+
+        // horizontal lines from node to children
+        ctx.beginPath();
+        ctx.moveTo(x, leftPos.y);
+        ctx.lineTo(leftPos.x, leftPos.y);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(x, rightPos.y);
+        ctx.lineTo(rightPos.x, rightPos.y);
+        ctx.stroke();
+
+        // vertical line connecting children
+        ctx.beginPath();
+        ctx.moveTo(x, leftPos.y);
+        ctx.lineTo(x, rightPos.y);
+        ctx.stroke();
+
+        return { x: x, y: y };
+    }
+
+    ctx.font = "10px sans-serif";
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = basicColors.black;
+    ctx.fillStyle = basicColors.black;
+
+    drawNode(root);
+}
+
+function checkComplete(a){
+  return a !== null && a !== undefined && !isNaN(a);
+}
+
+function cleanForCorrelation(a, b) {
+    var x = [];
+    var y = [];
+    var i;
+
+    for (i = 0; i < a.length && i < b.length; i++) {
+        if (checkComplete(a[i]) && checkComplete(b[i])) {
+            x.push(a[i]);
+            y.push(b[i]);
+        }
+    }
+    return { x: x, y: y };
 }

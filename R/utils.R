@@ -125,9 +125,7 @@ toJSON <- function(x){
   }
 
   json <- ""
-  if(inherits(x,"POSIXt")){
-    json <- toJSON(as.character(x))
-  }else if(length(x)<=1){
+  if(length(x)<=1){
     if(is.null(x)||identical(is.na(x),TRUE)){
         json <- "null"
     }else if(is.vector(x)){
@@ -164,6 +162,8 @@ toJSON <- function(x){
         aux <- apply(x, 1, function(x)  paste0('{', paste0('"',names(x)[1],'":',toJSON(x)), '}', collapse = ""))
         aux <- paste0(aux , collapse = ",")
         json <- paste0("[", aux, "]", collapse = "")
+    }else{
+        json <- toJSON(as.character(x))
     }
   }else if(is.data.frame(x)){      
       aux <- lapply(seq_len(dim(x)[1]), function(x,z)
@@ -196,6 +196,8 @@ toJSON <- function(x){
   }else if(is.vector(x)||is.factor(x)){
       aux <- paste0(vapply(x, toJSON, character(1)), collapse = ",")
       json <- paste0("[", aux, "]", collapse = "")
+  }else{
+      json <- toJSON(as.character(x))
   }
   return(json)
 }

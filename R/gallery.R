@@ -294,7 +294,7 @@ gallery3_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL, orde
     decreasing = FALSE, ntext = NULL,
     mainframeHeight = NULL, mainframeWidth = NULL, mainframeImage = 0,
     image = NULL, imageCopy = NULL, imageRatio = NULL, noFilterCols = NULL, zoom = NULL, scale = NULL, main = NULL, note = NULL,
-    tableButton = FALSE, search = TRUE, cex = 1, language = c("en", "es", "ca"), dir = NULL){
+    tableButton = FALSE, export = FALSE, search = TRUE, cex = 1, language = c("en", "es", "ca"), dir = NULL){
 
   nodes <- as.data.frame(nodes)
 
@@ -368,6 +368,7 @@ gallery3_rd3 <- function(nodes, name = NULL, label = NULL, subtitle = NULL, orde
 
   options <- showSomething(options,"search",search)
   options <- showSomething(options,"showTable",tableButton)
+  options <- showSomething(options,"exportExcel",export)
   options[["cex"]] <- check_cex(cex)
   options[["language"]] <- checkLanguage(language)
 

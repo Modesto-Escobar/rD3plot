@@ -100,21 +100,11 @@ function gallery(Graph){
         .column(Graph.options.nodeLabel)
         .updateSelection(displayGraph)
         .updateFilter(function(){
-          if(!nodes.filter(function(node){ return node.selected; }).length){
-            var noresults = topbarButtons.select(".topbar-search > .simple-search")
-              .append("div")
-                .attr("class","noresults")
-            noresults.append("span").text(texts.noresults);
-            setTimeout(function(){
-              noresults.remove();
-            }, 5000);
-          }else{
             filterSelection();
             nodes.forEach(function(node){ delete node.selected; });
             displayGraph();
-          }
-          topbarButtons.select(".show-search-container").style("display",null);
-          topbarButtons.select(".topbar-search").style("display",null);
+            topbarButtons.select(".show-search-container").style("display",null);
+            topbarButtons.select(".topbar-search").style("display",null);
         }))
 
     var searchButton = topbarButtons.append("div")
@@ -739,7 +729,8 @@ function gallery(Graph){
 
     var tableInst = tableWrapper()
             .data(Graph.filteredOrderedData)
-            .onlySelectedData(false)
+            .onlySelectedData(true)
+            .ifemptyshowall(true)
             .columns(Graph.nodenames.filter(filterColumns))
             .id(Graph.options.nodeName)
             .update(function(){
@@ -1390,9 +1381,12 @@ function getLoadingSVG(w,h){
 
 function displaySimpleSearch(){
   var data = [],
+      cutoff = 1,
+      typingInterval = 500,
       column = "name",
       updateSelection = function(){},
-      updateFilter = function(){};
+      updateFilter = function(){},
+      warning = "";
 
   function exports(sel){
 
@@ -1403,7 +1397,6 @@ function displaySimpleSearch(){
       .attr("type","text");
 
     var typingTimer;
-    var typingInterval = data.length>1000 ? 1000 : 500; 
 
     input.attr("placeholder",texts.searchanode)
         .on("keydown",function(){
@@ -1433,14 +1426,23 @@ function displaySimpleSearch(){
         .width(16).height(16))
       .on("click",function(){
         doneTyping();
-        updateFilter();
+        if(!data.filter(function(d){ return d.selected; }).length){
+            var noresults = searchSel.append("div")
+                .attr("class","noresults")
+            noresults.append("span").text(warning);
+            setTimeout(function(){
+              noresults.remove();
+            }, 5000);
+        }else{
+          updateFilter();
+        }
       })
 
     function doneTyping () {
-          var cutoff = data.length>1000 ? 3 : 1,
-              values = cleanString(input.property("value")).split(" ").filter(function(d){ return d.length>=cutoff; });
+          var values = cleanString(input.property("value")).split(" ").filter(function(d){ return d.length>=cutoff; });
 
           if(values.length){
+            warning = texts.noresults;
             data.forEach(function(node){ delete node.selected; });
 
             data.forEach(function(node){
@@ -1453,6 +1455,8 @@ function displaySimpleSearch(){
             });
 
             updateSelection();
+          }else{
+            warning = cutoff>1 ? texts['typeatleast'].replace("[n]",cutoff) : texts['typesomething'];
           }
     }
   }
@@ -1460,6 +1464,8 @@ function displaySimpleSearch(){
   exports.data = function(x) {
     if (!arguments.length) return data;
     data = x;
+    cutoff = data.length>1000 ? 3 : 1;
+    typingInterval = data.length>1000 ? 1000 : 500;
     return exports;
   };
 
