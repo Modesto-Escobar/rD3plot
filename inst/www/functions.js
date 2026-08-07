@@ -1807,12 +1807,31 @@ function attrSelectionWindow(){
 function displayStatistics(){
   var names,
       nodes,
+      initialCategories = false,
       categories = {},
       types = [],
       nodeLabel = false;
 
   function exports(sel){
     sel.selectAll("*").remove();
+
+    categories = initialCategories ? JSON.parse(JSON.stringify(initialCategories)) : {};
+    names.forEach(function(name){
+        if(types[names.indexOf(name)]!="number"){
+          var keys = d3.map(nodes,function(n){
+              return n[name];
+            }).keys();
+          if(!categories.hasOwnProperty(name)){
+            categories[name] = keys;
+          }else{
+            categories[name] = categories[name].filter(function(k){
+              return keys.indexOf(k)!=-1;
+            });
+          }
+        }else{
+          delete categories[name];
+        }
+    });
 
     var div = sel.append("div")
     .attr("class","statistics-section")
@@ -2006,7 +2025,7 @@ function displayStatistics(){
       })
     }
 
-    function displayScatter(div, points, var1, var2, width, height, tooltip){
+    function displayScatter(div, points, var1, var2, width, height, tooltip, labels){
 
       var wrapper = div.append("div")
         .attr("class","scatter-wrapper")
@@ -2020,10 +2039,10 @@ function displayStatistics(){
       var radius = 3;
 
       // Margins for axes
-      var margin = 40;
+      var margin = labels ? 80 : 40;
       var left   = margin;
-      var right  = canvas.width  - margin;
-      var top    = margin;
+      var right  = canvas.width  - margin/2;
+      var top    = margin/2;
       var bottom = canvas.height - margin;
 
       // Compute data ranges
@@ -2086,20 +2105,24 @@ function displayStatistics(){
           ctx.fillText(value, x, bottom + 20);
       });
 
+      if(labels){
+
       // Axis labels
       ctx.fillStyle = basicColors.black;
       ctx.font = "10px sans-serif";
-      ctx.textAlign = "end"; 
+      ctx.textAlign = "center"; 
 
       // Y label
       ctx.save();
-      ctx.translate(left + 14, top);
+      ctx.translate(14, top + (bottom-top)/2);
       ctx.rotate(-Math.PI / 2);
       ctx.fillText(var2, 0, 0);
       ctx.restore();
 
       // X label
-      ctx.fillText(var1, right, bottom - 8);
+      ctx.fillText(var1, left + (right-left)/2, canvas.height - 8);
+
+      }
 
       // Draw points
       ctx.fillStyle = categoryColors[0];
@@ -2115,23 +2138,17 @@ function displayStatistics(){
         tooltip = wrapper.append("div")
           .attr("class","scatter-tooltip")
 
-      function getMousePos(evt) {
-        var rect = canvas.getBoundingClientRect();
-        return [
-          evt.clientX - rect.left,
-          evt.clientY - rect.top
-        ];
-      }
-
       canvas.addEventListener('mousemove', function (evt) {
-        var pos = getMousePos(evt);
+        var rect = canvas.getBoundingClientRect();
+        var mx = event.clientX - rect.left;
+        var my = event.clientY - rect.top;
         var i, p, dx, dy, dist;
         var found = null;
 
         for (i = 0; i < points.length; i++) {
           p = points[i];
-          dx = pos[0] - scaleX(p[var1]);
-          dy = pos[1] - scaleY(p[var2]);
+          dx = mx - scaleX(p[var1]);
+          dy = my - scaleY(p[var2]);
           dist = Math.sqrt(dx * dx + dy * dy);
 
           if (dist < radius + 2) { // small tolerance
@@ -2141,8 +2158,8 @@ function displayStatistics(){
         }
 
         if (found) {
-          tooltip.style("left", (pos[0] + 10) + 'px');
-          tooltip.style("top", (pos[1] + 10) + 'px');
+          tooltip.style("left", (mx + 10) + 'px');
+          tooltip.style("top", (my + 10) + 'px');
           tooltip.html(found[nodeLabel]);
           tooltip.style('display', 'block');
         } else {
@@ -2215,12 +2232,12 @@ function displayStatistics(){
       var fieldvariables = selectordiv.append("fieldset");
       fieldvariables.append("legend").text(statistics_texts["Variables"]);
 
-      var selector1 = displaySelector(fieldvariables.append("div").attr("class","field-div"), statistics_texts["Categorical"], catnames);
-      selector1.on("change",calculateDescriptive)
-      .insert("option", ":first-child")
-        .text(statistics_texts["_All_"])
-        .property("value","")
-        .attr("selected","selected")
+      var selector1 = fieldvariables.append("div")
+        .attr("class","field-div")
+      .append("select")
+        .attr("multiple","multiple")
+      selector1.on("change",calculateDescriptive);
+      listCategories(selector1,catnames);
 
       var fieldorder = selectordiv.append("fieldset");
       fieldorder.append("legend").text(statistics_texts["Charts"]);
@@ -2244,15 +2261,14 @@ function displayStatistics(){
       function calculateDescriptive(){
         results.selectAll("*").remove();
 
-        var var1 = selector1.property("value"),
-            orderbyfreq = checkOrder.node().checked;
+        results.append("h3").text("n = "+nodes.length)
 
-        if(catnames.indexOf(var1)==-1){
-          var1 = false;
-        }
+        var orderbyfreq = checkOrder.node().checked;
 
-        (var1 ? [var1] : catnames).forEach(function(var1){
-          var data1 = {},
+        var opts = selector1.node().selectedOptions;
+        for (var j = 0; j < opts.length; j++){
+          var var1 = opts[j].value,
+              data1 = {},
               max = 0;
 
           results.append("h2")
@@ -2265,9 +2281,11 @@ function displayStatistics(){
         });
 
         for(var i=0; i<nodes.length; i++){
-          data1[nodes[i][var1]]++;
-          if(data1[nodes[i][var1]]>max){
-            max = data1[nodes[i][var1]];
+          if(nodes[i][var1]){
+            data1[nodes[i][var1]]++;
+            if(data1[nodes[i][var1]]>max){
+              max = data1[nodes[i][var1]];
+            }
           }
         }
 
@@ -2286,11 +2304,14 @@ function displayStatistics(){
         categories[var1].forEach(function(k){
           tr.append("td").text(k);
         });
+        tr.append("td").text(statistics_texts["Valid_cases"]);
         tr = table.append("tr");
         tr.append("td").style("display","none");
         categories[var1].forEach(function(k){
-          tr.append("td").text(data1[k]);
+          tr.append("td").text(data1[k] + "(" + formatter(data1[k]/nodes.length*100) + "%)");
         });
+        var validcases = d3.sum(categories[var1].map(function(k){ return data1[k]; }));
+        tr.append("td").text(validcases + "(" + (validcases/nodes.length*100) + "%)");
 
         var barplot = results.append("div")
           .attr("class","bar-plot")
@@ -2316,7 +2337,7 @@ function displayStatistics(){
           axis.append("span").style("left",(t/max*100)+"%").text(t);
         })
 
-        });
+        }
       }
     }
 
@@ -2331,25 +2352,27 @@ function displayStatistics(){
       var fieldvariables = selectordiv.append("fieldset");
       fieldvariables.append("legend").text(statistics_texts["Variables"]);
 
-      var selector1 = displaySelector(fieldvariables.append("div").attr("class","field-div"), statistics_texts["Numeric"], numnames);
-      selector1.on("change",function(){
-        calculateDescriptive(this.value);
-      })
-      .insert("option", ":first-child")
-        .text(statistics_texts["_All_"])
-        .property("value","")
-        .attr("selected","selected")
+      var selector1 = fieldvariables.append("div")
+        .attr("class","field-div")
+      .append("select")
+        .attr("multiple","multiple")
+      selector1.on("change",calculateDescriptive);
+      listCategories(selector1,numnames);
 
       var results = div.append("div")
         .attr("class","results")
 
       calculateDescriptive();
 
-      function calculateDescriptive(var1){
+      function calculateDescriptive(){
         results.selectAll("*").remove();
 
-        (var1 ? [var1] : numnames).forEach(function(var1){
-          var data1 = [],
+        results.append("h3").text("n = "+nodes.length)
+
+        var opts = selector1.node().selectedOptions;
+        for (var j = 0; j < opts.length; j++){
+          var var1 = opts[j].value,
+              data1 = [],
               boxplotData = {};
 
           results.append("h2")
@@ -2375,14 +2398,15 @@ function displayStatistics(){
             mean = d3.mean(data1),
             q1 = d3_quantile(data1, 0.25),
             median = d3_quantile(data1, 0.50),
-            q3 = d3_quantile(data1, 0.75);
+            q3 = d3_quantile(data1, 0.75),
+            sd = stdlib.stats.stdev(data1.length,1,data1,1);
 
         tr = table.append("tr").style("display","none");
         tr = table.append("tr");
         tr.append("td").text("Min.");
         tr.append("td").text(formatter(min));
         tr = table.append("tr");
-        tr.append("td").text("1st Qu.");
+        tr.append("td").text("Q1");
         tr.append("td").text(formatter(q1));
         tr = table.append("tr");
         tr.append("td").text("Median");
@@ -2391,16 +2415,29 @@ function displayStatistics(){
         tr.append("td").text("Mean");
         tr.append("td").text(formatter(mean));
         tr = table.append("tr");
-        tr.append("td").text("3rd Qu.");
+        tr.append("td").text("Q3");
         tr.append("td").text(formatter(q3));
         tr = table.append("tr");
         tr.append("td").text("Max.");
         tr.append("td").text(formatter(max));
+        tr = table.append("tr");
+        tr.append("td").text("sd");
+        tr.append("td").text(formatter(sd));
 
           boxplotData[var1] = data1;
           displayBoxplot(row, boxplotData);
-        });
+        }
       }
+    }
+
+    function listCategories(selector,cats){
+      selector.selectAll("option").remove();
+      cats.forEach(function(d){
+        selector.append("option")
+          .text(d)
+          .property("value",d)
+          .property("selected",true)
+      });
     }
 
     function allvsallEnvironment(){
@@ -2452,6 +2489,7 @@ function displayStatistics(){
 
       var divHeatmap = results.append("div")
         .attr("class","heatmap")
+        .style("position","relative")
 
       var dendroWidth = 100,
           heatmapColorScale = colorScales.RdWhBu,
@@ -2502,13 +2540,38 @@ function displayStatistics(){
           novariability = false,
           invalidvalues = false;
 
+      var scatterSize = 200;
+
+      // column headers
+      var scatterrow = results.append("div")
+          .attr("class","scatter-row");
+      scatterrow.append("div")
+          .style("width","50px")
+          .style("display","inline-block")
+          .style("text-align","center")
+          .text("")
+      for (var c = 0; c < cols; c++) {
+        scatterrow.append("div")
+          .style("width",scatterSize+"px")
+          .style("display","inline-block")
+          .style("text-align","center")
+          .text(cats[c])
+      }
+
       for (var r = 0; r < rows; r++) {
         var scatterrow = results.append("div")
           .attr("class","scatter-row");
+        scatterrow.append("div")
+          .style("width","50px")
+          .style("display","inline-block")
+          .style("text-align","center")
+          .style("vertical-align","top")
+          .style("transform","rotate(-90deg)translate(-"+(scatterSize/2)+"px)")
+          .text(cats[r])
         pcorr.push([]);
         pvalue.push([]);
         for (var c = 0; c < cols; c++) {
-          displayScatter(scatterrow, nodes, cats[r], cats[c], 200, 200);
+          displayScatter(scatterrow, nodes, cats[r], cats[c], scatterSize, scatterSize);
           if(c<r){
             pcorr[r].push(pcorr[c][r]);
             pvalue[r].push(pvalue[c][r]);
@@ -2529,6 +2592,8 @@ function displayStatistics(){
               pvalue[r].push(res.pValue);
             }
           }
+          scatterrow.select(".scatter-wrapper:last-child")
+            .attr("title",cats[r]+"\n"+cats[c]+"\npcorr: "+formatter(pcorr[r][c]));
         }
       }
 
@@ -2602,6 +2667,56 @@ function displayStatistics(){
         ctx.fillText(cats[r], scaleX(cols)+10, scaleY(i) + cellHeight/2);
       }
 
+// Tooltip div
+var tooltip = divHeatmap.append("div")
+  .style("position","absolute")
+  .style("padding","4px 8px")
+  .style("background","#fff")
+  .style("border","1px solid #333")
+  .style("display","none")
+  .style("pointer-events","none");
+
+// Mousemove handler
+canvas.addEventListener("mousemove", function(event){
+  var rect = canvas.getBoundingClientRect();
+  var mx = event.clientX - rect.left;
+  var my = event.clientY - rect.top;
+
+  var parentRect = canvas.parentNode.getBoundingClientRect();
+  var offsetx = rect.left - parentRect.left;
+  var offsety = rect.top - parentRect.top;
+
+  // Convert mouse -> cell index
+  var j = Math.floor(mx / cellWidth);
+  var i = Math.floor(my / cellHeight);
+
+  // Bounds check
+  if(i < 0 || i >= rows || j < 0 || j >= cols){
+    tooltip.style("display","none");
+    return;
+  }
+
+  var r = order[i];
+  var c = order[j];
+
+  var value = pcorr[r][c];
+  var pval = pvalue[r][c];
+
+  tooltip
+    .style("left", (mx + offsetx + 10) + "px")
+    .style("top", (my + offsety + 10) + "px")
+    .style("display","block")
+    .html(
+      "pcorr: " + formatter(value) + "<br>" +
+      "p-value: " + formatter(pval)
+    );
+});
+
+// Hide tooltip on mouseout
+canvas.addEventListener("mouseout", function(){
+  tooltip.style("display","none");
+});
+
         drawDendrogram(canvasDendrogram, dendrogram);
       }
     }
@@ -2666,7 +2781,7 @@ function displayStatistics(){
         results.append("h3")
           .text("pValue: "+formatter(res.pValue));
 
-        displayScatter(results, nodes, var1, var2, 450, 450, true);
+        displayScatter(results, nodes, var1, var2, 450, 450, true, true);
       }
     }
 
@@ -2860,7 +2975,7 @@ function displayStatistics(){
       fieldDiv = fieldvariables.append("div").attr("class","field-div");
       var selector2 = displaySelector(fieldDiv, statistics_texts["Categorical"], catnames);
       selector2.on("change", function(value){
-        listCategories(selector3,selector4,this.value);
+        listCategories2(selector3,selector4,this.value);
         calculateTtest();
       });
 
@@ -2872,7 +2987,7 @@ function displayStatistics(){
       var selector4 = displaySelector(fieldDiv, statistics_texts["Group_2"]);
       selector4.on("change",calculateTtest);
 
-      listCategories(selector3,selector4,catnames[0]);
+      listCategories2(selector3,selector4,catnames[0]);
 
       fieldDiv = fieldvariables.append("div").attr("class","field-div");
       var selector5 = displaySelector(fieldDiv, statistics_texts["Tail"], ['two-sided','less','greater']);
@@ -2943,7 +3058,7 @@ function displayStatistics(){
         displayBoxplot(results, boxplotData);
       }
 
-      function listCategories(selector1,selector2,cat){
+      function listCategories2(selector1,selector2,cat){
         [selector1,selector2].forEach(function(selector,i){
           selector.selectAll("option").remove();
           categories[cat].forEach(function(d,j){
@@ -2977,7 +3092,7 @@ function displayStatistics(){
       fieldDiv = fieldvariables.append("div").attr("class","field-div");
       var selector2 = displaySelector(fieldDiv, statistics_texts["Categorical"], catnames);
       selector2.on("change",function(){
-        listCategories(selector3,selector4,this.value);
+        listCategories2(selector3,selector4,this.value);
         calculateUtest();
       });
 
@@ -2989,7 +3104,7 @@ function displayStatistics(){
       var selector4 = displaySelector(fieldDiv, statistics_texts["Group_2"]);
       selector4.on("change",calculateUtest);
 
-      listCategories(selector3,selector4,catnames[0]);
+      listCategories2(selector3,selector4,catnames[0]);
 
       fieldDiv = fieldvariables.append("div").attr("class","field-div");
       var checkCorrection = fieldDiv.append("input")
@@ -3061,7 +3176,7 @@ function displayStatistics(){
         displayBoxplot(results, boxplotData);
       }
 
-      function listCategories(selector1,selector2,cat){
+      function listCategories2(selector1,selector2,cat){
         [selector1,selector2].forEach(function(selector,i){
           selector.selectAll("option").remove();
           categories[cat].forEach(function(d,j){
@@ -3094,7 +3209,7 @@ function displayStatistics(){
       selector1.on("change",calculateAnova);
       var selector2 = displaySelector(fieldcol1.append("div").attr("class","field-div"), statistics_texts["Categorical"], catnames);
       selector2.on("change",function(){
-        listCategories(selector3,this.value);
+        listCategories(selector3,categories[this.value]);
         calculateAnova();
       });
 
@@ -3103,7 +3218,7 @@ function displayStatistics(){
         .attr("multiple","multiple")
         .attr("class","category-values")
       selector3.on("change",calculateAnova);
-      listCategories(selector3,catnames[0]);
+      listCategories(selector3,categories[catnames[0]]);
 
       var results = div.append("div")
         .attr("class","results")
@@ -3190,16 +3305,6 @@ function displayStatistics(){
         displayMeansTable(results, boxplotData);
 
         displayBoxplot(results, boxplotData);
-      }
-
-      function listCategories(selector,cat){
-      selector.selectAll("option").remove();
-      categories[cat].forEach(function(d){
-        selector.append("option")
-          .text(d)
-          .property("value",d)
-          .property("selected",true)
-      });
       }
     }
 
@@ -3897,15 +4002,9 @@ function displayStatistics(){
     function getCatNames(){
       return names.filter(function(name){
         if(types[names.indexOf(name)]!="number"){
-          if(!categories.hasOwnProperty(name)){
-            categories[name] = d3.map(nodes,function(n){
-              return n[name];
-            }).keys();
-          }
-        }else{
-          delete categories[name];
+          return true;
         }
-        return categories.hasOwnProperty(name);
+        return false;
       });
     }
 
@@ -3932,8 +4031,8 @@ function displayStatistics(){
   };
 
   exports.categories = function(x) {
-    if (!arguments.length) return categories;
-    categories = x ? JSON.parse(JSON.stringify(x)) : {};
+    if (!arguments.length) return initialCategories;
+    initialCategories = x;
     return exports;
   };
 

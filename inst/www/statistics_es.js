@@ -40,5 +40,6 @@ var statistics_texts = {
     Some_correlations_are_unavailable: "Algunas correlaciones no están disponibles porque una o ambas variables tienen insuficiente variabilidad (todos o la mayoría de valores son idénticos).",
     The_test_cannot_be_performed_with_the_same_two_variables: "El test no se puede hacer con las mismas dos variables.",
     The_test_cannot_be_performed_with_with_only_one_variable: "El test no se puede hacer con solo una variable variable.",
-    Order_by_frequency: "Ordenar por frecuencia"
+    Order_by_frequency: "Ordenar por frecuencia",
+    Valid_cases: "Casos válidos"
   };
