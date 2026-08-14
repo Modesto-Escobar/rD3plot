@@ -811,7 +811,7 @@ function displayMain(){
         .title("statistics")
         .job(function(){
           options.statistics = true;
-          var win = displayWindow(1400,780);
+          var win = displayWindow(1400,height<800 ? height-20 : 780);
           var data = Graph.nodes.filter(checkSelectableNode);
           if(options.showCoordinates && !options.heatmap){
             data = JSON.parse(JSON.stringify(data));
@@ -3120,22 +3120,22 @@ function drawNet(){
       gSelectAll.append("span")
         .text(texts.selectall)
 
-      var gHighNeigh = legendBottomControls.append("div")
+      if(GraphLinksLength){
+        var gHighNeigh = legendBottomControls.append("div")
         .attr("class","highlight-neighbors")
-      gHighNeigh.append("div")
+        gHighNeigh.append("div")
         .attr("class","legend-check-box")
         .classed("checked",options.highlightNeighbors)
-      gHighNeigh.style("cursor","pointer")
+        gHighNeigh.style("cursor","pointer")
         .on("click",function(){
           options.highlightNeighbors = !options.highlightNeighbors;
           gHighNeigh.select(".legend-check-box")
             .classed("checked",options.highlightNeighbors)
           showTables();
         })
-      gHighNeigh.append("span")
+        gHighNeigh.append("span")
         .text(texts["highlightneighbors"])
 
-      if(GraphLinksLength){
         displayBottomButton(legendBottomControls,"filter",texts.filterInfo+" (ctrl + e)",switchEgoNet,filterLinkSelection);
       }
       displayBottomButton(legendBottomControls,"isolate",texts.isolateInfo+" (ctrl + f)",filterSelection,isolateLinkSelection);
@@ -5083,14 +5083,21 @@ function tables2xlsx(){
         }
       })
 
-      if(nodes.length == 1 && links.length == 1){
-        displayWindow()
-            .append("p")
-              .attr("class","window-message")
-              .text(texts.noitemsselected);
-      }else{
-        downloadExcel({nodes: nodes, links: links}, d3.select("head>title").text());
+      if(nodes.length == 1){
+        // if empty, show all
+        Graph.nodes.forEach(function(node){
+            nodes.push(nodenames.map(function(col){ return renderNodeCell(node,col); }));
+        })
+        Graph.links.forEach(function(link){
+            links.push(linknames.map(function(col){ return renderLinkCell(link,col); }));
+        })
       }
+
+      var sheets = {nodes: nodes, links: links};
+      if(sheets.links.length == 1){
+        delete sheets.links;
+      }
+      downloadExcel(sheets, d3.select("head>title").text());
 }
 
 function selectFromTable(){

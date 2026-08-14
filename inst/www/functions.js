@@ -1987,7 +1987,7 @@ function displayStatistics(){
       .text(statistics_texts["ANOVA"])
     button.classed("disabled",!somecategorical || !somenumeric)
 
-    function displaySelector(fieldvariables,title,data){
+    function displaySelector(fieldvariables,title,data,textformat){
       fieldvariables.append("span").text(title+": ");
       var selector = fieldvariables.append("div")
       .attr("class","select-wrapper")
@@ -1998,13 +1998,13 @@ function displayStatistics(){
           .data(data)
         .enter().append("option")
           .property("value",String)
-          .text(String)
+          .text(textformat ? textformat : String)
       }
         
       return selector;
     }
 
-    function displayMeansTable(div, data){
+    function displayMeansTable(div, data, param){
       var divMeansTable = div.append("div")
           .attr("class","stats-table")
       var table = divMeansTable.append("table")
@@ -2013,16 +2013,48 @@ function displayStatistics(){
       d3.keys(data).forEach(function(k){
         tr.append("td").text(k);
       })
+
+      if(param){
+        meansd();
+        quantiles();
+      }else{
+        quantiles();
+        meansd();
+      }
+
+      function quantiles(){
       tr = table.append("tr");
-      tr.append("td").text("mean");
+      tr.append("td").text("Q1");
+      d3.values(data).forEach(function(values){
+        tr.append("td").text(formatter(d3_quantile(values, 0.25)));
+      })
+
+      tr = table.append("tr");
+      tr.append("td").text(statistics_texts["Median"]);
+      d3.values(data).forEach(function(values){
+        tr.append("td").text(formatter(d3_quantile(values, 0.50)));
+      })
+
+      tr = table.append("tr");
+      tr.append("td").text("Q3");
+      d3.values(data).forEach(function(values){
+        tr.append("td").text(formatter(d3_quantile(values, 0.75)));
+      })
+      }
+
+      function meansd(){
+      tr = table.append("tr");
+      tr.append("td").text(statistics_texts["Mean"]);
       d3.values(data).forEach(function(values){
         tr.append("td").text(formatter(d3.mean(values)));
       })
+
       tr = table.append("tr");
-      tr.append("td").text("sd");
+      tr.append("td").text(statistics_texts["SD"]);
       d3.values(data).forEach(function(values){
         tr.append("td").text(formatter(stdlib.stats.stdev(values.length,1,values,1)));
       })
+      }
     }
 
     function displayScatter(div, points, var1, var2, width, height, tooltip, labels){
@@ -2388,7 +2420,9 @@ function displayStatistics(){
         table = table.append("table")
 
         for(var i=0; i<nodes.length; i++){
-          data1.push(nodes[i][var1]);
+          if(checkComplete(nodes[i][var1])){
+            data1.push(nodes[i][var1]);
+          }
         }
 
         data1.sort();
@@ -2409,10 +2443,10 @@ function displayStatistics(){
         tr.append("td").text("Q1");
         tr.append("td").text(formatter(q1));
         tr = table.append("tr");
-        tr.append("td").text("Median");
+        tr.append("td").text(statistics_texts["Median"]);
         tr.append("td").text(formatter(median));
         tr = table.append("tr");
-        tr.append("td").text("Mean");
+        tr.append("td").text(statistics_texts["Mean"]);
         tr.append("td").text(formatter(mean));
         tr = table.append("tr");
         tr.append("td").text("Q3");
@@ -2421,8 +2455,14 @@ function displayStatistics(){
         tr.append("td").text("Max.");
         tr.append("td").text(formatter(max));
         tr = table.append("tr");
-        tr.append("td").text("sd");
+        tr.append("td").text(statistics_texts["SD"]);
         tr.append("td").text(formatter(sd));
+        tr = table.append("tr");
+        tr.append("td").text("Q3-Q1");
+        tr.append("td").text(formatter(q3-q1));
+        tr = table.append("tr");
+        tr.append("td").text("n");
+        tr.append("td").text(data1.length);
 
           boxplotData[var1] = data1;
           displayBoxplot(row, boxplotData);
@@ -2512,17 +2552,19 @@ function displayStatistics(){
           .text(d)
       });
 
+      var heatmapSize = cats.length*50+100;
+
       var canvasDendrogram = divHeatmap
         .append("canvas")
           .attr("width",dendroWidth)
-          .attr("height",300)
+          .attr("height",heatmapSize-100)
           .style("margin-bottom","100px")
           .node();
 
       var canvas = divHeatmap
         .append("canvas")
-          .attr("width",400)
-          .attr("height",400)
+          .attr("width",heatmapSize)
+          .attr("height",heatmapSize)
           .node();
 
       var ctx = canvas.getContext("2d");
@@ -2593,7 +2635,7 @@ function displayStatistics(){
             }
           }
           scatterrow.select(".scatter-wrapper:last-child")
-            .attr("title",cats[r]+"\n"+cats[c]+"\npcorr: "+formatter(pcorr[r][c]));
+            .attr("title",cats[r]+"\n"+cats[c]+"\nr: "+formatter(pcorr[r][c]));
         }
       }
 
@@ -2707,7 +2749,7 @@ canvas.addEventListener("mousemove", function(event){
     .style("top", (my + offsety + 10) + "px")
     .style("display","block")
     .html(
-      "pcorr: " + formatter(value) + "<br>" +
+      "r: " + formatter(value) + "<br>" +
       "p-value: " + formatter(pval)
     );
 });
@@ -2808,7 +2850,7 @@ canvas.addEventListener("mouseout", function(){
       selector2.on("change",calculateWilcoxon);
 
       fieldDiv = fieldvariables.append("div").attr("class","field-div");
-      var selector5 = displaySelector(fieldDiv, statistics_texts["Tail"], ['two-sided','less','greater']);
+      var selector5 = displaySelector(fieldDiv, statistics_texts["Tail"], ['two-sided','less','greater'], function(d){ return statistics_texts[d]; });
       selector5.on("change",calculateWilcoxon);
 
       var results = div.append("div")
@@ -2849,6 +2891,13 @@ canvas.addEventListener("mouseout", function(){
           'alpha': 0.05
         });
 
+        results.append("h3").text(statistics_texts["Wilcoxon_test_for_Variable1_and_Variable2"].replace("[Variable1]",var1).replace("[Variable2]",var2));
+
+        var boxplotData = {};
+        boxplotData[var1] = data1.sort();
+        boxplotData[var2] = data2.sort();
+        displayMeansTable(results, boxplotData, false);
+
         var table = results.append("div")
           .attr("class","stats-table")
           .append("table")
@@ -2856,14 +2905,10 @@ canvas.addEventListener("mouseout", function(){
         tr = table.append("tr").style("display","none");
         ["pValue","statistic"].forEach(function(d){
           tr = table.append("tr");
-          tr.append("td").text(d);
+          tr.append("td").text(statistics_texts[d]);
           tr.append("td").text(formatter(res[d]));
         });
 
-        var boxplotData = {};
-        boxplotData[var1] = data1.sort();
-        boxplotData[var2] = data2.sort();
-        displayMeansTable(results, boxplotData);
         displayBoxplot(results, boxplotData);
       }
     }
@@ -2891,7 +2936,7 @@ canvas.addEventListener("mouseout", function(){
       selector2.on("change",calculateTtest);
 
       fieldDiv = fieldvariables.append("div").attr("class","field-div");
-      var selector5 = displaySelector(fieldDiv, statistics_texts["Tail"], ['two-sided','less','greater']);
+      var selector5 = displaySelector(fieldDiv, statistics_texts["Tail"], ['two-sided','less','greater'], function(d){ return statistics_texts[d]; });
       selector5.on("change",calculateTtest);
 
       var results = div.append("div")
@@ -2914,6 +2959,8 @@ canvas.addEventListener("mouseout", function(){
           return;
         }
 
+        results.append("h3").text(statistics_texts["Paired_Student_t_test_for_Variable1_and_Variable2"].replace("[Variable1]",var1).replace("[Variable2]",var2));
+
         for(var i=0; i<nodes.length; i++){
           data1.push(nodes[i][var1]);
           data2.push(nodes[i][var2]);
@@ -2932,6 +2979,11 @@ canvas.addEventListener("mouseout", function(){
           'alpha': 0.05
         });
 
+        var boxplotData = {};
+        boxplotData[var1] = data1.sort();
+        boxplotData[var2] = data2.sort();
+        displayMeansTable(results, boxplotData, true);
+
         var table = results.append("div")
           .attr("class","stats-table")
           .append("table")
@@ -2939,17 +2991,13 @@ canvas.addEventListener("mouseout", function(){
         tr = table.append("tr").style("display","none");
         ["pValue","statistic","df"].forEach(function(d){
           tr = table.append("tr");
-          tr.append("td").text(d);
+          tr.append("td").text(statistics_texts[d]);
           tr.append("td").text(formatter(res[d]));
         });
         tr = table.append("tr");
-        tr.append("td").text("95% confidence interval");
+        tr.append("td").text("95% "+statistics_texts["confidence_interval"]);
         tr.append("td").text("["+formatter(res['ci'][0])+","+formatter(res['ci'][1])+"]");
 
-        var boxplotData = {};
-        boxplotData[var1] = data1.sort();
-        boxplotData[var2] = data2.sort();
-        displayMeansTable(results, boxplotData);
         displayBoxplot(results, boxplotData);
       }
     }
@@ -2990,7 +3038,7 @@ canvas.addEventListener("mouseout", function(){
       listCategories2(selector3,selector4,catnames[0]);
 
       fieldDiv = fieldvariables.append("div").attr("class","field-div");
-      var selector5 = displaySelector(fieldDiv, statistics_texts["Tail"], ['two-sided','less','greater']);
+      var selector5 = displaySelector(fieldDiv, statistics_texts["Tail"], ['two-sided','less','greater'], function(d){ return statistics_texts[d]; });
       selector5.on("change",calculateTtest);
 
       var results = div.append("div")
@@ -3009,6 +3057,10 @@ canvas.addEventListener("mouseout", function(){
             data1 = [],
             data2 = [],
             someignored = false;
+
+        results.append("h3").text(statistics_texts["Student_t_test_for_Numeric_Categorical_Group1_vs_Categorical_Group2"]
+          .replace("[Numeric]",var1).replace("[Categorical]",var2).replace("[Group1]",group1)
+          .replace("[Categorical]",var2).replace("[Group2]",group2))
 
         for(var i=0; i<nodes.length; i++){
           var d = nodes[i][var1];
@@ -3037,6 +3089,11 @@ canvas.addEventListener("mouseout", function(){
             .text(statistics_texts["Some_cases_has_been_ignored"]);
         }
 
+        var boxplotData = {};
+        boxplotData[group1] = data1.sort();
+        boxplotData[group2] = data2.sort();
+        displayMeansTable(results, boxplotData, true);
+
         var table = results.append("div")
           .attr("class","stats-table")
           .append("table")
@@ -3044,17 +3101,13 @@ canvas.addEventListener("mouseout", function(){
         tr = table.append("tr").style("display","none");
         ["pValue","statistic","df"].forEach(function(d){
           tr = table.append("tr");
-          tr.append("td").text(d);
+          tr.append("td").text(statistics_texts[d]);
           tr.append("td").text(formatter(res[d]));
         });
         tr = table.append("tr");
-        tr.append("td").text("95% confidence interval");
+        tr.append("td").text("95% "+statistics_texts["confidence_interval"]);
         tr.append("td").text("["+formatter(res['ci'][0])+","+formatter(res['ci'][1])+"]");
 
-        var boxplotData = {};
-        boxplotData[group1] = data1.sort();
-        boxplotData[group2] = data2.sort();
-        displayMeansTable(results, boxplotData);
         displayBoxplot(results, boxplotData);
       }
 
@@ -3158,6 +3211,15 @@ canvas.addEventListener("mouseout", function(){
             .text(statistics_texts["Some_cases_has_been_ignored"]);
         }
 
+        results.append("h3").text(statistics_texts["Mann_Withney_test_for_Numeric_Categorical_Group1_vs_Categorical_Group2"]
+          .replace("[Numeric]",var1).replace("[Categorical]",var2).replace("[Group1]",group1)
+          .replace("[Categorical]",var2).replace("[Group2]",group2))
+
+        var boxplotData = {};
+        boxplotData[group1] = data1.sort();
+        boxplotData[group2] = data2.sort();
+        displayMeansTable(results, boxplotData, false);
+
         var table = results.append("div")
           .attr("class","stats-table")
           .append("table")
@@ -3165,14 +3227,10 @@ canvas.addEventListener("mouseout", function(){
         tr = table.append("tr").style("display","none");
         ["U1","U2","U","z","pValue"].forEach(function(d){
           tr = table.append("tr");
-          tr.append("td").text(d);
+          tr.append("td").text(statistics_texts[d] ? statistics_texts[d] : d);
           tr.append("td").text(formatter(res[d]));
         });
 
-        var boxplotData = {};
-        boxplotData[group1] = data1.sort();
-        boxplotData[group2] = data2.sort();
-        displayMeansTable(results, boxplotData);
         displayBoxplot(results, boxplotData);
       }
 
@@ -3258,42 +3316,14 @@ canvas.addEventListener("mouseout", function(){
           return node[var2];
         });
 
+        results.append("h3").text(statistics_texts["Analysis_of_Variance_for_Numeric_across_Categorical"].replace("[Numeric]",var1).replace("[Categorical]",var2));
+
         var res = stdlib.stats.anova1(data, factor);
 
         if(someignored){
           results.append("pre")
             .text(statistics_texts["Some_cases_has_been_ignored"]);
         }
-
-        var tableColumns = {"df":"df","ss":"SS","ms":"MS","statistic":"F Score","pValue":"P Value"};
-        var table = results.append("div")
-          .attr("class","stats-table")
-          .append("table")
-        var tr;
-        ["","treatment","error"].forEach(function(d,i){
-          tr = table.append("tr");
-          tr.append("td").text(d);
-          d3.keys(tableColumns).forEach(function(k){
-            if(!i){
-              tr.append("td").text(tableColumns[k]);
-            }else{
-              if(res[d].hasOwnProperty(k)){
-                tr.append("td").text(formatter(res[d][k]));
-              }else{
-                if(i==1 && res.hasOwnProperty(k)){
-                  tr.append("td").text(formatter(res[k]));
-                }else{
-                  tr.append("td");
-                }
-              }
-            }
-          });
-        });
-        
-
-        results.append("div")
-          .html("eta<sup>2</sup> = "+(res.treatment.ss/(res.treatment.ss+res.error.ss)).toFixed(3))
-          .style("margin-bottom","16px")
 
         var boxplotData = {};
         cats.forEach(function(cat,i){
@@ -3302,7 +3332,58 @@ canvas.addEventListener("mouseout", function(){
           }).sort();
         });
 
-        displayMeansTable(results, boxplotData);
+        displayMeansTable(results, boxplotData, true);
+
+        var tableColumns = {"ss":statistics_texts["SS"], "df":statistics_texts["df"], "ms":statistics_texts["MS"], "statistic":statistics_texts["fScore"], "pValue":statistics_texts["pValue"]};
+        var table = results.append("div")
+          .attr("class","stats-table")
+          .append("table")
+        var tr;
+        tr = table.append("tr");
+        tr.append("td").text("");
+        d3.keys(tableColumns).forEach(function(k){
+          tr.append("td").text(tableColumns[k]);
+        });
+
+        tr = table.append("tr");
+        tr.append("td").text(statistics_texts["Between"]);
+        d3.keys(tableColumns).forEach(function(k){
+              if(res["treatment"].hasOwnProperty(k)){
+                tr.append("td").text(formatter(res["treatment"][k]));
+              }else{
+                if(res.hasOwnProperty(k)){
+                  tr.append("td").text(formatter(res[k]));
+                }else{
+                  tr.append("td");
+                }
+              }
+        });
+
+        tr = table.append("tr");
+        tr.append("td").text(statistics_texts["Within"]);
+        d3.keys(tableColumns).forEach(function(k){
+              if(res["error"].hasOwnProperty(k)){
+                tr.append("td").text(formatter(res["error"][k]));
+              }else{
+                tr.append("td");
+              }
+        });        
+
+        var totalss = res["treatment"]['ss']+res["error"]['ss'],
+            totaldf = res["error"]['df']+res["error"]['df'],
+            totalms = totalss/totaldf;
+        tr = table.append("tr");
+        tr.append("td").text(statistics_texts["Total"]);
+        tr.append("td").text(formatter(totalss));
+        tr.append("td").text(formatter(totaldf));
+        tr.append("td").text(formatter(totalms));
+        tr.append("td");
+        tr.append("td");
+
+
+        results.append("div")
+          .html("eta<sup>2</sup> = "+(res.treatment.ss/(res.treatment.ss+res.error.ss)).toFixed(3))
+          .style("margin-bottom","16px")
 
         displayBoxplot(results, boxplotData);
       }
@@ -3408,10 +3489,12 @@ canvas.addEventListener("mouseout", function(){
         calculateTables();
       })
       selectorPercentage.selectAll("option")
-        .data([statistics_texts["_None_"],"row","column","total"])
+        .data(["_None_","Row","Column","Total"])
       .enter().append("option")
         .property("value",String)
-        .text(String)
+        .text(function(d){
+          return statistics_texts[d];
+        })
 
     var fieldstats = selectordiv.append("fieldset");
     fieldstats.append("legend").text(statistics_texts["Statistics"]);
@@ -3473,10 +3556,11 @@ canvas.addEventListener("mouseout", function(){
 
     function tables2xlsx(){
       var tables = {};
+      var title = results.select(".results > h3").text();
       results.selectAll(".stats-table > table").each(function(){
         var table = d3.select(this),
             mode = table.attr("data-mode");
-        tables[mode] = [];
+        tables[mode] = [[title]];
         table.selectAll("tr").each(function(){
           tables[mode].push(Array.from(this.querySelectorAll("td"),function(td){ return td.textContent.trim(); }));
         })
@@ -3521,11 +3605,17 @@ canvas.addEventListener("mouseout", function(){
       if(var3==statistics_texts["_None_"]){
         var3 = false;
       }
-      if(percentage==statistics_texts["_None_"]){
+      if(percentage=="_None_"){
         percentage = false;
       }
       if(stack){
         bars = true;
+      }
+
+      if(var3){
+        results.append("h3").text(statistics_texts["Cross_tabulation_of_Row_by_Column_by_Row2"].replace("[Row]",var1).replace("[Column]",var2).replace("[Row2]",var3));
+      }else{
+        results.append("h3").text(statistics_texts["Cross_tabulation_of_Row_by_Column"].replace("[Row]",var1).replace("[Column]",var2));
       }
 
       if(var3){
@@ -3651,7 +3741,7 @@ canvas.addEventListener("mouseout", function(){
 
           var v1 = var2,
               v2 = var1;
-          if(percentage=="row"){
+          if(percentage=="Row"){
             v1 = var1;
             v2 = var2;
           }
@@ -3794,13 +3884,13 @@ canvas.addEventListener("mouseout", function(){
               var observed = false;
               var value = 0;
               if(countsobserved){
-                var obsval = percentage=="row" ? obsdata[i][j] : obsdata[j][i];
+                var obsval = percentage=="Row" ? obsdata[i][j] : obsdata[j][i];
                 observed = { value: obsval, title: categories[v1][i]+" - "+categories[v2][j]+": "+valueformat(obsval) };
                 value = obsval;
               }
               var expected = false;
               if(countsexpected){
-                var expval = percentage=="row" ? expdata[i][j] : expdata[j][i];
+                var expval = percentage=="Row" ? expdata[i][j] : expdata[j][i];
                 expected = { value: expval, title: categories[v1][i]+" - "+categories[v2][j]+": "+valueformat(expval) };
                 if(!value){
                   value = expval;
@@ -3955,11 +4045,11 @@ canvas.addEventListener("mouseout", function(){
           }
           if(percentage){
             var pervalue;
-            if(percentage=="row"){
+            if(percentage=="Row"){
               pervalue = value / rowtotal[i] * 100;
-            }else if(percentage=="column"){
+            }else if(percentage=="Column"){
               pervalue = value / coltotal[j] * 100;
-            }else if(percentage=="total"){
+            }else if(percentage=="Total"){
               pervalue = value / total * 100;
             }
             if(isNaN(pervalue)){
