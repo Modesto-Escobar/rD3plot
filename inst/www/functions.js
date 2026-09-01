@@ -2022,6 +2022,12 @@ function displayStatistics(){
         meansd();
       }
 
+      tr = table.append("tr");
+      tr.append("td").text("n");
+      d3.values(data).forEach(function(values){
+        tr.append("td").text(values.length);
+      })
+
       function quantiles(){
       tr = table.append("tr");
       tr.append("td").text("Q1");
@@ -3684,7 +3690,7 @@ canvas.addEventListener("mouseout", function(){
         var chi2res;
         if(var3){
           for(var k=0; k<categories[var3].length; k++){
-            chi2res = stdlib.stats.chi2test(observed[k]);
+            chi2res = stdlib.stats.chi2test(cleanMatrix(observed[k]));
             addCramer(chi2res,observed[k]);
             chi2row(categories[var3][k],chi2res);
           }
@@ -3695,6 +3701,23 @@ canvas.addEventListener("mouseout", function(){
           chi2res = stdlib.stats.chi2test(observed);
           addCramer(chi2res,observed);
           chi2row("chi-square",chi2res);
+        }
+
+        function cleanMatrix(matrix) {
+          // 1. Remove rows where sum is 0
+          const validRows = matrix.filter(row => row.reduce((a, b) => a + b, 0) > 0);
+  
+          if (validRows.length === 0) return [];
+
+          // 2. Identify indices of columns where sum is 0
+          const colSums = validRows[0].map((_, colIdx) => 
+            validRows.reduce((sum, row) => sum + row[colIdx], 0)
+          );
+  
+          // 3. Keep only non-zero columns
+          return validRows.map(row => 
+            row.filter((_, colIdx) => colSums[colIdx] > 0)
+          );
         }
 
         function addCramer(chi2res,observed){
@@ -4063,7 +4086,22 @@ canvas.addEventListener("mouseout", function(){
           }
         }
         td = tr.append("td");
-        td.text(rowtotal[i]);
+        var value = rowtotal[i];
+        if(percentage){
+          var pervalue;
+          if(percentage=="Row"){
+            pervalue = 100;
+          }else{
+            pervalue = value / total * 100;
+            if(isNaN(pervalue)){
+              pervalue = 0;
+            }
+          }
+          value = value + '<span class="percentage">(' + pervalue.toFixed(1) +'%)</span>';
+          td.html(value);
+        }else{
+          td.text(value);
+        }
       }
       tr = table.append("tr");
       td = tr.append("td");
@@ -4074,7 +4112,22 @@ canvas.addEventListener("mouseout", function(){
       }
       for(var j=0; j<categories[var2].length; j++){
         td = tr.append("td");
-        td.text(coltotal[j]);
+        var value = coltotal[j];
+        if(percentage){
+          var pervalue;
+          if(percentage=="Column"){
+            pervalue = 100;
+          }else{
+            pervalue = value / total * 100;
+            if(isNaN(pervalue)){
+              pervalue = 0;
+            }
+          }
+          value = value + '<span class="percentage">(' + pervalue.toFixed(1) +'%)</span>';
+          td.html(value);
+        }else{
+          td.text(value);
+        }
       }
       td = tr.append("td");
       td.text(total);
@@ -4157,9 +4210,15 @@ function displayFreqBars(){
       div;
   
   function exports(sel){
-    sel.selectAll("*").remove();
-    div = sel.append("div");
-    div.attr("class","frequency-barplots");
+    div = sel.select(":scope > .frequency-barplots");
+    if(div.empty()){
+      sel.selectAll("*").remove();
+      div = sel.append("div");
+      div.attr("class","frequency-barplots");
+    }else{
+      div.style("height",div.node().offsetHeight+"px")
+      div.selectAll("*").remove();
+    }
     var header = div.append("div")
       .attr("class","freq-header")
     header.append("div")
@@ -4535,6 +4594,8 @@ function displayFreqBars(){
       }
     }
   })
+
+    div.style("height",null);
   }
 
   function selectOnClick(callback){

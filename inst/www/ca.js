@@ -84,6 +84,8 @@ var texts = {
     TextInfo: "Text",
     Layout: "Disposició",
     LayoutInfo: "Disposició",
+    XInfo: "Eix X",
+    YInfo: "Eix Y",
     Show: "Mostra",
     Hide: "Oculta",
     circle: "cercle",

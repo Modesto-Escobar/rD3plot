@@ -84,6 +84,8 @@ var texts = {
     TextInfo: "Texto",
     Layout: "Disposición",
     LayoutInfo: "Disposición",
+    XInfo: "Eje X",
+    YInfo: "Eje Y",
     Show: "Mostrar",
     Hide: "Ocultar",
     circle: "Círculo",

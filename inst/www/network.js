@@ -71,7 +71,11 @@ function network(Graph){
 
   width = computeWidth();
 
-  var infoPanel = displayInfoPanel();
+  var infoPanel = displayInfoPanel()
+    .closeAction(function(){
+      delete options.frequencies;
+      delete options.lineplots;
+    });
   body.call(infoPanel);
   infoPanel.selection()
     .style("position","absolute")
@@ -642,14 +646,10 @@ function network(Graph){
       options.showLinks = false;
     }
 
-    if(Array.isArray(options.axesLabels)){
-      if(options.axesLabels.length>4)
-        options.axesLabels.length = 4;
-    }else{
-      if(options.axesLabels)
-        options.axesLabels = [options.axesLabels];
-      else
-        options.axesLabels = [];
+    if(!options.axesLabels){
+      options.axesLabels = [];
+    }else if(typeof options.axesLabels == 'string'){
+      options.axesLabels = [options.axesLabels];
     }
 
     options.heatmap = false;
@@ -770,7 +770,6 @@ function displayMain(){
         .updateSelection(showTables)
         .applyColor(function(name){ applyAuto("nodeColor",name); })
         .applyShape(function(name){ applyAuto("nodeShape",name); })
-      infoPanel.closeAction(function(){ options.frequencies = false; });
       main.call(iconButton()
         .alt("freq")
         .width(24)
@@ -802,7 +801,6 @@ function displayMain(){
         .names(names)
         .categories(options.categories)
         .types(types)
-      infoPanel.closeAction(function(){ options.statistics = false; });
       main.call(iconButton()
         .alt("statistics")
         .width(24)
@@ -830,7 +828,6 @@ function displayMain(){
       linePlots = displayLinePlots()
         .frames(frameControls.frames)
         .variables(options.lineplotsKeys)
-      infoPanel.closeAction(function(){ options.lineplots = false; });
       main.call(iconButton()
         .alt("lineplots")
         .width(24)
@@ -1374,6 +1371,59 @@ function displaySidebar(){
       })
 
       svg.attr("height",countY*options.cex+parseInt(svg.attr("height")))
+
+      // custom X and Y
+      if(!options.heatmap){
+      var numericNodeColumns = Graph["nodenames"].filter(function(d){
+          if(!hiddenFields.has(d)){
+            var t = dataType(Graph.nodes,d,true);
+            if(t=="number"){
+              return true;
+            }
+          }
+          return false;
+      });
+      if(numericNodeColumns.length){
+        numericNodeColumns.unshift("-"+texts.none+"-");
+        var div = sel.append("div")
+          .attr("class", "customlayout");
+        ["X","Y"].forEach(function(d){
+          var divsel = div.append("div")
+            .attr("class","visSel attribute-"+d)
+      divsel.append("div")
+        .append("span")
+          .text(d+" ")
+          .append("img")
+            .attr("width","12")
+            .attr("height","12")
+            .attr("src",b64Icons.help)
+            .attr("title",texts[d+"Info"]);
+
+      divsel.append("div")
+        .attr("class","select-wrapper")
+        .append("select")
+        .on("change",function(){
+          var Xval = div.select(".visSel.attribute-X select").property("value");
+          var Yval = div.select(".visSel.attribute-Y select").property("value");
+          if(Xval!="-"+texts.none+"-" && Yval!="-"+texts.none+"-"){
+            delete options.dynamicNodes;
+            Graph.nodes.forEach(function(node){
+              node.fx = node[Xval];
+              node.fy = node[Yval];
+            });
+            options.axesLabels = [Xval,Yval];
+            adaptLayout();
+            drawSVG();
+          }
+        })
+        .selectAll("option")
+          .data(numericNodeColumns)
+        .enter().append("option")
+          .property("value",String)
+          .text(String)
+        });
+      }
+      }
     }
 
     function displayLayoutSelection(sel){
@@ -1404,7 +1454,7 @@ function displaySidebar(){
           selectLayout(this.value);
           delete options.dynamicNodes;
           adaptLayout();
-          simulation.restart();
+          drawSVG();
         })
         .selectAll("option")
           .data(d3.keys(Graph.layouts))
@@ -3664,13 +3714,48 @@ function drawNet(){
           }
           doc.line(x1, y1, x2, y2);
         });
+        d3.selectAll(".plot > svg > .axis > .tick > line").each(function(){
+          var rect = this.getBoundingClientRect(),
+              offsetY = this.ownerSVGElement.getBoundingClientRect().y,
+              x1,y1,x2,y2;
+          if(d3.select(this.parentNode.parentNode).classed("y")){
+            x1 = rect.x,
+            y1 = rect.y-offsetY,
+            x2 = rect.x+rect.width,
+            y2 = y1;
+          }else{
+            x1 = rect.x+rect.width,
+            y1 = rect.y-offsetY,
+            x2 = x1,
+            y2 = rect.y+rect.height-offsetY;
+          }
+          doc.line(x1, y1, x2, y2);
+        });
         d3.selectAll(".plot > svg > .axis > .tick > text").each(function(){
           var rect = this.getBoundingClientRect(),
               offsetY = this.ownerSVGElement.getBoundingClientRect().y,
               x = rect.x,
-              y = rect.y+(rect.height/2)-offsetY;
+              y = rect.y+(rect.height/2)-offsetY+4;
           doc.text(x, y, d3.select(this).text());
         });
+        d3.selectAll(".plot > svg > .axisLabel").each(function(){
+          var self = d3.select(this);
+          var rect = this.getBoundingClientRect(),
+              offsetY = this.ownerSVGElement.getBoundingClientRect().y,
+              x = rect.x,
+              y = rect.y+(rect.height/2)-offsetY,
+              transform = self.attr("transform"),
+              anchors = {"start":"left","middle":"center","end":"right"},
+              tAlign = anchors[self.attr("text-anchor")];
+          if(!transform){
+            transform = 0;
+          }else{
+            transform = Math.abs(parseInt(transform.replace("rotate(","").replace(")","")));
+            x = x + 10;
+            y = y + 10;
+          }
+          doc.text(x, y, self.text(), { align: tAlign, angle: transform });
+        })
     }
 
     doc.save(d3.select("head>title").text()+".pdf");
@@ -5174,6 +5259,9 @@ function selectLayout(key){
       node.fx = coor[0];
       node.fy = coor[1];
     })
+    if(options.layoutsAxesLabels){
+      options.axesLabels = options.layoutsAxesLabels[key];
+    }
   }
 }
 

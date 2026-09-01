@@ -99,12 +99,18 @@ netAddLayout <- function(net,layout){
       names(layout) <- paste0("layout",seq_along(layout))
     }
     net$layouts <- layout
+    if(is.null(net$options[["axesLabels"]])){
+      net$options[["layoutsAxesLabels"]] <- lapply(layout,colnames)
+    }
   }else if(inherits(layout,"matrix") &&
        is.numeric(layout) &&
        ncol(layout)==2 &&
        nrow(layout)==nrow(net$nodes)){
     net$nodes[["fx"]] <- layout[,1]
     net$nodes[["fy"]] <- layout[,2]
+    if(is.null(net$options[["axesLabels"]])){
+      net$options[["axesLabels"]] <- colnames(layout)
+    }
   }else{
     warning("layout: each layout must be a numeric matrix and have a pair of coordinates per node")
   }
@@ -341,7 +347,7 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
   options <- showSomething(options,"statistics",statistics)
   if (!is.null(controls)) options[["controls"]] <- as.numeric(controls)
   if (!is.null(mode)) options[["mode"]] <- tolower(substr(as.character(mode),1,1))
-  if (!is.null(axesLabels)) options[["axesLabels"]] <- as.character(axesLabels)
+  if(!is.null(axesLabels)) options[["axesLabels"]] <- as.character(axesLabels)
 
   options <- showSomething(options,"fixed",fixed)
 
