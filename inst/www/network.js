@@ -646,6 +646,17 @@ function network(Graph){
       options.showLinks = false;
     }
 
+    if(options.fixed && !Graph.layouts){
+      Graph.layouts = {};
+      Graph.layouts['default'] = Graph.nodes.map(function(node){
+        return [node["fx"],node["fy"]];
+      });
+      if(options.axesLabels){
+        options.layoutsAxesLabels = {};
+        options.layoutsAxesLabels['default'] = options.axesLabels;
+      }
+    }
+
     if(!options.axesLabels){
       options.axesLabels = [];
     }else if(typeof options.axesLabels == 'string'){
@@ -1387,7 +1398,7 @@ function displaySidebar(){
         numericNodeColumns.unshift("-"+texts.none+"-");
         var div = sel.append("div")
           .attr("class", "customlayout");
-        ["X","Y"].forEach(function(d){
+        ["X","Y"].forEach(function(d,i){
           var divsel = div.append("div")
             .attr("class","visSel attribute-"+d)
       divsel.append("div")
@@ -1403,18 +1414,61 @@ function displaySidebar(){
         .attr("class","select-wrapper")
         .append("select")
         .on("change",function(){
+          delete options.dynamicNodes;
           var Xval = div.select(".visSel.attribute-X select").property("value");
-          var Yval = div.select(".visSel.attribute-Y select").property("value");
-          if(Xval!="-"+texts.none+"-" && Yval!="-"+texts.none+"-"){
-            delete options.dynamicNodes;
-            Graph.nodes.forEach(function(node){
-              node.fx = node[Xval];
-              node.fy = node[Yval];
-            });
-            options.axesLabels = [Xval,Yval];
-            adaptLayout();
-            drawSVG();
+          if(Xval=="-"+texts.none+"-"){
+            Xval="";
           }
+          var Yval = div.select(".visSel.attribute-Y select").property("value");
+          if(Yval=="-"+texts.none+"-"){
+            Yval="";
+          }
+          if(!Graph.layouts){
+            Graph.nodes.forEach(function(node){
+              if(Xval){
+                node["fx"] = node[Xval];
+              }else{
+                delete node["fx"];
+              }
+              if(Yval){
+                node["fy"] = node[Yval]
+              }else{
+                delete node["fy"];
+              }
+            });
+          }else{
+            var layoutselector = sel.select(".layouts select");
+            var laykey;
+            if(layoutselector.empty()){
+                laykey = d3.keys(Graph.layouts)[0];
+            }else{
+                laykey = layoutselector.property("value");
+            }
+            var layout = Graph.layouts[laykey];
+            Graph.nodes.forEach(function(node,j){
+              if(Xval){
+                node["fx"] = node[Xval];
+              }else{
+                node["fx"] = layout[j][0];
+              }
+              if(Yval){
+                node["fy"] = node[Yval]
+              }else{
+                node["fy"] = layout[j][1];
+              }
+            });
+            if(options.layoutsAxesLabels){
+              if(!Xval){
+                Xval = options.layoutsAxesLabels[laykey][0];
+              }
+              if(!Yval){
+                Yval = options.layoutsAxesLabels[laykey][1];
+              }
+            }
+          }
+          options.axesLabels = [Xval,Yval];
+          adaptLayout();
+          drawSVG();
         })
         .selectAll("option")
           .data(numericNodeColumns)
@@ -1427,7 +1481,7 @@ function displaySidebar(){
     }
 
     function displayLayoutSelection(sel){
-      if(options.dynamicNodes || !Graph.layouts || Graph.layouts.length<=1 || options.heatmap){
+      if(options.dynamicNodes || !Graph.layouts || d3.keys(Graph.layouts).length<=1 || options.heatmap){
         return;
       }
 
@@ -1455,6 +1509,7 @@ function displaySidebar(){
           delete options.dynamicNodes;
           adaptLayout();
           drawSVG();
+          sel.selectAll(".customlayout select > option:first-child").property("selected","selected");
         })
         .selectAll("option")
           .data(d3.keys(Graph.layouts))
@@ -5260,7 +5315,7 @@ function selectLayout(key){
       node.fy = coor[1];
     })
     if(options.layoutsAxesLabels){
-      options.axesLabels = options.layoutsAxesLabels[key];
+      options.axesLabels = options.layoutsAxesLabels[key].slice();
     }
   }
 }
