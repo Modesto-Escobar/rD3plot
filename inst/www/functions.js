@@ -1923,7 +1923,7 @@ function displayStatistics(){
 
     button = fieldAssociation.append("button")
       .on("click",function(){
-          categoryTables(true);
+          categoryTables(true,"Column");
       })
     button.append("img")
       .attr("src","stats-icons/chi-square.png")
@@ -3395,7 +3395,7 @@ canvas.addEventListener("mouseout", function(){
       }
     }
 
-    function categoryTables(chiselected){
+    function categoryTables(chiselected,defaultPercentage){
 
     mainselectors.remove();
 
@@ -3500,6 +3500,9 @@ canvas.addEventListener("mouseout", function(){
         .property("value",String)
         .text(function(d){
           return statistics_texts[d];
+        })
+        .property("selected",function(d){
+          return defaultPercentage && defaultPercentage==d;
         })
 
     var fieldstats = selectordiv.append("fieldset");

@@ -18,6 +18,7 @@ function network(Graph){
       linePlots = false,
       GraphNodesLength = 0,
       GraphLinksLength = 0,
+      currentLayoutKey = false,
       options = Graph.options;
 
   delete Graph.options;
@@ -646,21 +647,37 @@ function network(Graph){
       options.showLinks = false;
     }
 
-    if(options.fixed && !Graph.layouts){
-      Graph.layouts = {};
-      Graph.layouts['default'] = Graph.nodes.map(function(node){
-        return [node["fx"],node["fy"]];
-      });
-      if(options.axesLabels){
-        options.layoutsAxesLabels = {};
-        options.layoutsAxesLabels['default'] = options.axesLabels;
-      }
-    }
-
     if(!options.axesLabels){
       options.axesLabels = [];
     }else if(typeof options.axesLabels == 'string'){
       options.axesLabels = [options.axesLabels];
+    }
+
+    if(options.fixed && !Graph.layouts){
+      Graph.layouts = {};
+      currentLayoutKey = 'default';
+      if(Graph.clusters){
+        var keys = d3.map(d3.keys(Graph.clusters),function(k){
+          return k.replace(/^.*[\.\/]/, '');
+        }).keys();
+        if(keys.length==1){
+          currentLayoutKey = keys[0];
+        }
+      }
+      Graph.layouts[currentLayoutKey] = Graph.nodes.map(function(node){
+        return [node["fx"],node["fy"]];
+      });
+      if(options.axesLabels.length){
+        options.layoutsAxesLabels = {};
+        options.layoutsAxesLabels[currentLayoutKey] = options.axesLabels.slice();
+      }
+    }
+
+    if(Graph.layouts && options.axesLabels.length && !Graph.layoutsAxesLabels){
+      options.layoutsAxesLabels = {};
+      for(var key in Graph.layouts){
+        options.layoutsAxesLabels[key] = options.axesLabels.slice();
+      }
     }
 
     options.heatmap = false;
@@ -1437,32 +1454,24 @@ function displaySidebar(){
               }
             });
           }else{
-            var layoutselector = sel.select(".layouts select");
-            var laykey;
-            if(layoutselector.empty()){
-                laykey = d3.keys(Graph.layouts)[0];
-            }else{
-                laykey = layoutselector.property("value");
-            }
-            var layout = Graph.layouts[laykey];
             Graph.nodes.forEach(function(node,j){
               if(Xval){
                 node["fx"] = node[Xval];
               }else{
-                node["fx"] = layout[j][0];
+                node["fx"] = Graph.layouts[currentLayoutKey][j][0];
               }
               if(Yval){
                 node["fy"] = node[Yval]
               }else{
-                node["fy"] = layout[j][1];
+                node["fy"] = Graph.layouts[currentLayoutKey][j][1];
               }
             });
             if(options.layoutsAxesLabels){
               if(!Xval){
-                Xval = options.layoutsAxesLabels[laykey][0];
+                Xval = options.layoutsAxesLabels[currentLayoutKey][0];
               }
               if(!Yval){
-                Yval = options.layoutsAxesLabels[laykey][1];
+                Yval = options.layoutsAxesLabels[currentLayoutKey][1];
               }
             }
           }
@@ -3433,6 +3442,20 @@ function drawNet(){
       });
       ctx.fill();
     }
+
+    if(currentLayoutKey && options.nodeColor && Graph.clusters && Graph.clusters.hasOwnProperty(options.nodeColor+"."+currentLayoutKey)){
+      ctx.strokeStyle = 'red';
+      ctx.lineWidth = 4;
+      ctx.lineCap = 'round';
+      Graph.clusters[options.nodeColor+"."+currentLayoutKey].forEach(function(d){
+        var x = scaleCoorX(d[0]),
+            y = scaleCoorY(d[1]);
+
+        ctx.beginPath();
+        ctx.arc(x, y, 6, 0.25 * Math.PI, 1.75 * Math.PI, false);
+        ctx.stroke();
+      });
+    }
     ctx.restore();
 
     function checkNodeBigger(node){
@@ -5307,7 +5330,12 @@ function getLayoutRange(){
 function selectLayout(key){
   if(Graph.layouts){
     if(!key){
-      key = d3.keys(Graph.layouts)[0];
+      if(!currentLayoutKey){
+        currentLayoutKey = d3.keys(Graph.layouts)[0];     
+      }
+      key = currentLayoutKey;
+    }else{
+      currentLayoutKey = key;
     }
     Graph.nodes.forEach(function(node,i){
       var coor = Graph.layouts[key][i];

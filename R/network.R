@@ -5,6 +5,7 @@ networkJSON<-function(net){
   tree <- net$tree
   nodes <- net$nodes
   layouts <- net$layouts
+  clusters <- net$clusters
   options <- net$options
 
   name <- as.character(nodes[[options$nodeName]])
@@ -82,6 +83,9 @@ networkJSON<-function(net){
     if(length(categories)){
       options$categories <- categories
     }
+  }
+  if(length(clusters)){
+    json$clusters <- clusters
   }
   json$options <- options
 
