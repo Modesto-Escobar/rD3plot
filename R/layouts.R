@@ -46,7 +46,7 @@ congloControl<-function(conglo){
     conglo<-gsub("cluster_","",conglo)
     conglo<-(tolower(substr(conglo,1,2)))
     if (!(conglo %in% conglos)){
-      warning(paste(conglo, "is not a valid layout"))
+      warning(paste(conglo, "is not a valid community detection method"))
       conglo <- NULL
     }
   }

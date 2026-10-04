@@ -1440,6 +1440,8 @@ function displaySidebar(){
           if(Yval=="-"+texts.none+"-"){
             Yval="";
           }
+          // the variables put on the axes, if any, for the cluster centroids
+          options.customAxes = [Xval,Yval];
           if(!Graph.layouts){
             Graph.nodes.forEach(function(node){
               if(Xval){
@@ -3443,11 +3445,12 @@ function drawNet(){
       ctx.fill();
     }
 
-    if(currentLayoutKey && options.nodeColor && Graph.clusters && Graph.clusters.hasOwnProperty(options.nodeColor+"."+currentLayoutKey)){
+    var centers = clusterCenters();
+    if(centers){
       ctx.strokeStyle = 'red';
       ctx.lineWidth = 4;
       ctx.lineCap = 'round';
-      Graph.clusters[options.nodeColor+"."+currentLayoutKey].forEach(function(d){
+      centers.forEach(function(d){
         var x = scaleCoorX(d[0]),
             y = scaleCoorY(d[1]);
 
@@ -3457,6 +3460,35 @@ function drawNet(){
       });
     }
     ctx.restore();
+
+    // The centroid of every group of the clusterization that colors the nodes, on the axes as
+    // they stand: an axis of the plane takes it from Graph.clusters, an axis holding a variable
+    // from Graph.clusterMeans, which holds the mean of every group on every numeric variable.
+    // No centroid is drawn where either axis has none to offer.
+    function clusterCenters(){
+      if(!options.nodeColor){
+        return null;
+      }
+      var custom = options.customAxes || ["",""],
+          planeKey = options.nodeColor+"."+currentLayoutKey,
+          plane = (currentLayoutKey && Graph.clusters && Graph.clusters.hasOwnProperty(planeKey)) ? Graph.clusters[planeKey] : null,
+          means = (Graph.clusterMeans && Graph.clusterMeans.hasOwnProperty(options.nodeColor)) ? Graph.clusterMeans[options.nodeColor] : null,
+          n = plane ? plane.length : (means ? means.length : 0),
+          out = [];
+      for(var g=0; g<n; g++){
+        var coor = [0,1].map(function(i){
+          if(custom[i]){
+            return (means && means[g] && typeof means[g][custom[i]] == "number") ? means[g][custom[i]] : null;
+          }
+          return (plane && plane[g]) ? plane[g][i] : null;
+        });
+        if(coor[0]===null || coor[1]===null){
+          return null;
+        }
+        out.push(coor);
+      }
+      return out.length ? out : null;
+    }
 
     function checkNodeBigger(node){
       return node._bigger ? node.nodeSize + 10/transform.k : node.nodeSize;
@@ -5329,6 +5361,8 @@ function getLayoutRange(){
 
 function selectLayout(key){
   if(Graph.layouts){
+    // the plane's own coordinates take both axes back
+    options.customAxes = ["",""];
     if(!key){
       if(!currentLayoutKey){
         currentLayoutKey = d3.keys(Graph.layouts)[0];     

@@ -6,6 +6,7 @@ networkJSON<-function(net){
   nodes <- net$nodes
   layouts <- net$layouts
   clusters <- net$clusters
+  clusterMeans <- net$clusterMeans
   options <- net$options
 
   name <- as.character(nodes[[options$nodeName]])
@@ -86,6 +87,11 @@ networkJSON<-function(net){
   }
   if(length(clusters)){
     json$clusters <- clusters
+  }
+  # the mean of every group on every numeric variable, for the centroids drawn when a
+  # variable takes an axis
+  if(length(clusterMeans)){
+    json$clusterMeans <- clusterMeans
   }
   json$options <- options
 
@@ -512,13 +518,15 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
   if (!is.null(layout)) {
     if(is.character(layout)){ 
       layoutName <- layoutControl(layout)
-      if(exists("layoutName")){
+      # an unknown layout has already been warned of by layoutControl, which then returns
+      # NULL: the network is drawn without it rather than failing on coords[[NULL]]
+      if(!is.null(layoutName)){
         if(layoutName=="fo") layout <- coords[[layoutName]](rd3_toIgraph(net), criteria=lweight) 
         else layout <- coords[[layoutName]](rd3_toIgraph(net))
         if(layoutName=="su")layout=layout$layout
-      }
+      }else layout <- NULL
     }
-    net <- netAddLayout(net,layout)
+    if(!is.null(layout)) net <- netAddLayout(net,layout)
   }
 
   #community
