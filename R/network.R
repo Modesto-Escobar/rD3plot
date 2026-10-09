@@ -86,16 +86,26 @@ networkJSON<-function(net){
     }
   }
   if(length(clusters)){
-    json$clusters <- clusters
+    json$clusters <- netCoinClustersPrepare(clusters)
   }
   # the mean of every group on every numeric variable, for the centroids drawn when a
   # variable takes an axis
   if(length(clusterMeans)){
-    json$clusterMeans <- clusterMeans
+    json$clusterMeans <- netCoinClustersPrepare(clusterMeans)
   }
   json$options <- options
 
   return(toJSON(json))
+}
+
+netCoinClustersPrepare <- function(x){
+  attributes(x) <- list(names = names(x))
+  return(lapply(x, function(mat) {
+    setNames(
+      lapply(seq_len(nrow(mat)), function(i) mat[i, ]),
+      rownames(mat)
+    )
+  }))
 }
 
 # add layout

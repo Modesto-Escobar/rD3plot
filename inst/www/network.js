@@ -642,6 +642,7 @@ function network(Graph){
 
     if(!GraphLinksLength){
       options.showLinks = undefined;
+      texts.nodes = texts.cases;
     }
     if(options.showLinks && options.showNodes){
       options.showLinks = false;
@@ -651,6 +652,10 @@ function network(Graph){
       options.axesLabels = [];
     }else if(typeof options.axesLabels == 'string'){
       options.axesLabels = [options.axesLabels];
+    }
+
+    if(Graph.clusters){
+      options.showCenters = true;
     }
 
     if(options.fixed && !Graph.layouts){
@@ -1245,6 +1250,9 @@ function displaySidebar(){
           }
         }},
           showAxes = {txt: texts.showhideaxes, key: "showAxes", tooltip: "ctrl + x", callback: showAxesFunction},
+          showCenters = {txt: texts.showhidecenters, key: "showCenters", callback: function(){
+            simulation.restart();
+          }},
           heatmap = {txt: texts.heatmap, key: "heatmap", tooltip: "ctrl + m", callback: function(){
           drawSVG();
           displaySidebar();
@@ -1321,7 +1329,12 @@ function displaySidebar(){
         .attr("class","buttons")
         .attr("transform","translate(5,0)")
 
-      if(Array.isArray(options.mode)){
+      if(Graph.clusters){
+          buttons.append("g")
+        .attr("class",function(d){ return "button showCenters"; })
+        .attr("transform","translate("+secondColW+","+countY*options.cex+")")
+        .datum(showCenters)
+      }else if(Array.isArray(options.mode)){
         buttons.append("g")
       .attr("class",function(d){ return "button heatmap"; })
       .attr("transform","translate("+secondColW+","+countY*options.cex+")")
@@ -3447,14 +3460,23 @@ function drawNet(){
 
     var centers = clusterCenters();
     if(centers){
-      ctx.strokeStyle = 'red';
-      ctx.lineWidth = 4;
       ctx.lineCap = 'round';
       centers.forEach(function(d){
+        var nodelike = {};
+        nodelike[options.nodeColor] = d[2];
+
         var x = scaleCoorX(d[0]),
             y = scaleCoorY(d[1]);
 
         ctx.beginPath();
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 10; // Wider than the main stroke
+        ctx.arc(x, y, 6, 0.25 * Math.PI, 1.75 * Math.PI, false);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.strokeStyle = VisualHandlers.nodeColor(nodelike);
+        ctx.lineWidth = 4;
         ctx.arc(x, y, 6, 0.25 * Math.PI, 1.75 * Math.PI, false);
         ctx.stroke();
       });
@@ -3466,6 +3488,9 @@ function drawNet(){
     // from Graph.clusterMeans, which holds the mean of every group on every numeric variable.
     // No centroid is drawn where either axis has none to offer.
     function clusterCenters(){
+      if(!options.showCenters){
+        return null;
+      }
       if(!options.nodeColor){
         return null;
       }
@@ -3473,18 +3498,20 @@ function drawNet(){
           planeKey = options.nodeColor+"."+currentLayoutKey,
           plane = (currentLayoutKey && Graph.clusters && Graph.clusters.hasOwnProperty(planeKey)) ? Graph.clusters[planeKey] : null,
           means = (Graph.clusterMeans && Graph.clusterMeans.hasOwnProperty(options.nodeColor)) ? Graph.clusterMeans[options.nodeColor] : null,
-          n = plane ? plane.length : (means ? means.length : 0),
+          keys = plane ? d3.keys(plane) : (means ? d3.keys(means) : []),
           out = [];
-      for(var g=0; g<n; g++){
+      for(var j=0; j<keys.length; j++){
+        var g = keys[j];
         var coor = [0,1].map(function(i){
           if(custom[i]){
-            return (means && means[g] && typeof means[g][custom[i]] == "number") ? means[g][custom[i]] : null;
+            return (means && means[g] && typeof means[g][0][custom[i]] == "number") ? means[g][0][custom[i]] : null;
           }
           return (plane && plane[g]) ? plane[g][i] : null;
         });
         if(coor[0]===null || coor[1]===null){
           return null;
         }
+        coor.push(g);
         out.push(coor);
       }
       return out.length ? out : null;

@@ -27,6 +27,7 @@ var texts = {
     showhidelegend: "Llegenda",
     Image: "Imatge",
     showhideaxes: "Eixos",
+    showhidecenters: "Centres",
     showhidesidebar: "Mostra/oculta barra lateral",
     showhidebuttons: "Mostra/oculta botons",
     showhidetables: "Mostra/oculta taules",
@@ -134,5 +135,6 @@ var texts = {
     noresults: "Sense resultats",
     jointfilter: "Filtre conjunt",
     typeatleast: "Tecleja almenys [n] caràcters",
-    typesomething: "Escriu alguna cosa"
+    typesomething: "Escriu alguna cosa",
+    cases: "Casos"
   };

@@ -26,6 +26,7 @@ var texts = {
     showHelp: "Mostrar ayuda",
     showhidelegend: "Leyenda",
     showhideaxes: "Ejes",
+    showhidecenters: "Centros",
     showhidesidebar: "Mostrar/ocultar control lateral",
     showhidebuttons: "Mostrar/ocultar botones",
     showhidetables: "Mostrar/ocultar tablas",
@@ -134,5 +135,6 @@ var texts = {
     noresults: "Sin resultados",
     jointfilter: "Filtro conjunto",
     typeatleast: "Teclea al menos [n] caracteres",
-    typesomething: "Escribe algo"
+    typesomething: "Escribe algo",
+    cases: "Casos"
   };
