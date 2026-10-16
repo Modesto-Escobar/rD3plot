@@ -524,6 +524,10 @@ function network(Graph){
 
     loadTree();
 
+    if(options.nodeTextDynamic){
+      options.nodeText = options.nodeName;
+    }
+
     ["nodeText","nodeInfo"].forEach(function(d){
       if(options[d] && options[d]!=options.nodeName)
         hiddenFields.add(options[d]);
@@ -3899,8 +3903,59 @@ function drawNet(){
   } // end pdf function
 }
 
+function getClusterCenter(nodeColor,value,i){
+  if(options.customAxes && options.customAxes[i]){
+    return (Graph.clusterMeans && Graph.clusterMeans.hasOwnProperty(options.nodeColor)) ? Graph.clusterMeans[options.nodeColor][value][0][options.customAxes[i]] : null;
+  }else{
+    var planeKey = nodeColor+"."+currentLayoutKey;
+    return (currentLayoutKey && Graph.clusters && Graph.clusters.hasOwnProperty(planeKey)) ? Graph.clusters[planeKey][value][i] : null;
+  }
+  return null;
+}
+
+function scatTooltip(node){
+    var axis1 = cleanaxisname(options.axesLabels[0]),
+        axis2 = cleanaxisname(options.axesLabels[1]),
+        cluster1 = getClusterCenter(options.nodeColor,node[options.nodeColor],0),
+        cluster2 = getClusterCenter(options.nodeColor,node[options.nodeColor],1),
+        x = formatter(scaleCoorX.invert(node['fx'])),
+        y = formatter(scaleCoorY.invert(node['fy']));
+
+    if(cluster1===null || cluster2===null){
+      return '<b>POSITION:</b><br>'+
+      '<b>'+axis1+'</b>: '+x+'<br>'+
+      '<b>'+axis2+'</b>: '+y+'<br>';
+    }
+
+    cluster1 = formatter(cluster1);
+    cluster2 = formatter(cluster2);
+
+    var diffx = formatter(x-cluster1),
+        diffy = formatter(y-cluster2);
+
+    return '<b>CLUSTER:</b><br>'+
+      '<b>'+options.nodeColor+'</b>: '+node[options.nodeColor]+'<br>'+
+      '<b>'+axis1+'</b>: '+cluster1+'<br>'+
+      '<b>'+axis2+'</b>: '+cluster2+'<br>'+
+      '<b>'+texts['position'].toUpperCase()+':</b><br>'+
+      '<b>'+axis1+'</b>: '+x+' ('+(diffx>=0?'+':'')+diffx+')<br>'+
+      '<b>'+axis2+'</b>: '+y+' ('+(diffy>=0?'+':'')+diffy+')<br>';
+
+    function cleanaxisname(x){
+      return x.replace(/\s*\(.*?\%\)$/g, "");
+    }
+}
+
 function showTooltip(node,fixed){
-    if(options.nodeText && node[options.nodeText] && plot.select("div.tooltip").filter(function(d){ return node[options.nodeName]==d[options.nodeName]; }).empty()){
+  if(plot.select("div.tooltip").filter(function(d){ return node[options.nodeName]==d[options.nodeName]; }).empty()){
+    if(options.nodeTextDynamic){
+      if(options.nodeTextDynamic == "scat" && currentLayoutKey && options.axesLabels && options.axesLabels.length>=2){
+        plot.append("div")
+             .attr("class","tooltip"+(fixed?" fixed":""))
+             .datum(node)
+             .html(scatTooltip)
+      }
+    }else if(options.nodeText && node[options.nodeText]){
         var tooltip = plot.append("div")
              .attr("class","tooltip"+(fixed?" fixed":""))
              .datum(node)
@@ -3910,6 +3965,7 @@ function showTooltip(node,fixed){
           tooltip.select(".info-template, .panel-template").select("img[src=_auto_]").attr("src",node[options.imageItems]);
         }
     }
+  }
 }
 
 function findNode(){

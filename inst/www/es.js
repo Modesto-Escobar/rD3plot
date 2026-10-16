@@ -136,5 +136,6 @@ var texts = {
     jointfilter: "Filtro conjunto",
     typeatleast: "Teclea al menos [n] caracteres",
     typesomething: "Escribe algo",
-    cases: "Casos"
+    cases: "Casos",
+    position: "posición"
   };

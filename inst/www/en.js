@@ -136,5 +136,6 @@ var texts = {
     jointfilter: "Joint filter",
     typeatleast: "Type at least [n] characters",
     typesomething: "Type something",
-    cases: "Cases"
+    cases: "Cases",
+    position: "position"
   };
