@@ -652,6 +652,13 @@ function network(Graph){
       options.showLinks = false;
     }
 
+    if(options.nodesLabel){
+      texts.nodes = options.nodesLabel;
+    }
+    if(options.linksLabel){
+      texts.links = options.linksLabel;
+    }
+
     if(!options.axesLabels){
       options.axesLabels = [];
     }else if(typeof options.axesLabels == 'string'){
@@ -1497,6 +1504,7 @@ function displaySidebar(){
           options.axesLabels = [Xval,Yval];
           adaptLayout();
           drawSVG();
+          updateScatTooltip();
         })
         .selectAll("option")
           .data(numericNodeColumns)
@@ -1777,6 +1785,9 @@ function applyAuto(key, value){
     var visSel = sidebar.select(".visSel."+key+" select");
     if(!visSel.empty() && visSel.property("value")!=value){
       visSel.property("value",value);
+    }
+    if(key=="nodeColor"){
+      updateScatTooltip();
     }
 }
 
@@ -3933,17 +3944,23 @@ function scatTooltip(node){
     var diffx = formatter(x-cluster1),
         diffy = formatter(y-cluster2);
 
-    return '<b>CLUSTER:</b><br>'+
+    return '<b>'+texts['position'].toUpperCase()+':</b><br>'+
+      '<b>'+axis1+'</b>: '+x+' ('+(diffx>=0?'+':'')+diffx+')<br>'+
+      '<b>'+axis2+'</b>: '+y+' ('+(diffy>=0?'+':'')+diffy+')<br>'+
+      '<b>CLUSTER:</b><br>'+
       '<b>'+options.nodeColor+'</b>: '+node[options.nodeColor]+'<br>'+
       '<b>'+axis1+'</b>: '+cluster1+'<br>'+
-      '<b>'+axis2+'</b>: '+cluster2+'<br>'+
-      '<b>'+texts['position'].toUpperCase()+':</b><br>'+
-      '<b>'+axis1+'</b>: '+x+' ('+(diffx>=0?'+':'')+diffx+')<br>'+
-      '<b>'+axis2+'</b>: '+y+' ('+(diffy>=0?'+':'')+diffy+')<br>';
+      '<b>'+axis2+'</b>: '+cluster2+'<br>';
 
     function cleanaxisname(x){
       return x.replace(/\s*\(.*?\%\)$/g, "");
     }
+}
+
+function updateScatTooltip(){
+  if(options.nodeTextDynamic && options.nodeTextDynamic == "scat" && currentLayoutKey && options.axesLabels && options.axesLabels.length>=2){
+    plot.selectAll("div.tooltip.fixed").html(scatTooltip);
+  }
 }
 
 function showTooltip(node,fixed){
@@ -5463,6 +5480,7 @@ function selectLayout(key){
       options.axesLabels = options.layoutsAxesLabels[key].slice();
     }
   }
+  updateScatTooltip();
 }
 
 function adaptLayout(){

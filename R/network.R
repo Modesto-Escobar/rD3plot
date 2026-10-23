@@ -224,7 +224,8 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
         fixed = showCoordinates, limits = NULL,
         main = NULL, note = NULL, showCoordinates = FALSE, showArrows = FALSE,
         showLegend = TRUE, frequencies = FALSE, statistics = FALSE, showAxes = FALSE,
-        axesLabels = NULL, scenarios = NULL, help = NULL, helpOn = FALSE,
+        axesLabels = NULL, nodesLabel = NULL, linksLabel = NULL,
+        scenarios = NULL, help = NULL, helpOn = FALSE,
         mode = c("network","heatmap"), roundedItems = FALSE, controls = 1:8,
         cex = 1, background = NULL, defaultColor = "#1f77b4",
         language = c("en","es","ca"), dir = NULL)
@@ -368,6 +369,8 @@ network_rd3 <- function(nodes = NULL, links = NULL, tree = NULL,
   if (!is.null(controls)) options[["controls"]] <- as.numeric(controls)
   if (!is.null(mode)) options[["mode"]] <- tolower(substr(as.character(mode),1,1))
   if(!is.null(axesLabels)) options[["axesLabels"]] <- as.character(axesLabels)
+  if(!is.null(nodesLabel)) options[["nodesLabel"]] <- as.character(nodesLabel)
+  if(!is.null(linksLabel)) options[["linksLabel"]] <- as.character(linksLabel)
 
   options <- showSomething(options,"fixed",fixed)
 
