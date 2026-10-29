@@ -3494,6 +3494,15 @@ function drawNet(){
         ctx.lineWidth = 4;
         ctx.arc(x, y, 6, 0.25 * Math.PI, 1.75 * Math.PI, false);
         ctx.stroke();
+
+        if(options.categories && options.categories[options.nodeColor]){
+          var num = options.categories[options.nodeColor].indexOf(d[2])+1;
+          ctx.strokeStyle = "white";
+          ctx.fillStyle = VisualHandlers.nodeColor(nodelike);
+          ctx.font = 'bold 12px sans-serif';
+          ctx.strokeText(num,x+8,y+10);
+          ctx.fillText(num,x+8,y+10);
+        }
       });
     }
     ctx.restore();
