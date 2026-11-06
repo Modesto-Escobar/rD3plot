@@ -66,5 +66,10 @@ var statistics_texts = {
     Mann_Withney_test_for_Numeric_Categorical_Group1_vs_Categorical_Group2: "Test Mann-Whitney per a [Numeric]: [Categorical] [Group 1] vs [Categorical] [Group 2]",
     Paired_Student_t_test_for_Variable1_and_Variable2: "Student t-test apariat per a [Variable1] i [Variable2]",
     Student_t_test_for_Numeric_Categorical_Group1_vs_Categorical_Group2: "Student t-test per a [Numeric]: [Categorical] [Group1] vs [Categorical] [Group2]",
-    Analysis_of_Variance_for_Numeric_across_Categorical: "Anàlisi de Variança per a [Numeric] en funció de [Categorical]"
+    Analysis_of_Variance_for_Numeric_across_Categorical: "Anàlisi de Variança per a [Numeric] en funció de [Categorical]",
+    Hierarchical_tree: "Arbre jeràrquic",
+    You_must_select_at_least_the_level_1_variable: "Heu de seleccionar almenys la variable de nivell 1.",
+    You_must_select_the_variable_for_the_bars: "Heu de seleccionar la variable per a les barres.",
+    You_cannot_repeat_the_same_variable_in_different_selectors: "No podeu repetir la mateixa variable en diferents selectors.",
+    Bars_distribution_of_targetVar_within_each_cluster: "Barres: distribució (%) de [targetVar] dins de cada cluster"
 };

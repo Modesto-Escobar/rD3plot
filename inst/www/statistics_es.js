@@ -20,6 +20,7 @@ var statistics_texts = {
     Statistics: "Estadisticas",
     Variable_1: "Variable 1",
     Variable_2: "Variable 2",
+    Variable_3: "Variable 3",
     Method: "Método",
     Rows: "Filas",
     Columns: "Columnas",
@@ -66,5 +67,10 @@ var statistics_texts = {
     Mann_Withney_test_for_Numeric_Categorical_Group1_vs_Categorical_Group2: "Test Mann-Withney para [Numeric]: [Categorical] [Group1] vs [Categorical] [Group2]",
     Paired_Student_t_test_for_Variable1_and_Variable2: "Student t-test pareado para [Variable1] y [Variable2]",
     Student_t_test_for_Numeric_Categorical_Group1_vs_Categorical_Group2: "Student t-test para [Numeric]: [Categorical] [Group1] vs [Categorical] [Group2]",
-    Analysis_of_Variance_for_Numeric_across_Categorical: "Análisis de Varianza para [Numeric] en función de [Categorical]"
+    Analysis_of_Variance_for_Numeric_across_Categorical: "Análisis de Varianza para [Numeric] en función de [Categorical]",
+    Hierarchical_tree: "Árbol jerárquico",
+    You_must_select_at_least_the_level_1_variable: "Debe seleccionar al menos la variable de nivel 1.",
+    You_must_select_the_variable_for_the_bars: "Debe seleccionar la variable para las barras.",
+    You_cannot_repeat_the_same_variable_in_different_selectors: "No puede repetir la misma variable en diferentes selectores.",
+    Bars_distribution_of_targetVar_within_each_cluster: "Barras: distribución (%) de [targetVar] dentro de cada cluster"
   };

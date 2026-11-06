@@ -67,5 +67,10 @@ var statistics_texts = {
     Mann_Withney_test_for_Numeric_Categorical_Group1_vs_Categorical_Group2: "Mann-Withney test for [Numeric]: [Categorical] [Group1] vs [Categorical] [Group2]",
     Paired_Student_t_test_for_Variable1_and_Variable2: "Paired Student t-test for [Variable1] and [Variable2]",
     Student_t_test_for_Numeric_Categorical_Group1_vs_Categorical_Group2: "Student t-test for [Numeric]: [Categorical] [Group1] vs [Categorical] [Group2]",
-    Analysis_of_Variance_for_Numeric_across_Categorical: "Analysis of Variance for [Numeric] across [Categorical]"
+    Analysis_of_Variance_for_Numeric_across_Categorical: "Analysis of Variance for [Numeric] across [Categorical]",
+    Hierarchical_tree: "Hierarchical tree",
+    You_must_select_at_least_the_level_1_variable: "You must select at least the level 1 variable.",
+    You_must_select_the_variable_for_the_bars: "You must select the variable for the bars.",
+    You_cannot_repeat_the_same_variable_in_different_selectors: "You cannot repeat the same variable in different selectors.",
+    Bars_distribution_of_targetVar_within_each_cluster: "Bars: distribution (%) of [targetVar] within each cluster"
   };

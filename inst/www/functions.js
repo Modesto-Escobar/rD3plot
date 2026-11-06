@@ -1987,6 +1987,15 @@ function displayStatistics(){
       .text(statistics_texts["ANOVA"])
     button.classed("disabled",!somecategorical || !somenumeric)
 
+    button = fieldDifference2.append("button")
+      .on("click",function(){
+          treeEnvironment();
+      })
+    button.append("img")
+      .attr("src","stats-icons/segmentation.png")
+    button.append("span")
+      .text(statistics_texts["Hierarchical_tree"])
+
     function displaySelector(fieldvariables,title,data,textformat){
       fieldvariables.append("span").text(title+": ");
       var selector = fieldvariables.append("div")
@@ -2277,10 +2286,10 @@ function displayStatistics(){
       selector1.on("change",calculateDescriptive);
       listCategories(selector1,catnames);
 
-      var fieldorder = selectordiv.append("fieldset");
-      fieldorder.append("legend").text(statistics_texts["Charts"]);
+      var fieldCharts = selectordiv.append("fieldset");
+      fieldCharts.append("legend").text(statistics_texts["Charts"]);
 
-      var fieldDiv = fieldorder.append("div")
+      var fieldDiv = fieldCharts.append("div")
       .attr("class","field-div");
       var checkOrder = fieldDiv.append("input")
         .attr("id","checkbox-order")
@@ -3393,6 +3402,18 @@ canvas.addEventListener("mouseout", function(){
 
         displayBoxplot(results, boxplotData);
       }
+    }
+
+    function treeEnvironment(){
+      mainselectors.remove();
+
+      div.append("div")
+        .attr("class","selectors")
+
+      div.append("div")
+        .attr("class","results")
+
+      displayHierarchicalTree(div.node(),names,types,nodes,categories);
     }
 
     function categoryTables(chiselected,defaultPercentage){
@@ -6229,4 +6250,428 @@ function cleanForCorrelation(a, b) {
         }
     }
     return { x: x, y: y };
+}
+
+function displayHierarchicalTree(div, names, types, nodes, categories){
+
+        // Render html environment
+        div.querySelector('.selectors').innerHTML = `<fieldset>
+        <legend>${statistics_texts['Variables']}</legend>
+        <div class="field-div">
+            <span>Variable dependiente</span>
+            <div class="select-wrapper">
+            <select id="sel-target"></select>
+            </div>
+        </div>
+        <div class="field-div">
+            <span>${statistics_texts['Variable_1']}</span>
+            <div class="select-wrapper">
+            <select id="sel-split1"></select>
+            </div>
+        </div>
+        <div class="field-div">
+            <span>${statistics_texts['Variable_2']}</span>
+            <div class="select-wrapper">
+            <select id="sel-split2"><option value="">${statistics_texts['_None_']}</option></select>
+            </div>
+        </div>
+        <div class="field-div">
+            <span>${statistics_texts['Variable_3']}</span>
+            <div class="select-wrapper">
+            <select id="sel-split3"><option value="">${statistics_texts['_None_']}</option></select>
+            </div>
+        </div>
+        </fieldset>`;
+
+        div.querySelector('.results').innerHTML = `<svg id="tree-svg" style="display: block; margin: 0 auto;"></svg>`;
+
+        // =========== CONFIG ===========
+        const NODE_W = 120;
+        const NODE_H = 46;
+        const BAR_W = 100;
+        const BAR_H = 24;
+        const LEAF_GAP = 20;
+        const V_GAP = 90;
+        const MARGIN = { top: 30, bottom: 80, lr: 40 };
+        const COLORS = categoryColors;
+
+        // =========== DATA ===========
+        const DATA = {};
+        const N = nodes.length;
+
+        const catnames = names.filter(function(name){
+          if(types[names.indexOf(name)]!="number"){
+            return true;
+          }
+          return false;
+        });
+
+        names.forEach(function(name){
+          DATA[name] = nodes.map(function(node){
+            return node[name];
+          });
+        });
+
+        function uniqueVals(vn) {
+            if(categories.hasOwnProperty(vn)){
+              return categories[vn];
+            }
+            const s = new Set(), o = [];
+            for (const v of DATA[vn]) { if (!s.has(v)) { s.add(v); o.push(v); } }
+            return o.sort();
+        }
+
+        // =========== POPULATE SELECTS ===========
+        const selSplit = ['sel-split1','sel-split2','sel-split3'].map(id => document.getElementById(id));
+        const selTarget = document.getElementById('sel-target');
+
+        catnames.forEach(function(name){
+            selSplit.forEach(function(sel){
+                const o = document.createElement('option');
+                o.value = name; o.textContent = name;
+                sel.appendChild(o);
+            });
+        });
+
+        names.forEach(function(name){
+            const o = document.createElement('option');
+            o.value = name; o.textContent = name;
+            selTarget.appendChild(o);
+        });
+
+        selSplit[0].value = catnames[0]==names[0] ? catnames[1] : catnames[0];
+        selTarget.value = names[0];
+
+        // =========== TREE BUILDING ===========
+        // The tree has "levels" for each splitVar.
+        // Level 0 = root node showing splitVars[0] name and total n.
+        // Root splits by splitVars[0] values → children.
+        // Each child leads to a node showing splitVars[1] name and count.
+        // That node splits by splitVars[1] values → children.
+        // And so on. Nodes at the last level are "leaves" = clusters with bars.
+
+        function buildTree(splitVars) {
+            const allIdx = Array.from({length: N}, (_, i) => i);
+
+            // Recursive: given a set of indices, split by splitVars[level]
+            function makeNode(indices, level) {
+                const node = {
+                    label: splitVars[level],
+                    n: indices.length,
+                    indices: indices,
+                    level: level,
+                    children: []
+                };
+
+                // Split by this variable's values
+                if (level < splitVars.length) {
+                    const vn = splitVars[level];
+                    const vals = uniqueVals(vn);
+                    vals.forEach(val => {
+                        const childIdx = indices.filter(i => DATA[vn][i] === val);
+                        if (childIdx.length === 0) return;
+
+                        if (level + 1 < splitVars.length) {
+                            // More levels: create intermediate node
+                            const child = makeNode(childIdx, level + 1);
+                            child.branchValue = val;
+                            node.children.push(child);
+                        } else {
+                            // Last split level: create leaf
+                            node.children.push({
+                                label: null, // leaf
+                                branchValue: val,
+                                n: childIdx.length,
+                                indices: childIdx,
+                                level: level + 1,
+                                children: []
+                            });
+                        }
+                    });
+                }
+                return node;
+            }
+
+            return makeNode(allIdx, 0);
+        }
+
+        function getLeaves(node) {
+            if (node.children.length === 0) return [node];
+            return node.children.flatMap(c => getLeaves(c));
+        }
+        function countLeaves(node) {
+            if (node.children.length === 0) return 1;
+            return node.children.reduce((s, c) => s + countLeaves(c), 0);
+        }
+
+        // =========== SVG HELPERS ===========
+        const NS = 'http://www.w3.org/2000/svg';
+        function el(tag, attrs) {
+            const e = document.createElementNS(NS, tag);
+            for (const [k,v] of Object.entries(attrs)) e.setAttribute(k, v);
+            return e;
+        }
+        function txt(x, y, text, attrs) {
+            const e = el('text', {
+                x, y,
+                'font-family': 'Arial, Helvetica, sans-serif',
+                'text-anchor': 'middle',
+                ...(attrs||{})
+            });
+            e.textContent = text;
+            return e;
+        }
+        function fmtN(n) { return n.toLocaleString('es-ES'); }
+        function trunc(s, m) { return s.length > m ? s.substring(0, m-1) + '…' : s; }
+
+        // =========== RENDER ===========
+        function render(splitVars, targetVar) {
+            const svg = document.getElementById('tree-svg');
+            svg.innerHTML = '';
+
+            const tree = buildTree(splitVars);
+            const numeric = types[names.indexOf(targetVar)]=="number";
+            const tVals = numeric ? [] : uniqueVals(targetVar);
+            const barH = (numeric ? 2 : tVals.length) * BAR_H;
+            const tMean = numeric ? DATA[targetVar].reduce(function(partialSum, a){ return  partialSum + a; }, 0) / N : 0;
+
+            // Layout
+            const nLeaves = countLeaves(tree);
+            const colW = Math.max(NODE_W, BAR_W) + LEAF_GAP;
+            const totalW = Math.max(nLeaves * colW + MARGIN.lr * 2, svg.parentNode.clientWidth);
+            // Depth: root level + number of split levels + leaf cluster level + bars + legend
+            const numNodeRows = splitVars.length + 1; // root + intermediate + leaf cluster row
+            const totalH = MARGIN.top + numNodeRows * (NODE_H + V_GAP) + barH + MARGIN.bottom;
+
+            svg.setAttribute('width', totalW);
+            svg.setAttribute('height', totalH);
+
+            // Calculate horizontal offset to center the tree within totalW
+            const treeWidth = nLeaves * colW;
+            const offsetX = (totalW - treeWidth) / 2;
+
+            // 1. Assign x to leaves using the calculated offset
+            const leaves = getLeaves(tree);
+            leaves.forEach((lf, i) => {
+                lf.x = offsetX + i * colW + colW / 2;
+            });
+
+            // 2. Propagate x upward
+            function propX(node) {
+                if (node.children.length === 0) return;
+                node.children.forEach(c => propX(c));
+                const xs = node.children.map(c => c.x);
+                node.x = (Math.min(...xs) + Math.max(...xs)) / 2;
+            }
+            propX(tree);
+
+            // 3. Assign y by level
+            function setY(node) {
+                node.y = MARGIN.top + node.level * (NODE_H + V_GAP);
+                node.children.forEach(c => setY(c));
+            }
+            setY(tree);
+
+            // ---- Drawing ----
+            let clusterNum = 0;
+
+            function drawNodeBox(x, y, label, n) {
+                svg.appendChild(el('rect', {
+                    x: x - NODE_W/2, y, width: NODE_W, height: NODE_H,
+                    fill: '#fff', stroke: '#333', 'stroke-width': 1.5, rx: 3
+                }));
+                svg.appendChild(txt(x, y + 18, label, {
+                    'font-size': '13', 'font-weight': 'bold', fill: '#333'
+                }));
+                svg.appendChild(txt(x, y + 35, 'n = ' + fmtN(n), {
+                    'font-size': '12', fill: '#555'
+                }));
+            }
+
+            function drawClusterBox(x, y, n) {
+                clusterNum++;
+                svg.appendChild(el('rect', {
+                    x: x - NODE_W/2, y, width: NODE_W, height: NODE_H,
+                    fill: '#fff', stroke: '#333', 'stroke-width': 1.5, rx: 3
+                }));
+                svg.appendChild(txt(x, y + 18, 'Cluster ' + clusterNum, {
+                    'font-size': '13', 'font-weight': 'bold', fill: '#333'
+                }));
+                svg.appendChild(txt(x, y + 35, 'n = ' + fmtN(n), {
+                    'font-size': '11', fill: '#555'
+                }));
+            }
+
+            if(numeric){
+              function drawBars(cx, startY, indices) {
+                let mean = 0;
+                indices.forEach(i => {
+                  mean += DATA[targetVar][i];
+                });
+                mean  = mean/indices.length;
+                svg.appendChild(el('rect', {
+                        x: cx - BAR_W/2, y: startY, width: BAR_W, height: barH,
+                        fill: mean<tMean ? COLORS[1] : COLORS[0], 'bar-value': mean
+                }));
+                svg.appendChild(txt(cx, startY + barH + 12, formatter(mean), {
+                        'font-size': '11', fill: '#000', 'font-weight': 'bold'
+                }));
+              }
+            }else{
+              function drawBars(cx, startY, indices) {
+                const counts = {};
+                tVals.forEach(c => counts[c] = 0);
+                indices.forEach(i => {
+                    const v = DATA[targetVar][i];
+                    if (counts[v] !== undefined) counts[v]++;
+                });
+                const total = indices.length;
+                let curY = startY;
+                tVals.forEach((cat, ci) => {
+                    const pct = total > 0 ? Math.round((counts[cat] / total) * 100) : 0;
+                    svg.appendChild(el('rect', {
+                        x: cx - BAR_W/2, y: curY, width: BAR_W, height: BAR_H,
+                        fill: COLORS[ci % COLORS.length], rx: 2
+                    }));
+                    svg.appendChild(txt(cx, curY + BAR_H/2 + 5, pct, {
+                        'font-size': '11', fill: '#fff', 'font-weight': 'bold'
+                    }));
+                    curY += BAR_H;
+                });
+              }
+            }
+
+            function drawConnector(parentX, parentBottomY, childX, childTopY, branchLabel) {
+                const midY = (parentBottomY + childTopY) / 2;
+                svg.appendChild(el('path', {
+                    d: `M ${parentX} ${parentBottomY} L ${parentX} ${midY} L ${childX} ${midY} L ${childX} ${childTopY}`,
+                    stroke: '#666', 'stroke-width': 1.5, fill: 'none'
+                }));
+                svg.appendChild(txt(childX, midY - 6, trunc(branchLabel, 20), {
+                    'font-size': '11', fill: '#333'
+                }));
+            }
+
+            function drawTree(node) {
+                // Draw this node
+                if (node.label !== null) {
+                    drawNodeBox(node.x, node.y, node.label, node.n);
+                } else {
+                    // Leaf cluster node
+                    drawClusterBox(node.x, node.y, node.n);
+                    drawBars(node.x, node.y + NODE_H + 10, node.indices);
+                }
+
+                // Draw children
+                node.children.forEach(child => {
+                    drawConnector(node.x, node.y + NODE_H, child.x, child.y, child.branchValue);
+                    drawTree(child);
+                });
+            }
+
+            drawTree(tree);
+
+            if(numeric){
+
+              // recalculate bars height
+              let maxvalue = -Infinity;
+              let minvalue = Infinity;
+              const bars = svg.querySelectorAll("rect[bar-value]");
+              bars.forEach(function(bar){
+                const v = bar.getAttribute('bar-value');
+                if(v>maxvalue){
+                  maxvalue = v;
+                }
+                if(v<minvalue){
+                  minvalue = v;
+                }
+              });
+              const startY = +bars[0].getAttribute('y');
+              const sacaleY = d3.scaleLinear()
+                .domain([maxvalue,minvalue])
+                .range([startY,startY+barH])
+
+              bars.forEach(function(bar){
+                const v = +bar.getAttribute('bar-value');
+                if(v<tMean){
+                  bar.setAttribute('height', sacaleY(v)-sacaleY(tMean));
+                  bar.setAttribute('y', sacaleY(tMean));
+                }else{
+                  bar.setAttribute('height', sacaleY(tMean)-sacaleY(v));
+                  bar.setAttribute('y', sacaleY(v));
+                }
+              });
+
+              // mean line
+              svg.appendChild(el('line',{
+                x1: offsetX, y1: sacaleY(tMean), x2: totalW-offsetX, y2: sacaleY(tMean), stroke: '#000',
+                'stroke-width': 1, 'stroke-dasharray': '10,10'
+              }));
+
+            }else{
+
+            // ---- Legend ----
+            const legendY = totalH - MARGIN.bottom + 16;
+            const legendItemW = 130;
+            const legendTotalW = tVals.length * legendItemW;
+            const legendLabelW = targetVar.length * 8 + 20;
+            const legendFullW = legendLabelW + legendTotalW;
+            const legendStartX = Math.max(MARGIN.lr + legendLabelW, totalW / 2 - legendFullW / 2 + legendLabelW);
+
+            svg.appendChild(txt(legendStartX - 10, legendY + 13, targetVar + ':', {
+                'text-anchor': 'end', 'font-size': '13', 'font-weight': 'bold', fill: '#333'
+            }));
+
+            tVals.forEach((val, i) => {
+                const lx = legendStartX + 6 + i * legendItemW;
+                svg.appendChild(el('rect', {
+                    x: lx, y: legendY, width: 16, height: 16,
+                    fill: COLORS[i % COLORS.length], rx: 2
+                }));
+                svg.appendChild(txt(lx + 26, legendY + 13, val, {
+                    'text-anchor': 'start', 'font-size': '12', fill: '#333'
+                }));
+            });
+
+            // Footnote
+            svg.appendChild(txt(totalW / 2, totalH - 10,
+                statistics_texts["Bars_distribution_of_targetVar_within_each_cluster"].replace("[targetVar]",targetVar), {
+                'font-size': '11', fill: '#999', 'text-anchor': 'middle'
+            }));
+
+            }
+        }
+
+        // =========== EVENTS ===========
+        function generateTree(){
+            const splits = [];
+            for (let i = 0; i < 3; i++) {
+                const v = selSplit[i].value;
+                if (v) splits.push(v);
+                else break;
+            }
+            const target = selTarget.value;
+
+            if (splits.length < 1) {
+                alert(statistics_texts['You_must_select_at_least_the_level_1_variable']);
+                return;
+            }
+            if (!target) {
+                alert(statistics_texts['You_must_select_the_variable_for_the_bars']);
+                return;
+            }
+            const all = [...splits, target];
+            if (new Set(all).size !== all.length) {
+                alert(statistics_texts['You_cannot_repeat_the_same_variable_in_different_selectors']);
+                return;
+            }
+            render(splits, target);
+        };
+
+        [...selSplit, selTarget].forEach(function(sel){
+          sel.addEventListener("change",generateTree);
+        });
+
+        // Initial render
+        generateTree();
 }
